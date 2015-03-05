@@ -3,6 +3,8 @@
 Assert provides dead-simple assertions for golang testing.
 
 ```go
+import "github.com/thatguystone/assert"
+
 func TestExample(t *testing.T) {
 	a := assert.A{t}
 
