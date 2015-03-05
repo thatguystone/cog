@@ -4,7 +4,7 @@ Assert provides dead-simple assertions for golang testing.
 
 ```go
 func TestExample(t *testing.T) {
-	a := A{t}
+	a := assert.A{t}
 
 	// These are just a few of the provided functions. Check out the full
 	// documentation for everything.
