@@ -78,8 +78,18 @@ func (a A) floatingEqual(e, g interface{}) bool {
 }
 
 func (a A) equal(e, g interface{}) bool {
-	if e == nil || g == nil {
-		return e == g
+	if e == nil {
+		if e == g {
+			return true
+		}
+
+		v := reflect.ValueOf(g)
+		k := v.Kind()
+		if k >= reflect.Chan && k <= reflect.Slice && v.IsNil() {
+			return true
+		}
+
+		return false
 	}
 
 	if reflect.DeepEqual(e, g) {
@@ -163,11 +173,16 @@ func (a A) MustFalse(cond bool, msg ...interface{}) {
 	}
 }
 
-// Equal compares to things, ensuring that they are equal to each other.
-// Returns true if they not equal, false otherwise.
+// Equal compares to things, ensuring that they are equal to each other. `e`
+// is the expected value; `g` is the value you got somewhere else. Returns
+// true if they not equal, false otherwise.
 //
 // Equal takes special care of floating point numbers, ensuring that any
 // precision loss doesn't affect their equality.
+//
+// If `e` is nil, `g` will be checked for nil, and if it's an interface, its
+// value will be checked for nil. Keep in mind that, for interfaces, this is
+// _not_ a strict `g == nil` comparison.
 func (a A) Equal(e, g interface{}, msg ...interface{}) bool {
 	if !a.equal(e, g) {
 		a.fail("%s\n"+

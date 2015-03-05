@@ -51,6 +51,21 @@ func TestEqual(t *testing.T) {
 			g:  2,
 			ok: false,
 		},
+		table{
+			e:  nil,
+			g:  []byte(nil),
+			ok: true,
+		},
+		table{
+			e:  []byte(nil),
+			g:  []byte(nil),
+			ok: true,
+		},
+		table{
+			e:  []byte(nil),
+			g:  nil,
+			ok: false,
+		},
 	}
 
 	f := 0.1
