@@ -89,6 +89,16 @@ func TestEqual(t *testing.T) {
 	a.MustNotEqual(1, 2, "expect not equal")
 }
 
+func TestLen(t *testing.T) {
+	a := A{t}
+
+	a.Len([]int{1, 2}, 2, "expect length")
+	a.MustLen([]int{1, 2}, 2, "expect length")
+
+	a.LenNot([]int{1, 2}, 1, "expect no length")
+	a.MustLenNot([]int{1, 2}, 1, "expect no length")
+}
+
 func TestContains(t *testing.T) {
 	a := A{t}
 

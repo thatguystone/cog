@@ -215,6 +215,56 @@ func (a A) MustNotEqual(e, g interface{}, msg ...interface{}) {
 	}
 }
 
+// Len checks that the length of the given v is l. Returns true if equal,
+// false otherwise.
+func (a A) Len(v, l interface{}, msg ...interface{}) (eq bool) {
+	defer func() {
+		if e := recover(); e != nil {
+			eq = false
+			a.fail("%s\n"+
+				"%#v is not iterable, cannot check length",
+				a.format(msg...),
+				v)
+		}
+	}()
+
+	vv := reflect.ValueOf(v)
+	eq = a.Equal(vv.Len(), l, msg...)
+	return
+}
+
+// MustLen is like Len, except it panics on failure.
+func (a A) MustLen(v, l interface{}, msg ...interface{}) {
+	if !a.Len(v, l, msg...) {
+		a.FailNow()
+	}
+}
+
+// LenNot checks that the length of the given v is not l. Returns true if not
+// equal, false otherwise.
+func (a A) LenNot(v, l interface{}, msg ...interface{}) (eq bool) {
+	defer func() {
+		if e := recover(); e != nil {
+			eq = false
+			a.fail("%s\n"+
+				"%#v is not iterable, cannot check length",
+				a.format(msg...),
+				v)
+		}
+	}()
+
+	vv := reflect.ValueOf(v)
+	eq = a.NotEqual(vv.Len(), l, msg...)
+	return
+}
+
+// MustLenNot is like LenNot, except it panics on failure.
+func (a A) MustLenNot(v, l interface{}, msg ...interface{}) {
+	if !a.LenNot(v, l, msg...) {
+		a.FailNow()
+	}
+}
+
 // Contains checks that v contains c. Returns true if it does, false otherwise.
 func (a A) Contains(v, c interface{}, msg ...interface{}) bool {
 	found, ok := a.contains(v, c)
