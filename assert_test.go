@@ -102,6 +102,10 @@ func TestEqual(t *testing.T) {
 
 	a.NotEqual(1, 2, "expect not equal")
 	a.MustNotEqual(1, 2, "expect not equal")
+
+	// Interface ints vs untyped ints don't compare nicely
+	v := uint64(1)
+	a.MustEqual(1, v, "expect equal")
 }
 
 func TestLen(t *testing.T) {

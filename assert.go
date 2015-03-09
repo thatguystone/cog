@@ -4,6 +4,7 @@ package assert
 import (
 	"fmt"
 	"math"
+	"math/big"
 	"path"
 	"reflect"
 	"runtime"
@@ -60,6 +61,51 @@ func (a A) callerInfo() string {
 	}
 }
 
+func (a A) getInt(e interface{}) (*big.Int, bool) {
+	i := big.NewInt(0)
+
+	// Maybe I'm just being stupid today, but go isn't letting me do any
+	// simple type casting.
+	switch v := e.(type) {
+	case int:
+		i.SetInt64(int64(v))
+	case int8:
+		i.SetInt64(int64(v))
+	case int16:
+		i.SetInt64(int64(v))
+	case int32:
+		i.SetInt64(int64(v))
+	case int64:
+		i.SetInt64(int64(v))
+
+	case uint:
+		i.SetUint64(uint64(v))
+	case uint8:
+		i.SetUint64(uint64(v))
+	case uint16:
+		i.SetUint64(uint64(v))
+	case uint32:
+		i.SetUint64(uint64(v))
+	case uint64:
+		i.SetUint64(uint64(v))
+
+	default:
+		return nil, false
+	}
+
+	return i, true
+}
+
+func (a A) intEqual(e, g interface{}) bool {
+	ex, ok1 := a.getInt(e)
+	gx, ok2 := a.getInt(g)
+	if !ok1 || !ok2 {
+		return false
+	}
+
+	return ex.Cmp(gx) == 0
+}
+
 func (a A) floatingEqual(e, g interface{}) bool {
 	fe, ok := e.(float64)
 	if !ok {
@@ -93,6 +139,10 @@ func (a A) equal(e, g interface{}) bool {
 	}
 
 	if reflect.DeepEqual(e, g) {
+		return true
+	}
+
+	if a.intEqual(e, g) {
 		return true
 	}
 
