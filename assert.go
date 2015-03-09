@@ -236,8 +236,8 @@ func (a A) MustFalse(cond bool, msg ...interface{}) {
 func (a A) Equal(e, g interface{}, msg ...interface{}) bool {
 	if !a.equal(e, g) {
 		a.fail("%s\n"+
-			"Expected: %#v\n"+
-			"       == %#v",
+			"Expected: %+v\n"+
+			"       == %+v",
 			a.format(msg...),
 			e,
 			g)
@@ -262,8 +262,8 @@ func (a A) MustEqual(e, g interface{}, msg ...interface{}) {
 func (a A) NotEqual(e, g interface{}, msg ...interface{}) bool {
 	if a.equal(e, g) {
 		a.fail("%s\n"+
-			"Expected %#v\n"+
-			"      != %#v",
+			"Expected %+v\n"+
+			"      != %+v",
 			a.format(msg...),
 			e,
 			g)
@@ -287,7 +287,7 @@ func (a A) Len(v, l interface{}, msg ...interface{}) (eq bool) {
 		if e := recover(); e != nil {
 			eq = false
 			a.fail("%s\n"+
-				"%#v is not iterable, cannot check length",
+				"%+v is not iterable, cannot check length",
 				a.format(msg...),
 				v)
 		}
@@ -312,7 +312,7 @@ func (a A) LenNot(v, l interface{}, msg ...interface{}) (eq bool) {
 		if e := recover(); e != nil {
 			eq = false
 			a.fail("%s\n"+
-				"%#v is not iterable, cannot check length",
+				"%+v is not iterable, cannot check length",
 				a.format(msg...),
 				v)
 		}
@@ -336,7 +336,7 @@ func (a A) Contains(v, c interface{}, msg ...interface{}) bool {
 
 	if !ok {
 		a.fail("%s\n"+
-			"%#v is not iterable; contain check failed",
+			"%+v is not iterable; contain check failed",
 			a.format(msg...),
 			v)
 		return false
@@ -344,7 +344,7 @@ func (a A) Contains(v, c interface{}, msg ...interface{}) bool {
 
 	if !found {
 		a.fail("%s\n"+
-			"%#v does not contain %#v",
+			"%+v does not contain %+v",
 			a.format(msg...),
 			v,
 			c)
@@ -368,7 +368,7 @@ func (a A) NotContains(v, c interface{}, msg ...interface{}) bool {
 
 	if !ok {
 		a.fail("%s\n"+
-			"%#v is not iterable; contain check failed",
+			"%+v is not iterable; contain check failed",
 			a.format(msg...),
 			v)
 		return false
@@ -376,7 +376,7 @@ func (a A) NotContains(v, c interface{}, msg ...interface{}) bool {
 
 	if found {
 		a.fail("%s\n"+
-			"%#v contains %#v",
+			"%+v contains %+v",
 			a.format(msg...),
 			v,
 			c)
@@ -514,7 +514,7 @@ func (a A) NotPanic(fn func(), msg ...interface{}) (ok bool) {
 	defer func() {
 		if r := recover(); r != nil {
 			a.fail("%s\n"+
-				"Expected fn not to panic; got panic with: %#v",
+				"Expected fn not to panic; got panic with: %+v",
 				a.format(msg...),
 				r)
 		} else {
