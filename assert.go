@@ -46,8 +46,10 @@ func (a A) clearInternalCaller() string {
 }
 
 func (a A) callerInfo() string {
+	var in string
+
 	for i := 0; ; i++ {
-		_, file, line, ok := runtime.Caller(i)
+		pc, file, line, ok := runtime.Caller(i)
 		if !ok {
 			return "???:1"
 		}
@@ -57,8 +59,21 @@ func (a A) callerInfo() string {
 			continue
 		}
 
-		return fmt.Sprintf("%s:%d", file, line)
+		fn := runtime.FuncForPC(pc)
+		if strings.Contains(fn.Name(), ".Test") {
+			if in == "" {
+				return fmt.Sprintf("%s:%d", file, line)
+			} else {
+				return fmt.Sprintf("%s (from %s:%d)", in, file, line)
+			}
+		} else {
+			if in == "" {
+				in = fmt.Sprintf("%s:%d", file, line)
+			}
+		}
 	}
+
+	return in
 }
 
 func (a A) getInt(e interface{}) (*big.Int, bool) {
