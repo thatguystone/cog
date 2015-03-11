@@ -69,9 +69,9 @@ func (a A) callerInfo() string {
 		if strings.Contains(fn.Name(), ".Test") {
 			if in == "" {
 				return fmt.Sprintf("%s:%d", file, line)
-			} else {
-				return fmt.Sprintf("%s (from %s:%d)", in, file, line)
 			}
+
+			return fmt.Sprintf("%s (from %s:%d)", in, file, line)
 		} else {
 			if in == "" {
 				in = fmt.Sprintf("%s:%d", file, line)
