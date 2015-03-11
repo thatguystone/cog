@@ -236,6 +236,9 @@ func TestPanic(t *testing.T) {
 func ExampleA() {
 	a := A{&testing.T{}}
 
+	// Or, if `go vet` is complaining:
+	a = From(&testing.T{})
+
 	// These are just a few of the provided functions. Check out the full
 	// documentation for everything.
 

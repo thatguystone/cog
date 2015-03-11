@@ -23,6 +23,12 @@ type A struct {
 	Tester
 }
 
+// From is a workaround for `go vet`'s complaining about a composite literaly
+// using unkeyed fields.
+func From(t Tester) A {
+	return A{t}
+}
+
 func (a A) format(msg ...interface{}) string {
 	if msg == nil || len(msg) == 0 {
 		return ""
