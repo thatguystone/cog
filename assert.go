@@ -23,7 +23,7 @@ type A struct {
 	Tester
 }
 
-// From is a workaround for `go vet`'s complaining about a composite literaly
+// From is a workaround for `go vet`'s complaining about a composite literal
 // using unkeyed fields.
 func From(t Tester) A {
 	return A{t}
