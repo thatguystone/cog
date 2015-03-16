@@ -3,6 +3,7 @@ package assert
 import (
 	"errors"
 	"testing"
+	"time"
 )
 
 func TestT(t *testing.T) {
@@ -231,6 +232,13 @@ func TestPanic(t *testing.T) {
 
 	a.NotPanic(func() {}, "expect no panic")
 	a.MustNotPanic(func() {}, "expect no panic")
+}
+
+func TestUntil(t *testing.T) {
+	a := A{t}
+
+	i := 0
+	a.Until(time.Second, func() bool { i++; return i > 10 }, "failed")
 }
 
 func ExampleA() {

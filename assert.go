@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 )
 
 // Tester provides the necessary testing functions for assertions
@@ -552,6 +553,24 @@ func (a A) MustNotPanic(fn func(), msg ...interface{}) {
 	if !a.NotPanic(fn, msg...) {
 		a.FailNow()
 	}
+}
+
+// Until polls for the given function for the given amount of time. If in that
+// time the function did not return true, the test fails immediately.
+func (a A) Until(wait time.Duration, fn func() bool, msg ...interface{}) {
+	sleep := wait / 1000
+	for i := 0; i < 1000; i++ {
+		if fn() {
+			return
+		}
+
+		time.Sleep(sleep)
+	}
+
+	a.fail("%s\n"+
+		"Waiting for condition failed",
+		a.format(msg...))
+	a.FailNow()
 }
 
 // B provides access to the underlying *testing.B. If A was not instantiated
