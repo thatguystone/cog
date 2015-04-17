@@ -310,7 +310,7 @@ func (a A) Len(v, l interface{}, msg ...interface{}) (eq bool) {
 	}()
 
 	vv := reflect.ValueOf(v)
-	eq = a.Equal(vv.Len(), l, msg...)
+	eq = a.Equal(l, vv.Len(), msg...)
 	return
 }
 
