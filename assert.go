@@ -13,20 +13,14 @@ import (
 	"time"
 )
 
-// Tester provides the necessary testing functions for assertions
-type Tester interface {
-	Errorf(format string, args ...interface{})
-	FailNow()
-}
-
 // A is like *testing.T/*testing.B, but it provides assertions
 type A struct {
-	Tester
+	testing.TB
 }
 
 // From is a workaround for `go vet`'s complaining about a composite literal
 // using unkeyed fields.
-func From(t Tester) A {
+func From(t testing.TB) A {
 	return A{t}
 }
 
@@ -576,11 +570,11 @@ func (a A) Until(wait time.Duration, fn func() bool, msg ...interface{}) {
 // B provides access to the underlying *testing.B. If A was not instantiated
 // with a *testing.B, this panics.
 func (a A) B() *testing.B {
-	return a.Tester.(*testing.B)
+	return a.TB.(*testing.B)
 }
 
 // T provides access to the underlying *testing.T. If A was not instantiated
 // with a *testing.T, this panics.
 func (a A) T() *testing.T {
-	return a.Tester.(*testing.T)
+	return a.TB.(*testing.T)
 }
