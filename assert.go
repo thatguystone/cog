@@ -409,7 +409,7 @@ func (a A) MustNotContain(v, c interface{}, msg ...interface{}) {
 	}
 }
 
-// Is ensures that g is the same type a e. Returns true if they are the same
+// Is ensures that g is the same type as e. Returns true if they are the same
 // type, false otherwise.
 func (a A) Is(e, g interface{}, msg ...interface{}) bool {
 	te := reflect.TypeOf(e)
