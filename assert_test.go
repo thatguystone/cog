@@ -241,6 +241,11 @@ func TestUntil(t *testing.T) {
 	a.Until(time.Second, func() bool { i++; return i > 10 }, "failed")
 }
 
+func TestGetTestName(t *testing.T) {
+	a := A{t}
+	a.Equal("TestGetTestName", GetTestName())
+}
+
 func ExampleA() {
 	a := A{&testing.T{}}
 

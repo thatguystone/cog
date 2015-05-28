@@ -578,3 +578,18 @@ func (a A) B() *testing.B {
 func (a A) T() *testing.T {
 	return a.TB.(*testing.T)
 }
+
+func GetTestName() string {
+	for i := 0; ; i++ {
+		pc, _, _, ok := runtime.Caller(i)
+		if !ok {
+			panic("failed to find caller info")
+		}
+
+		fn := runtime.FuncForPC(pc)
+		name := fn.Name()
+		if strings.Contains(name, ".Test") {
+			return name[strings.LastIndex(name, ".")+1:]
+		}
+	}
+}
