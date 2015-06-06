@@ -588,7 +588,7 @@ func GetTestName() string {
 
 		fn := runtime.FuncForPC(pc)
 		name := fn.Name()
-		if strings.Contains(name, ".Test") {
+		if strings.Contains(name, ".Test") || strings.Contains(name, ".Benchmark") {
 			return name[strings.LastIndex(name, ".")+1:]
 		}
 	}
