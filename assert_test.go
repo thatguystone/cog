@@ -145,6 +145,24 @@ func TestContains(t *testing.T) {
 			found: true,
 		},
 		table{
+			c:     []byte("some string"),
+			v:     []byte("me st"),
+			ok:    true,
+			found: true,
+		},
+		table{
+			c:     []byte("some string"),
+			v:     []byte("some string"),
+			ok:    true,
+			found: true,
+		},
+		table{
+			c:     []byte("some string"),
+			v:     []byte("no way"),
+			ok:    true,
+			found: false,
+		},
+		table{
 			c:     []int{1, 2},
 			v:     1,
 			ok:    true,

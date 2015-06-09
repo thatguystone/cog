@@ -185,6 +185,25 @@ func (a A) contains(v, c interface{}) (found, ok bool) {
 		return
 	}
 
+	if reflect.TypeOf(c).Kind() == reflect.Slice {
+		at := 0
+
+		for i := 0; i < vv.Len(); i++ {
+			if at == cv.Len() {
+				break
+			}
+
+			if a.equal(vv.Index(i).Interface(), cv.Index(at).Interface()) {
+				at++
+			} else {
+				at = 0
+			}
+		}
+
+		found = at == cv.Len()
+		return
+	}
+
 	for i := 0; i < vv.Len(); i++ {
 		if a.equal(vv.Index(i).Interface(), c) {
 			found = true
