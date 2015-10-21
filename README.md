@@ -1,25 +1,29 @@
-# assert [![Build Status](https://travis-ci.org/thatguystone/assert.svg)](https://travis-ci.org/thatguystone/assert) [![GoDoc](https://godoc.org/github.com/thatguystone/assert?status.svg)](https://godoc.org/github.com/thatguystone/assert)
+## Cog [![Build Status](https://travis-ci.org/thatguystone/cog.svg)](https://travis-ci.org/thatguystone/cog) [![GoDoc](https://godoc.org/github.com/thatguystone/cog?status.svg)](https://godoc.org/github.com/thatguystone/cog)
 
-Assert provides dead-simple assertions for golang testing.
+Cog is a collection of utilities for golang that I tend to use across many of my projects. Rather than building new cogs everywhere, I've just consolidated them all here. Cogs for everyone!
+
+### Check [![GoDoc](https://godoc.org/github.com/thatguystone/cog/check?status.svg)](https://godoc.org/github.com/thatguystone/cog/check)
+
+Check provides dead-simple assertions for golang testing.
 
 ```go
-import "github.com/thatguystone/assert"
+import "github.com/thatguystone/cog/check"
 
-func TestExample(t *testing.T) {
-	a := assert.A{t}
+func TestIt(t *testing.T) {
+	c := check.New(t)
 
 	// These are just a few of the provided functions. Check out the full
 	// documentation for everything.
 
-	a.Equal(1, 1, "the universe is falling apart")
-	a.NotEqual(1, 2, "those can't be equal!")
+	c.Equal(1, 1, "the universe is falling apart")
+	c.NotEqual(1, 2, "those can't be equal!")
 
 	panics := func() {
 		panic("i get nervous sometimes")
 	}
-	a.Panic(panics, "this should always panic")
+	c.Panic(panics, "this should always panic")
 
 	// Get the original *testing.T
-	a.T()
+	c.T()
 }
 ```

@@ -1,5 +1,4 @@
-// Package assert provides dead-simple assertions for testing.
-package assert
+package check
 
 import (
 	"fmt"
@@ -9,22 +8,16 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
-	"testing"
 	"time"
+
+	"github.com/thatguystone/cog/stack"
 )
 
-// A is like *testing.T/*testing.B, but it provides assertions
-type A struct {
-	testing.TB
-}
+// Can't really get 100% coverage on this file: doing so causes the tests to
+// fail.
+//gocovr:skip-file
 
-// From is a workaround for `go vet`'s complaining about a composite literal
-// using unkeyed fields.
-func From(t testing.TB) A {
-	return A{t}
-}
-
-func (a A) format(msg ...interface{}) string {
+func format(msg ...interface{}) string {
 	if msg == nil || len(msg) == 0 {
 		return ""
 	} else if len(msg) == 1 {
@@ -34,19 +27,7 @@ func (a A) format(msg ...interface{}) string {
 	}
 }
 
-func (a A) clearInternalCaller() string {
-	l := len("???:1")
-	_, file, line, ok := runtime.Caller(1)
-
-	if ok {
-		// +8 for leading tab
-		l = len(fmt.Sprintf("%s:%d: ", path.Base(file), line)) + 8
-	}
-
-	return strings.Repeat(" ", l)
-}
-
-func (a A) callerInfo() string {
+func callerInfo() string {
 	var in string
 
 	for i := 0; ; i++ {
@@ -67,43 +48,34 @@ func (a A) callerInfo() string {
 			}
 
 			return fmt.Sprintf("%s (from %s:%d)", in, file, line)
-		} else {
-			if in == "" {
-				in = fmt.Sprintf("%s:%d", file, line)
-			}
+		}
+
+		if in == "" {
+			in = fmt.Sprintf("%s:%d", file, line)
 		}
 	}
-
-	return in
 }
 
-func (a A) getInt(e interface{}) (*big.Int, bool) {
+func (c *C) getInt(e interface{}) (*big.Int, bool) {
 	i := big.NewInt(0)
 
-	// Maybe I'm just being stupid today, but go isn't letting me do any
-	// simple type casting.
-	switch v := e.(type) {
-	case int:
-		i.SetInt64(int64(v))
-	case int8:
-		i.SetInt64(int64(v))
-	case int16:
-		i.SetInt64(int64(v))
-	case int32:
-		i.SetInt64(int64(v))
-	case int64:
-		i.SetInt64(int64(v))
+	v := reflect.ValueOf(e)
+	switch v.Kind() {
+	case reflect.Int,
+		reflect.Int8,
+		reflect.Int16,
+		reflect.Int32,
+		reflect.Int64:
 
-	case uint:
-		i.SetUint64(uint64(v))
-	case uint8:
-		i.SetUint64(uint64(v))
-	case uint16:
-		i.SetUint64(uint64(v))
-	case uint32:
-		i.SetUint64(uint64(v))
-	case uint64:
-		i.SetUint64(uint64(v))
+		i.SetInt64(v.Int())
+
+	case reflect.Uint,
+		reflect.Uint8,
+		reflect.Uint16,
+		reflect.Uint32,
+		reflect.Uint64:
+
+		i.SetUint64(v.Uint())
 
 	default:
 		return nil, false
@@ -112,9 +84,9 @@ func (a A) getInt(e interface{}) (*big.Int, bool) {
 	return i, true
 }
 
-func (a A) intEqual(e, g interface{}) bool {
-	ex, ok1 := a.getInt(e)
-	gx, ok2 := a.getInt(g)
+func (c *C) intEqual(e, g interface{}) bool {
+	ex, ok1 := c.getInt(e)
+	gx, ok2 := c.getInt(g)
 	if !ok1 || !ok2 {
 		return false
 	}
@@ -122,7 +94,7 @@ func (a A) intEqual(e, g interface{}) bool {
 	return ex.Cmp(gx) == 0
 }
 
-func (a A) floatingEqual(e, g interface{}) bool {
+func (c *C) floatingEqual(e, g interface{}) bool {
 	fe, ok := e.(float64)
 	if !ok {
 		return false
@@ -139,7 +111,7 @@ func (a A) floatingEqual(e, g interface{}) bool {
 	return math.Nextafter(min, max) == max
 }
 
-func (a A) equal(e, g interface{}) bool {
+func (c *C) equal(e, g interface{}) bool {
 	if e == nil {
 		if e == g {
 			return true
@@ -158,22 +130,22 @@ func (a A) equal(e, g interface{}) bool {
 		return true
 	}
 
-	if a.intEqual(e, g) {
+	if c.intEqual(e, g) {
 		return true
 	}
 
-	if a.floatingEqual(e, g) {
+	if c.floatingEqual(e, g) {
 		return true
 	}
 
 	return false
 }
 
-func (a A) contains(v, c interface{}) (found, ok bool) {
+func (c *C) contains(v, i interface{}) (found, ok bool) {
 	ok = true
 
 	vv := reflect.ValueOf(v)
-	cv := reflect.ValueOf(c)
+	iv := reflect.ValueOf(i)
 	defer func() {
 		if e := recover(); e != nil {
 			ok = false
@@ -181,31 +153,31 @@ func (a A) contains(v, c interface{}) (found, ok bool) {
 	}()
 
 	if reflect.TypeOf(v).Kind() == reflect.String {
-		found = strings.Contains(vv.String(), cv.String())
+		found = strings.Contains(vv.String(), iv.String())
 		return
 	}
 
-	if reflect.TypeOf(c).Kind() == reflect.Slice {
+	if reflect.TypeOf(i).Kind() == reflect.Slice {
 		at := 0
 
-		for i := 0; i < vv.Len(); i++ {
-			if at == cv.Len() {
+		for j := 0; j < vv.Len(); j++ {
+			if at == iv.Len() {
 				break
 			}
 
-			if a.equal(vv.Index(i).Interface(), cv.Index(at).Interface()) {
+			if c.equal(vv.Index(j).Interface(), iv.Index(at).Interface()) {
 				at++
 			} else {
 				at = 0
 			}
 		}
 
-		found = at == cv.Len()
+		found = at == iv.Len()
 		return
 	}
 
-	for i := 0; i < vv.Len(); i++ {
-		if a.equal(vv.Index(i).Interface(), c) {
+	for j := 0; j < vv.Len(); j++ {
+		if c.equal(vv.Index(j).Interface(), i) {
 			found = true
 			return
 		}
@@ -214,47 +186,47 @@ func (a A) contains(v, c interface{}) (found, ok bool) {
 	return
 }
 
-func (a A) fail(msg ...interface{}) {
-	a.Errorf("\r%s\r\t%s: %s",
-		a.clearInternalCaller(),
-		a.callerInfo(),
-		a.format(msg...))
+func (c *C) fail(msg ...interface{}) {
+	c.Errorf("%s\t%s: %s",
+		stack.ClearTestCaller(),
+		callerInfo(),
+		format(msg...))
 }
 
 // True checks that the given bool is true. Returns the value of the bool.
-func (a A) True(cond bool, msg ...interface{}) bool {
+func (c *C) True(cond bool, msg ...interface{}) bool {
 	if !cond {
-		a.fail("%s\n"+
+		c.fail("%s\n"+
 			"Bool check failed: expected true",
-			a.format(msg...))
+			format(msg...))
 	}
 
 	return cond
 }
 
 // MustTrue is like True, except it panics on failure.
-func (a A) MustTrue(cond bool, msg ...interface{}) {
-	if !a.True(cond, msg...) {
-		a.FailNow()
+func (c *C) MustTrue(cond bool, msg ...interface{}) {
+	if !c.True(cond, msg...) {
+		c.FailNow()
 	}
 }
 
 // False checks that the given bool is false. Returns the value opposite value
 // of the bool.
-func (a A) False(cond bool, msg ...interface{}) bool {
+func (c *C) False(cond bool, msg ...interface{}) bool {
 	if cond {
-		a.fail("%s\n"+
+		c.fail("%s\n"+
 			"Bool check failed: expected false",
-			a.format(msg...))
+			format(msg...))
 	}
 
 	return !cond
 }
 
 // MustFalse is like False, except it panics on failure.
-func (a A) MustFalse(cond bool, msg ...interface{}) {
-	if !a.False(cond, msg...) {
-		a.FailNow()
+func (c *C) MustFalse(cond bool, msg ...interface{}) {
+	if !c.False(cond, msg...) {
+		c.FailNow()
 	}
 }
 
@@ -268,12 +240,12 @@ func (a A) MustFalse(cond bool, msg ...interface{}) {
 // If `e` is nil, `g` will be checked for nil, and if it's an interface, its
 // value will be checked for nil. Keep in mind that, for interfaces, this is
 // _not_ a strict `g == nil` comparison.
-func (a A) Equal(e, g interface{}, msg ...interface{}) bool {
-	if !a.equal(e, g) {
-		a.fail("%s\n"+
+func (c *C) Equal(e, g interface{}, msg ...interface{}) bool {
+	if !c.equal(e, g) {
+		c.fail("%s\n"+
 			"Expected: %+v\n"+
 			"       == %+v",
-			a.format(msg...),
+			format(msg...),
 			e,
 			g)
 		return false
@@ -283,9 +255,9 @@ func (a A) Equal(e, g interface{}, msg ...interface{}) bool {
 }
 
 // MustEqual is like Equal, except it panics on failure.
-func (a A) MustEqual(e, g interface{}, msg ...interface{}) {
-	if !a.Equal(e, g, msg...) {
-		a.FailNow()
+func (c *C) MustEqual(e, g interface{}, msg ...interface{}) {
+	if !c.Equal(e, g, msg...) {
+		c.FailNow()
 	}
 }
 
@@ -294,12 +266,12 @@ func (a A) MustEqual(e, g interface{}, msg ...interface{}) {
 //
 // NotEqual takes special care of floating point numbers, ensuring that any
 // precision loss doesn't affect their equality.
-func (a A) NotEqual(e, g interface{}, msg ...interface{}) bool {
-	if a.equal(e, g) {
-		a.fail("%s\n"+
+func (c *C) NotEqual(e, g interface{}, msg ...interface{}) bool {
+	if c.equal(e, g) {
+		c.fail("%s\n"+
 			"Expected %+v\n"+
 			"      != %+v",
-			a.format(msg...),
+			format(msg...),
 			e,
 			g)
 		return false
@@ -309,80 +281,80 @@ func (a A) NotEqual(e, g interface{}, msg ...interface{}) bool {
 }
 
 // MustNotEqual is like NotEqual, except it panics on failure.
-func (a A) MustNotEqual(e, g interface{}, msg ...interface{}) {
-	if !a.NotEqual(e, g, msg...) {
-		a.FailNow()
+func (c *C) MustNotEqual(e, g interface{}, msg ...interface{}) {
+	if !c.NotEqual(e, g, msg...) {
+		c.FailNow()
 	}
 }
 
 // Len checks that the length of the given v is l. Returns true if equal,
 // false otherwise.
-func (a A) Len(v, l interface{}, msg ...interface{}) (eq bool) {
+func (c *C) Len(v, l interface{}, msg ...interface{}) (eq bool) {
 	defer func() {
 		if e := recover(); e != nil {
 			eq = false
-			a.fail("%s\n"+
+			c.fail("%s\n"+
 				"%+v is not iterable, cannot check length",
-				a.format(msg...),
+				format(msg...),
 				v)
 		}
 	}()
 
 	vv := reflect.ValueOf(v)
-	eq = a.Equal(l, vv.Len(), msg...)
+	eq = c.Equal(l, vv.Len(), msg...)
 	return
 }
 
 // MustLen is like Len, except it panics on failure.
-func (a A) MustLen(v, l interface{}, msg ...interface{}) {
-	if !a.Len(v, l, msg...) {
-		a.FailNow()
+func (c *C) MustLen(v, l interface{}, msg ...interface{}) {
+	if !c.Len(v, l, msg...) {
+		c.FailNow()
 	}
 }
 
 // LenNot checks that the length of the given v is not l. Returns true if not
 // equal, false otherwise.
-func (a A) LenNot(v, l interface{}, msg ...interface{}) (eq bool) {
+func (c *C) LenNot(v, l interface{}, msg ...interface{}) (eq bool) {
 	defer func() {
 		if e := recover(); e != nil {
 			eq = false
-			a.fail("%s\n"+
+			c.fail("%s\n"+
 				"%+v is not iterable, cannot check length",
-				a.format(msg...),
+				format(msg...),
 				v)
 		}
 	}()
 
 	vv := reflect.ValueOf(v)
-	eq = a.NotEqual(vv.Len(), l, msg...)
+	eq = c.NotEqual(vv.Len(), l, msg...)
 	return
 }
 
 // MustLenNot is like LenNot, except it panics on failure.
-func (a A) MustLenNot(v, l interface{}, msg ...interface{}) {
-	if !a.LenNot(v, l, msg...) {
-		a.FailNow()
+func (c *C) MustLenNot(v, l interface{}, msg ...interface{}) {
+	if !c.LenNot(v, l, msg...) {
+		c.FailNow()
 	}
 }
 
-// Contains checks that v contains c. Returns true if it does, false otherwise.
-func (a A) Contains(v, c interface{}, msg ...interface{}) bool {
-	found, ok := a.contains(v, c)
+// Contains checks that v contains i. Returns true if it does, false otherwise.
+func (c *C) Contains(v, i interface{}, msg ...interface{}) bool {
+	found, ok := c.contains(v, i)
 
 	if !ok {
-		a.fail("%s\n"+
+		c.fail("%s\n"+
 			"%+v is not iterable; contain check failed",
-			a.format(msg...),
+			format(msg...),
 			v)
 		return false
 	}
 
 	if !found {
-		a.fail("%s\n"+
+		c.fail("%s\n"+
 			"%+v does not contain %+v",
-			a.format(msg...),
+			format(msg...),
 			v,
-			c)
+			i)
 		return false
 	}
 
@@ -390,31 +362,31 @@ func (a A) Contains(v, c interface{}, msg ...interface{}) bool {
 }
 
 // MustContain is like Contains, except it panics on failure.
-func (a A) MustContain(v, c interface{}, msg ...interface{}) {
-	if !a.Contains(v, c, msg...) {
-		a.FailNow()
+func (c *C) MustContain(v, i interface{}, msg ...interface{}) {
+	if !c.Contains(v, i, msg...) {
+		c.FailNow()
 	}
 }
 
 // NotContains checks that v does not contain c. Returns true if it does,
 // false otherwise.
-func (a A) NotContains(v, c interface{}, msg ...interface{}) bool {
-	found, ok := a.contains(v, c)
+func (c *C) NotContains(v, i interface{}, msg ...interface{}) bool {
+	found, ok := c.contains(v, i)
 
 	if !ok {
-		a.fail("%s\n"+
+		c.fail("%s\n"+
 			"%+v is not iterable; contain check failed",
-			a.format(msg...),
+			format(msg...),
 			v)
 		return false
 	}
 
 	if found {
-		a.fail("%s\n"+
+		c.fail("%s\n"+
 			"%+v contains %+v",
-			a.format(msg...),
+			format(msg...),
 			v,
-			c)
+			i)
 		return false
 	}
 
@@ -422,23 +394,23 @@ func (a A) NotContains(v, c interface{}, msg ...interface{}) bool {
 }
 
 // MustNotContain is like NotContains, except it panics on failure.
-func (a A) MustNotContain(v, c interface{}, msg ...interface{}) {
-	if !a.NotContains(v, c, msg...) {
-		a.FailNow()
+func (c *C) MustNotContain(v, i interface{}, msg ...interface{}) {
+	if !c.NotContains(v, i, msg...) {
+		c.FailNow()
 	}
 }
 
 // Is ensures that g is the same type as e. Returns true if they are the same
 // type, false otherwise.
-func (a A) Is(e, g interface{}, msg ...interface{}) bool {
+func (c *C) Is(e, g interface{}, msg ...interface{}) bool {
 	te := reflect.TypeOf(e)
 	tg := reflect.TypeOf(g)
 
-	if !a.equal(te, tg) {
-		a.fail("%s\n"+
+	if !c.equal(te, tg) {
+		c.fail("%s\n"+
 			"Expected type: %s.%s\n"+
 			"            == %s.%s",
-			a.format(msg...),
+			format(msg...),
 			te.PkgPath(), te.Name(),
 			tg.PkgPath(), tg.Name())
 		return false
@@ -448,23 +420,23 @@ func (a A) Is(e, g interface{}, msg ...interface{}) bool {
 }
 
 // MustBe is like Is, except it panics on failure.
-func (a A) MustBe(e, g interface{}, msg ...interface{}) {
-	if !a.Is(e, g, msg...) {
-		a.FailNow()
+func (c *C) MustBe(e, g interface{}, msg ...interface{}) {
+	if !c.Is(e, g, msg...) {
+		c.FailNow()
 	}
 }
 
 // IsNot ensures that g is not the same type as e. Returns true if they are
 // not the same type, false otherwise.
-func (a A) IsNot(e, g interface{}, msg ...interface{}) bool {
+func (c *C) IsNot(e, g interface{}, msg ...interface{}) bool {
 	te := reflect.TypeOf(e)
 	tg := reflect.TypeOf(g)
 
-	if a.equal(te, tg) {
-		a.fail("%s\n"+
+	if c.equal(te, tg) {
+		c.fail("%s\n"+
 			"Expected type: %s.%s\n"+
 			"            != %s.%s",
-			a.format(msg...),
+			format(msg...),
 			te.PkgPath(), te.Name(),
 			tg.PkgPath(), tg.Name())
 		return false
@@ -474,19 +446,19 @@ func (a A) IsNot(e, g interface{}, msg ...interface{}) bool {
 }
 
 // MustNotBe is like IsNot, except it panics on failure.
-func (a A) MustNotBe(e, g interface{}, msg ...interface{}) {
-	if !a.IsNot(e, g, msg...) {
-		a.FailNow()
+func (c *C) MustNotBe(e, g interface{}, msg ...interface{}) {
+	if !c.IsNot(e, g, msg...) {
+		c.FailNow()
 	}
 }
 
 // Error ensures that an error is not nil. Returns true if an error was
 // received, false otherwise.
-func (a A) Error(err error, msg ...interface{}) bool {
+func (c *C) Error(err error, msg ...interface{}) bool {
 	if err == nil {
-		a.fail("%s\n"+
+		c.fail("%s\n"+
 			"Expected an error, got nil",
-			a.format(msg...))
+			format(msg...))
 		return false
 	}
 
@@ -494,19 +466,19 @@ func (a A) Error(err error, msg ...interface{}) bool {
 }
 
 // MustError is like Error, except it panics on failure.
-func (a A) MustError(err error, msg ...interface{}) {
-	if !a.Error(err, msg...) {
-		a.FailNow()
+func (c *C) MustError(err error, msg ...interface{}) {
+	if !c.Error(err, msg...) {
+		c.FailNow()
 	}
 }
 
 // NotError ensures that an error is nil. Returns true if no error was found,
 // false otherwise.
-func (a A) NotError(err error, msg ...interface{}) bool {
+func (c *C) NotError(err error, msg ...interface{}) bool {
 	if err != nil {
-		a.fail("%s\n"+
+		c.fail("%s\n"+
 			"Expected no error, got: %s",
-			a.format(msg...),
+			format(msg...),
 			err)
 		return false
 	}
@@ -515,19 +487,19 @@ func (a A) NotError(err error, msg ...interface{}) bool {
 }
 
 // MustNotError is like NotError, except it panics on failure.
-func (a A) MustNotError(err error, msg ...interface{}) {
-	if !a.NotError(err, msg...) {
-		a.FailNow()
+func (c *C) MustNotError(err error, msg ...interface{}) {
+	if !c.NotError(err, msg...) {
+		c.FailNow()
 	}
 }
 
 // Panic ensures that the given function panics
-func (a A) Panic(fn func(), msg ...interface{}) (ok bool) {
+func (c *C) Panic(fn func(), msg ...interface{}) (ok bool) {
 	defer func() {
 		if r := recover(); r == nil {
-			a.fail("%s\n"+
+			c.fail("%s\n"+
 				"Expected fn to panic; it did not.",
-				a.format(msg...))
+				format(msg...))
 		} else {
 			ok = true
 		}
@@ -538,19 +510,19 @@ func (a A) Panic(fn func(), msg ...interface{}) (ok bool) {
 }
 
 // MustPanic is like Panic, except it panics on failure.
-func (a A) MustPanic(fn func(), msg ...interface{}) {
-	if !a.Panic(fn, msg...) {
-		a.FailNow()
+func (c *C) MustPanic(fn func(), msg ...interface{}) {
+	if !c.Panic(fn, msg...) {
+		c.FailNow()
 	}
 }
 
 // NotPanic ensures that the given function does not panic
-func (a A) NotPanic(fn func(), msg ...interface{}) (ok bool) {
+func (c *C) NotPanic(fn func(), msg ...interface{}) (ok bool) {
 	defer func() {
 		if r := recover(); r != nil {
-			a.fail("%s\n"+
+			c.fail("%s\n"+
 				"Expected fn not to panic; got panic with: %+v",
-				a.format(msg...),
+				format(msg...),
 				r)
 		} else {
 			ok = true
@@ -562,15 +534,15 @@ func (a A) NotPanic(fn func(), msg ...interface{}) (ok bool) {
 }
 
 // MustNotPanic is like NotPanic, except it panics on failure.
-func (a A) MustNotPanic(fn func(), msg ...interface{}) {
-	if !a.NotPanic(fn, msg...) {
-		a.FailNow()
+func (c *C) MustNotPanic(fn func(), msg ...interface{}) {
+	if !c.NotPanic(fn, msg...) {
+		c.FailNow()
 	}
 }
 
 // Until polls for the given function for the given amount of time. If in that
 // time the function did not return true, the test fails immediately.
-func (a A) Until(wait time.Duration, fn func() bool, msg ...interface{}) {
+func (c *C) Until(wait time.Duration, fn func() bool, msg ...interface{}) {
 	sleep := wait / 1000
 	for i := 0; i < 1000; i++ {
 		if fn() {
@@ -580,35 +552,8 @@ func (a A) Until(wait time.Duration, fn func() bool, msg ...interface{}) {
 		time.Sleep(sleep)
 	}
 
-	a.fail("%s\n"+
+	c.fail("%s\n"+
 		"Waiting for condition failed",
-		a.format(msg...))
-	a.FailNow()
-}
-
-// B provides access to the underlying *testing.B. If A was not instantiated
-// with a *testing.B, this panics.
-func (a A) B() *testing.B {
-	return a.TB.(*testing.B)
-}
-
-// T provides access to the underlying *testing.T. If A was not instantiated
-// with a *testing.T, this panics.
-func (a A) T() *testing.T {
-	return a.TB.(*testing.T)
-}
-
-func GetTestName() string {
-	for i := 0; ; i++ {
-		pc, _, _, ok := runtime.Caller(i)
-		if !ok {
-			panic("failed to find caller info")
-		}
-
-		fn := runtime.FuncForPC(pc)
-		name := fn.Name()
-		if strings.Contains(name, ".Test") || strings.Contains(name, ".Benchmark") {
-			return name[strings.LastIndex(name, ".")+1:]
-		}
-	}
+		format(msg...))
+	c.FailNow()
 }

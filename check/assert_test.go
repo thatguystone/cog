@@ -1,4 +1,4 @@
-package assert
+package check
 
 import (
 	"errors"
@@ -6,24 +6,35 @@ import (
 	"time"
 )
 
-func TestT(t *testing.T) {
-	a := A{t}
+func TestFormat(t *testing.T) {
+	c := New(t)
 
-	a.T()
+	c.Equal("", format())
+	c.Equal("test", format("test"))
+	c.Equal("test 1", format("test %d", 1))
+}
+
+func TestCallerInfo(t *testing.T) {
+	c := New(t)
+
+	c.Contains(callerInfo(), "assert_test.go")
+	func() {
+		c.Contains(callerInfo(), "assert_test.go")
+	}()
 }
 
 func TestBool(t *testing.T) {
-	a := A{t}
+	c := New(t)
 
-	a.True(true, "expect true")
-	a.MustTrue(true, "expect true")
+	c.True(true, "expect true")
+	c.MustTrue(true, "expect true")
 
-	a.False(false, "expect false")
-	a.MustFalse(false, "expect false")
+	c.False(false, "expect false")
+	c.MustFalse(false, "expect false")
 }
 
 func TestEqual(t *testing.T) {
-	a := A{t}
+	c := New(t)
 
 	type table struct {
 		e  interface{}
@@ -67,6 +78,16 @@ func TestEqual(t *testing.T) {
 			g:  nil,
 			ok: false,
 		},
+		table{
+			e:  nil,
+			g:  nil,
+			ok: true,
+		},
+		table{
+			e:  nil,
+			g:  1,
+			ok: false,
+		},
 	}
 
 	f := 0.1
@@ -88,39 +109,39 @@ func TestEqual(t *testing.T) {
 	})
 
 	for _, test := range tests {
-		if a.equal(test.e, test.g) != test.ok {
+		if c.equal(test.e, test.g) != test.ok {
 			eq := "=="
 			if !test.ok {
 				eq = "!="
 			}
 
-			t.Errorf("expected %#v %s %#v", test.e, eq, test.g)
+			c.Errorf("expected %#v %s %#v", test.e, eq, test.g)
 		}
 	}
 
-	a.Equal(1, 1, "expect equal")
-	a.MustEqual(1, 1, "expect equal")
+	c.Equal(1, 1, "expect equal")
+	c.MustEqual(1, 1, "expect equal")
 
-	a.NotEqual(1, 2, "expect not equal")
-	a.MustNotEqual(1, 2, "expect not equal")
+	c.NotEqual(1, 2, "expect not equal")
+	c.MustNotEqual(1, 2, "expect not equal")
 
 	// Interface ints vs untyped ints don't compare nicely
 	v := uint64(1)
-	a.MustEqual(1, v, "expect equal")
+	c.MustEqual(1, v, "expect equal")
 }
 
 func TestLen(t *testing.T) {
-	a := A{t}
+	c := New(t)
 
-	a.Len([]int{1, 2}, 2, "expect length")
-	a.MustLen([]int{1, 2}, 2, "expect length")
+	c.Len([]int{1, 2}, 2, "expect length")
+	c.MustLen([]int{1, 2}, 2, "expect length")
 
-	a.LenNot([]int{1, 2}, 1, "expect no length")
-	a.MustLenNot([]int{1, 2}, 1, "expect no length")
+	c.LenNot([]int{1, 2}, 1, "expect no length")
+	c.MustLenNot([]int{1, 2}, 1, "expect no length")
 }
 
 func TestContains(t *testing.T) {
-	a := A{t}
+	c := New(t)
 
 	type table struct {
 		c     interface{}
@@ -189,7 +210,7 @@ func TestContains(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		found, ok := a.contains(test.c, test.v)
+		found, ok := c.contains(test.c, test.v)
 
 		if ok != test.ok {
 			negate := ""
@@ -197,92 +218,86 @@ func TestContains(t *testing.T) {
 				negate = "not "
 			}
 
-			t.Errorf("expected %#v to %sbe iterable", test.c, negate)
+			c.Errorf("expected %#v to %sbe iterable", test.c, negate)
 		} else if found != test.found {
 			in := "in"
 			if !test.found {
 				in = "not in"
 			}
 
-			t.Errorf("expected %#v %s %#v", test.c, in, test.v)
+			c.Errorf("expected %#v %s %#v", test.c, in, test.v)
 		}
 	}
 
-	a.Contains("test", "es", "expect to contain")
-	a.Contains([]int{1, 2}, 1, "expect to contain")
-	a.MustContain("test", "es", "expect to contain")
+	c.Contains("test", "es", "expect to contain")
+	c.Contains([]int{1, 2}, 1, "expect to contain")
+	c.MustContain("test", "es", "expect to contain")
 
-	a.NotContains("hi", "es", "expect to contain")
-	a.NotContains([]int{1, 2}, 3, "expect to contain")
-	a.MustNotContain("hi", "es", "expect to contain")
+	c.NotContains("hi", "es", "expect to contain")
+	c.NotContains([]int{1, 2}, 3, "expect to contain")
+	c.MustNotContain("hi", "es", "expect to contain")
 }
 
 func TestIs(t *testing.T) {
-	a := A{t}
+	c := New(t)
 
-	a.Is(1, 2, "expect same types")
-	a.MustBe(1, 2, "expect same types")
+	c.Is(1, 2, "expect same types")
+	c.MustBe(1, 2, "expect same types")
 
-	a.IsNot(1, a, "expect different types")
-	a.IsNot(1, 2.0, "expect different types")
-	a.MustNotBe(1, a, "expect different types")
+	c.IsNot(1, c, "expect different types")
+	c.IsNot(1, 2.0, "expect different types")
+	c.MustNotBe(1, c, "expect different types")
 }
 
 func TestError(t *testing.T) {
-	a := A{t}
+	c := New(t)
 
-	a.Error(errors.New("test"), "expect to get error")
-	a.MustError(errors.New("test"), "expect to get error")
+	c.Error(errors.New("test"), "expect to get error")
+	c.MustError(errors.New("test"), "expect to get error")
 
-	a.NotError(nil, "expect no error")
-	a.MustNotError(nil, "expect no error")
+	c.NotError(nil, "expect no error")
+	c.MustNotError(nil, "expect no error")
 }
 
 func TestPanic(t *testing.T) {
-	a := A{t}
+	c := New(t)
 
 	panics := func() {
 		panic("oh noez!")
 	}
 
-	a.Panic(panics, "expect panic")
-	a.MustPanic(panics, "expect panic")
+	c.Panic(panics, "expect panic")
+	c.MustPanic(panics, "expect panic")
 
-	a.NotPanic(func() {}, "expect no panic")
-	a.MustNotPanic(func() {}, "expect no panic")
+	c.NotPanic(func() {}, "expect no panic")
+	c.MustNotPanic(func() {}, "expect no panic")
 }
 
 func TestUntil(t *testing.T) {
-	a := A{t}
+	c := New(t)
 
 	i := 0
-	a.Until(time.Second, func() bool { i++; return i > 10 }, "failed")
+	c.Until(time.Second, func() bool { i++; return i > 10 }, "failed")
 }
 
 func TestGetTestName(t *testing.T) {
-	a := A{t}
-	a.Equal("TestGetTestName", GetTestName())
+	c := New(t)
+	c.Equal("TestGetTestName", GetTestName())
 }
 
 func ExampleA() {
-	a := A{&testing.T{}}
-
-	// Or, if `go vet` is complaining:
-	a = From(&testing.T{})
+	c := New(nil)
 
 	// These are just a few of the provided functions. Check out the full
 	// documentation for everything.
 
-	a.Equal(1, 1, "the universe is falling apart")
-	a.NotEqual(1, 2, "those can't be equal!")
+	c.Equal(1, 1, "the universe is falling apart")
+	c.NotEqual(1, 2, "those can't be equal!")
 
 	panics := func() {
 		panic("i get nervous sometimes")
 	}
-	a.Panic(panics, "this should always panic")
-
-	// Get the original *testing.T
-	a.T()
+	c.Panic(panics, "this should always panic")
 
 	// Output:
 }
