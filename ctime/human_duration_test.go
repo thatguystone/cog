@@ -1,4 +1,4 @@
-package cog
+package ctime
 
 import (
 	"encoding/json"

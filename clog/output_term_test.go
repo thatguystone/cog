@@ -12,7 +12,7 @@ func TestOutputTermCoverage(t *testing.T) {
 	o, err := newTermOutput(ConfigOutputArgs{})
 	c.MustNotError(err)
 
-	o.Write([]byte("test"))
+	o.Write([]byte(""))
 	o.Reopen()
 	_ = o.String()
 }

@@ -2,6 +2,7 @@ package cfs
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -20,30 +21,41 @@ func TestFindDirInParents(t *testing.T) {
 	}
 }
 
+func TestFileExists(t *testing.T) {
+	t.Parallel()
+
+	fs, err := filepath.Glob("*")
+	if len(fs) == 0 || err != nil {
+		t.Errorf("could not find files: len=%d, err=%v", len(fs), err)
+	}
+
+	ex, err := FileExists(fs[0])
+	if !ex || err != nil {
+		t.Errorf("%s should exist: ex=%t, err=%v", fs[0], ex, err)
+	}
+
+	ex, err = FileExists("/i/dont/exist")
+	if ex || err != nil {
+		t.Errorf("should not exist: ex=%t, err=%v", ex, err)
+	}
+}
+
 func TestDirExists(t *testing.T) {
 	t.Parallel()
 
 	dir, err := os.Getwd()
 	if err != nil {
-		panic(err)
+		t.Fatalf("could not get cwd: %v", err)
 	}
 
 	ex, err := DirExists(dir)
-	if err != nil {
-		panic(err)
+	if !ex || err != nil {
+		t.Errorf("%s should exist: ex=%t err=%v", dir, ex, err)
 	}
 
-	if !ex {
-		t.Fail()
-	}
-
-	ex, err = DirExists("/i/dont/exist")
-	if err != nil {
-		panic(err)
-	}
-
-	if ex {
-		t.Fail()
+	ex, err = DirExists("/i/dont/exist/")
+	if ex || err != nil {
+		t.Errorf("%s should not exist: ex=%t err=%v", dir, ex, err)
 	}
 }
 
@@ -52,7 +64,7 @@ func TestTempFile(t *testing.T) {
 
 	f, err := TempFile("tmp-", ".aac")
 	if err != nil {
-		panic(err)
+		t.Fatalf("failed to create TempFile: %v", err)
 	}
 
 	defer func() {
@@ -61,10 +73,10 @@ func TestTempFile(t *testing.T) {
 	}()
 
 	if !strings.Contains(f.Name(), "tmp-") {
-		t.Fail()
+		t.Errorf("%s doesn't contain %s", f.Name(), "tmp-")
 	}
 
 	if !strings.Contains(f.Name(), ".aac") {
-		t.Fail()
+		t.Errorf("%s doesn't contain %s", f.Name(), ".aac")
 	}
 }

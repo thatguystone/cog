@@ -1,3 +1,4 @@
+// Package stack provides some utilities for dealing with the call stack.
 package stack
 
 import (

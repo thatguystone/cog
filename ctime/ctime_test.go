@@ -1,7 +1,6 @@
-package cog
+package ctime
 
 import (
-	"runtime"
 	"testing"
 	"time"
 
@@ -26,7 +25,7 @@ func TestUntilPeriod(t *testing.T) {
 		in, err := time.ParseDuration(test)
 		c.MustNotError(err, "error at %d", i)
 
-		res := untilPeriod(when, in)
+		res := UntilPeriod(when, in)
 		at := when.Add(res)
 		remain := at.UnixNano() % int64(in)
 
@@ -35,30 +34,5 @@ func TestUntilPeriod(t *testing.T) {
 			i,
 			at,
 			at.UnixNano())
-	}
-}
-
-func TestCronTicker(t *testing.T) {
-	check.New(t)
-
-	ticker := NewCronTicker(5 * time.Microsecond)
-	defer ticker.Stop()
-
-	for i := 0; i < 3; i++ {
-		<-ticker.C
-	}
-}
-
-func TestCronTickerGC(t *testing.T) {
-	check.New(t)
-
-	gcCh := NewCronTicker(5 * time.Microsecond).exitCh
-
-	runtime.GC()
-
-	select {
-	case <-gcCh:
-	case <-time.After(time.Second):
-		t.Fatal("unused ticker not GC'd")
 	}
 }

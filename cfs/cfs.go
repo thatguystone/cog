@@ -1,3 +1,4 @@
+// Package cfs implements some extra filesystem utilities
 package cfs
 
 import (
@@ -35,20 +36,31 @@ func FindDirInParents(dir string) (path string, err error) {
 	return
 }
 
-// DirExists checks if a directory exists, taking care of all of the wonkiness
-// from os.Stat().
-func DirExists(path string) (bool, error) {
+func exists(path string) (exists, dir bool, err error) {
 	s, err := os.Stat(path)
 
 	if err == nil {
-		return s.IsDir(), nil
-	}
-
-	if os.IsNotExist(err) {
+		exists = true
+		dir = s.IsDir()
+	} else if os.IsNotExist(err) {
 		err = nil
 	}
 
-	return false, err
+	return
+}
+
+// FileExists checks if a file exists, taking care of all of the wonkiness
+// from os.Stat().
+func FileExists(path string) (bool, error) {
+	exists, dir, err := exists(path)
+	return exists && !dir, err
+}
+
+// DirExists checks if a directory exists, taking care of all of the wonkiness
+// from os.Stat().
+func DirExists(path string) (bool, error) {
+	exists, dir, err := exists(path)
+	return exists && dir, err
 }
 
 // TempFile creates a new temporary file in /tmp/ (or equivalent) with the given

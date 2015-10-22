@@ -1,4 +1,4 @@
-package cog
+package ctime
 
 import (
 	"runtime"
@@ -13,10 +13,6 @@ import (
 type CronTicker struct {
 	C      <-chan time.Time
 	exitCh chan struct{}
-}
-
-func untilPeriod(t time.Time, d time.Duration) time.Duration {
-	return d - time.Duration(t.UnixNano()%int64(d))
 }
 
 // NewCronTicker creates a new ticker that fires on the given interval
@@ -55,7 +51,7 @@ func runCronTicker(
 	defer timer.Stop()
 
 	for {
-		timer.Reset(untilPeriod(time.Now(), d))
+		timer.Reset(UntilPeriod(time.Now(), d))
 
 		select {
 		case t := <-timer.C:

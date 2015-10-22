@@ -1,3 +1,5 @@
+// Package clog implements a python-like, module-based logger with a variety of
+// backends and formats.
 package clog
 
 import (
