@@ -33,12 +33,13 @@ func (es *Errors) Prefix(prefix string) *Errors {
 	}
 }
 
-// Add adds an error to the collector. It's safe to call this when err == nil.
+// Add adds an error to the collector. It's safe to call this when err==nil.
 func (es *Errors) Add(err error) {
 	es.Addf(err, "")
 }
 
-// Addf is like Add, but prefix the error with the given format and args.
+// Addf is like Add, but prefixes the error with the given format and args. If
+// err==nil, this does nothing.
 func (es *Errors) Addf(err error, format string, args ...interface{}) {
 	if err != nil {
 		es.init()
