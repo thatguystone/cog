@@ -6,15 +6,15 @@ import (
 	"testing"
 )
 
-func TestFindDir(t *testing.T) {
+func TestFindDirInParents(t *testing.T) {
 	t.Parallel()
 
-	_, err := FindDir("idontexist")
+	_, err := FindDirInParents("idontexist")
 	if err == nil {
 		t.Fail()
 	}
 
-	_, err = FindDir("cog")
+	_, err = FindDirInParents("cog")
 	if err != nil {
 		t.Fail()
 	}

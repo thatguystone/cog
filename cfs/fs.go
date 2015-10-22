@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 )
 
-// FindDir climbs the directory tree, from the current directory to the root,
-// looking for a directory with the given name. If found, its absolute path is
-// returned.
-func FindDir(dir string) (path string, err error) {
+// FindDirInParents climbs the directory tree, from the current directory to the
+// root, looking for a directory with the given name at each level. If found,
+// its absolute path is returned.
+func FindDirInParents(dir string) (path string, err error) {
 	path, err = os.Getwd()
 
 	if err == nil {

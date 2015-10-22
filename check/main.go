@@ -35,7 +35,7 @@ func Main(m *testing.M) {
 // Setup does basic pre-test checks to ensure the environment is ready to run.
 // (It's just simple stuff, like make sure DataDir exists, and etc).
 func Setup() {
-	_, err := cfs.FindDir(DataDir)
+	_, err := cfs.FindDirInParents(DataDir)
 	if err != nil {
 		err = os.Mkdir(DataDir, 0750)
 	}
@@ -47,7 +47,7 @@ func Setup() {
 
 // Cleanup removes any and all testing state
 func Cleanup() {
-	path, err := cfs.FindDir(DataDir)
+	path, err := cfs.FindDirInParents(DataDir)
 	if err == nil {
 		os.RemoveAll(path)
 	}

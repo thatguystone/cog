@@ -75,7 +75,7 @@ func (fs *FS) GetDataDir() string {
 	}
 
 	fs.dataDirOnce.Do(func() {
-		path, err := cfs.FindDir(DataDir)
+		path, err := cfs.FindDirInParents(DataDir)
 		fs.c.MustNotError(err)
 
 		fs.dataDir = filepath.Join(path, GetTestName())

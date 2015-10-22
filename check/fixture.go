@@ -24,7 +24,7 @@ var (
 // is not found, this panics.
 func Fixture(parts ...string) string {
 	fixtureOnce.Do(func() {
-		path, err := cfs.FindDir(FixtureDir)
+		path, err := cfs.FindDirInParents(FixtureDir)
 		if err != nil {
 			panic(err)
 		}
