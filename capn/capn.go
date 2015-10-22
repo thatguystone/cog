@@ -8,6 +8,8 @@ import (
 	"github.com/thatguystone/cog"
 )
 
+// TODO(astone): upgrade to github.com/zombiezen/go-capnproto2
+
 // ProtoFromBytes loads a segment from a byte slice
 func ProtoFromBytes(b []byte) *capnproto.Segment {
 	seg, _, err := capnproto.ReadFromMemoryZeroCopy(b)
