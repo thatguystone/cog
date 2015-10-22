@@ -10,21 +10,6 @@ import (
 	"github.com/thatguystone/cog/check"
 )
 
-type testCfger struct {
-	One int
-	Two int
-}
-
-func (t *testCfger) Validate(_ *Cfg, es *cog.Errors) {
-	if t.One != 1 {
-		es.Add(fmt.Errorf("`One` != 1 (==%d)", t.One))
-	}
-
-	if t.Two != 2 {
-		es.Add(fmt.Errorf("`Two` != 2 (==%d)", t.Two))
-	}
-}
-
 type testListener struct {
 	Addr string
 }
