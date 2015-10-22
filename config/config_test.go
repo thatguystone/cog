@@ -18,6 +18,10 @@ func (t *testListener) Validate(c *Cfg, es *cog.Errors) {
 	c.ResolveListen(&t.Addr, es)
 }
 
+type testNoopConfiger struct{}
+
+func (t *testNoopConfiger) Validate(c *Cfg, es *cog.Errors) {}
+
 func TestMain(m *testing.M) {
 	check.Main(m)
 }
@@ -35,17 +39,12 @@ func testEC2MetadataServer() *httptest.Server {
 func TestRegister(t *testing.T) {
 	c := check.New(t)
 
-	Register("TestRegister", func() Configer { return nil })
-	c.Panic(func() {
-		Register("TestRegister", nil)
+	Register("TestNoop", func() Configer {
+		return &testNoopConfiger{}
 	})
-}
-
-func TestNewCoverage(t *testing.T) {
-	check.New(t)
-
-	Register("TestNewCoverage", func() Configer { return nil })
-	New()
+	c.Panic(func() {
+		Register("TestNoop", nil)
+	})
 }
 
 func TestResolveListen(t *testing.T) {

@@ -126,6 +126,9 @@ func (cfg *Cfg) Validate() (err error) {
 
 // ResolveListen validates the given address and resolves any special hostnames
 // to actual addresses.
+//
+// Currently, it resolves the following:
+//     - ec2: resolves to the node's private IP address
 func (cfg *Cfg) ResolveListen(addr *string, es *cog.Errors) {
 	// Just let it fail on listen
 	if len(*addr) == 0 {
