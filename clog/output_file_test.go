@@ -28,15 +28,3 @@ func TestOutputFileNew(t *testing.T) {
 		nil)
 	c.Error(err)
 }
-
-func TestOutputFileRotate(t *testing.T) {
-	// c := check.New(t)
-
-	// l, err := newFileOutputter(
-	// 	ConfigOutputArgs{
-	// 		"format": "human",
-	// 		"path":   c.FS.Path("log"),
-	// 	},
-	// 	nil)
-	// c.MustNotError(err)
-}

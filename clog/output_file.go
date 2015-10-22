@@ -6,8 +6,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"unsafe"
-
-	"github.com/thatguystone/cog"
 )
 
 // FileOutput writes directly to a file.
@@ -24,35 +22,8 @@ type FileOutput struct {
 
 		// Path to file to write to
 		Path string
-
-		// How often the file should be rotated. This value specifies clock
-		// time, meaning that for a value of "15m", the log will be rotated on
-		// :00, :15, :30, and :45 of every hour. If "1h", it will be rotated at
-		// the start of the hour, every hour. 0 = never.
-		RotatePeriod cog.HumanDuration
-
-		// How large the file may grow, in bytes, before it's rotated. 0 =
-		// never.
-		MaxSize uint64
-
-		// The number of old log files to keep around. Defaults to 9.
-		Backups uint
-
-		// What to use to compress backup files
-		Compression FileCompression
 	}
 }
-
-// FileCompression is the compression that is applied to rotated log files
-type FileCompression int
-
-const (
-	// NoCompression does not apply any file compression
-	NoCompression FileCompression = iota
-
-	// Gzip applies gzip and suffixes rotated files with ".gz"
-	Gzip
-)
 
 func init() {
 	RegisterOutputter("JSONFile", newJSONFileOutputter)
@@ -65,8 +36,6 @@ func newFileOutputter(a ConfigOutputArgs, fmttr Formatter) (Outputter, error) {
 	o := &FileOutput{
 		Formatter: fmttr,
 	}
-
-	o.args.Backups = 9
 
 	err := a.ApplyTo(&o.args)
 
