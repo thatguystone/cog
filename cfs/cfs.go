@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // FindDirInParents climbs the directory tree, from the current directory to the
@@ -67,6 +68,10 @@ func DirExists(path string) (bool, error) {
 // prefix and, unlike ioutil.TempFile, extension.
 func TempFile(prefix, ext string) (f *os.File, err error) {
 	dir := os.TempDir()
+
+	if !strings.HasPrefix(ext, ".") {
+		ext = "." + ext
+	}
 
 	for i := 0; i < 10000; i++ {
 		name := filepath.Join(dir, fmt.Sprintf("%s%d%s",

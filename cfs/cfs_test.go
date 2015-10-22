@@ -62,7 +62,7 @@ func TestDirExists(t *testing.T) {
 func TestTempFile(t *testing.T) {
 	t.Parallel()
 
-	f, err := TempFile("tmp-", ".aac")
+	f, err := TempFile("tmp-", "aac")
 	if err != nil {
 		t.Fatalf("failed to create TempFile: %v", err)
 	}
