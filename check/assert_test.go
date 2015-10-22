@@ -284,20 +284,3 @@ func TestGetTestName(t *testing.T) {
 	c := New(t)
 	c.Equal("TestGetTestName", GetTestName())
 }
-
-func ExampleA() {
-	c := New(nil)
-
-	// These are just a few of the provided functions. Check out the full
-	// documentation for everything.
-
-	c.Equal(1, 1, "the universe is falling apart")
-	c.NotEqual(1, 2, "those can't be equal!")
-
-	panics := func() {
-		panic("i get nervous sometimes")
-	}
-	c.Panic(panics, "this should always panic")
-
-	// Output:
-}

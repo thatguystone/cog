@@ -1,4 +1,6 @@
 // Package check provides dead-simple assertions and utilities for testing.
+//
+// All tests created with check.New() run in parallel, so be warned.
 package check
 
 import (
@@ -56,7 +58,8 @@ func GetTestName() string {
 			fnName := fn.Name()
 
 			isTest := strings.Contains(fnName, ".Test") ||
-				strings.Contains(fnName, ".Benchmark")
+				strings.Contains(fnName, ".Benchmark") ||
+				strings.Contains(fnName, ".Example")
 			if isTest {
 				name = fnName[strings.LastIndex(fnName, ".")+1:]
 				break

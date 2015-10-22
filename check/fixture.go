@@ -22,6 +22,11 @@ var (
 
 // Fixture gets the path to the fixture described by `parts`. If the FixtureDir
 // is not found, this panics.
+//
+// The fixture directory is found by climbing the FS tree until a directory
+// containing the directory defined by the constant FixtureDir is found. If
+// found, the absolute path to that directory is joined with the given parts is
+// returned.
 func Fixture(parts ...string) string {
 	fixtureOnce.Do(func() {
 		path, err := cfs.FindDirInParents(FixtureDir)
