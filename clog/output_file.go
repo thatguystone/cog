@@ -4,17 +4,14 @@ import (
 	"fmt"
 	"os"
 	"sync"
-	"sync/atomic"
-	"unsafe"
 )
 
 // FileOutput writes directly to a file.
 type FileOutput struct {
 	Formatter
-	f *os.File
 
-	// For file rotation
-	mtx sync.Mutex
+	rwmtx sync.RWMutex
+	f     *os.File
 
 	args struct {
 		// Which format to use
@@ -71,25 +68,33 @@ func newJSONFileOutputter(a ConfigOutputArgs) (Outputter, error) {
 }
 
 func (o *FileOutput) Write(b []byte) error {
-	ptr := unsafe.Pointer(o.f)
-	f := (*os.File)(atomic.LoadPointer(&ptr))
-
 	b = append(b, '\n')
-	_, err := f.Write(b)
+
+	o.rwmtx.RLock()
+	defer o.rwmtx.RUnlock()
+
+	// File has an internal lock to prevent interleaving. So just need the read
+	// lock above to protect access to the FD.
+	_, err := o.f.Write(b)
 
 	return err
 }
 
 // Reopen implements Outputter.Reopen
 func (o *FileOutput) Reopen() error {
+	o.rwmtx.Lock()
+	defer o.rwmtx.Unlock()
+
 	f, err := os.OpenFile(o.args.Path,
 		os.O_RDWR|os.O_CREATE|os.O_APPEND,
 		0640)
 
 	if err == nil {
-		src := unsafe.Pointer(f)
-		dst := (*unsafe.Pointer)(unsafe.Pointer(&o.f))
-		atomic.StorePointer(dst, src)
+		if o.f != nil {
+			o.f.Close()
+		}
+
+		o.f = f
 	}
 
 	return err
