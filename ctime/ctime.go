@@ -4,10 +4,15 @@ package ctime
 import "time"
 
 // UntilPeriod calculates the amount of time until the given period boundary is
-// hit. That is, for example, if the period is "15m", and the given time is
-// 13:03, it would return "12m", meaning 12 minutes until it's "13:15". If it's
-// "30m", and the time is 13:15, it would return "15m", meaning 15 minutes until
-// "13:30".
+// hit.
+//
+// This is easiest to explain with examples:
+//
+//      5s: fires every minute at :00, :05, :10, :15, :20, and etc
+//     15m: fires every hour at :00, :15, :30, and :45
+//     30m: fires every hour at :00 and :30
+//      1h: fires every hour at :00
+//      2h: fires every 2 hours, on the hour, at 00, 02, 04, 06, 08, 10, 12, 14, 16, 18, 20, and 22
 func UntilPeriod(t time.Time, d time.Duration) time.Duration {
 	return d - time.Duration(t.UnixNano()%int64(d))
 }

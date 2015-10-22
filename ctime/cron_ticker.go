@@ -5,11 +5,8 @@ import (
 	"time"
 )
 
-// CronTicker is like a ticker, but it only ticks at specified times.
-//
-// When created with an interval of 15m, the ticker will only fire on :00, :15,
-// :30, and :45. When created with an interval of 5m, it will fire at :00, :05,
-// :10, :15, and so on.
+// CronTicker is like a ticker, but it only ticks at specified times. See the
+// documentation on UntilPeriod() for when this will fire.
 type CronTicker struct {
 	C      <-chan time.Time
 	exitCh chan struct{}

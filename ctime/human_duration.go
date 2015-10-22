@@ -6,7 +6,8 @@ import (
 )
 
 // HumanDuration wraps time.Duration to provide human-usable duration parsing
-// from JSON
+// from JSON. It parses values like "1s" to (time.Second), "10m" to
+// (10*time.Minute), and so forth.
 type HumanDuration struct {
 	time.Duration
 }

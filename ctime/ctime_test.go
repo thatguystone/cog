@@ -16,6 +16,7 @@ func TestUntilPeriod(t *testing.T) {
 		"15s",
 		"15m",
 		"1h",
+		"2h",
 		"32h",
 	}
 
