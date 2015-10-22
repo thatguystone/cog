@@ -1,29 +1,21 @@
-## Cog [![Build Status](https://travis-ci.org/thatguystone/cog.svg)](https://travis-ci.org/thatguystone/cog) [![GoDoc](https://godoc.org/github.com/thatguystone/cog?status.svg)](https://godoc.org/github.com/thatguystone/cog)
+## Cog [![Build Status](https://travis-ci.org/thatguystone/cog.svg)](https://travis-ci.org/thatguystone/cog)
 
-Cog is a collection of utilities for golang that I tend to use across many of my projects. Rather than building new cogs everywhere, I've just consolidated them all here. Cogs for everyone!
+Cog is a collection of utils for golang that I tend to use across many of my projects. Rather than building new cogs everywhere, I've just consolidated them all here. Cogs for everyone!
 
-### Check [![GoDoc](https://godoc.org/github.com/thatguystone/cog/check?status.svg)](https://godoc.org/github.com/thatguystone/cog/check)
+### Modules
 
-Check provides dead-simple assertions for golang testing.
+Cog consists of the following modules:
 
-```go
-import "github.com/thatguystone/cog/check"
+| Module | Docs | Description |
+| ------ | ---- | ----------- |
+| (root) | [![GoDoc](https://godoc.org/github.com/thatguystone/cog?status.svg)](https://godoc.org/github.com/thatguystone/cog) | generic utils that didn't fit anywhere else |
+| capn   | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/capn?status.svg)](https://godoc.org/github.com/thatguystone/cog/capn) | some stupid stuff for capnproto |
+| cfs    | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/cfs?status.svg)](https://godoc.org/github.com/thatguystone/cog/cfs) | filesystem utils |
+| check  | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/check?status.svg)](https://godoc.org/github.com/thatguystone/cog/check) | test assertions and isolated FS utils |
+| clog   | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/clog?status.svg)](https://godoc.org/github.com/thatguystone/cog/clog) | a logging framework that looks a bit like python's logging |
+| cnet   | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/cnet?status.svg)](https://godoc.org/github.com/thatguystone/cog/cnet) | misc net utils and a socket implementation using channels |
+| config | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/config?status.svg)](https://godoc.org/github.com/thatguystone/cog/config) | multi-module configuration helper |
+| ctime  | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/ctime?status.svg)](https://godoc.org/github.com/thatguystone/cog/ctime) | time utils |
+| stack  | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/stack?status.svg)](https://godoc.org/github.com/thatguystone/cog/stack) | runtime call stack utils |
 
-func TestIt(t *testing.T) {
-	c := check.New(t)
-
-	// These are just a few of the provided functions. Check out the full
-	// documentation for everything.
-
-	c.Equal(1, 1, "the universe is falling apart")
-	c.NotEqual(1, 2, "those can't be equal!")
-
-	panics := func() {
-		panic("i get nervous sometimes")
-	}
-	c.Panic(panics, "this should always panic")
-
-	// Get the original *testing.T
-	c.T()
-}
-```
+Each module contains full documentation over on godoc, including tons of examples.
