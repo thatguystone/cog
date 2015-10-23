@@ -1,5 +1,5 @@
-// Package capn implements some stupid stuff for capnproto
-package capn
+// Package capnp implements some stupid stuff for capnproto
+package capnp
 
 import (
 	"bytes"
@@ -10,16 +10,16 @@ import (
 
 // TODO(astone): upgrade to github.com/zombiezen/go-capnproto2
 
-// ProtoFromBytes loads a segment from a byte slice
-func ProtoFromBytes(b []byte) *capnproto.Segment {
+// FromBytes loads a segment from a byte slice
+func FromBytes(b []byte) *capnproto.Segment {
 	seg, _, err := capnproto.ReadFromMemoryZeroCopy(b)
 	cog.Must(err, "failed to decode proto")
 
 	return seg
 }
 
-// ProtoToBytes serializes a segment to a byte slice
-func ProtoToBytes(seg *capnproto.Segment) []byte {
+// ToBytes serializes a segment to a byte slice
+func ToBytes(seg *capnproto.Segment) []byte {
 	b := bytes.Buffer{}
 	_, err := seg.WriteTo(&b)
 	cog.Must(err, "failed to write to buffer")

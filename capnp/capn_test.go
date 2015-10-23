@@ -1,4 +1,4 @@
-package capn
+package capnp
 
 import (
 	"testing"
@@ -14,5 +14,5 @@ func TestProto(t *testing.T) {
 	seg := capnproto.NewBuffer(nil)
 	seg.NewPointerList(8)
 
-	ProtoFromBytes(ProtoToBytes(seg))
+	FromBytes(ToBytes(seg))
 }
