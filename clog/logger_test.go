@@ -46,5 +46,27 @@ func TestLoggerCoverage(t *testing.T) {
 	c.Equal(5, strings.Count(test, "one 2 three"))
 	c.Equal(5, strings.Count(test, "data."))
 	c.Equal(5, strings.Count(test, "#fun"))
+}
 
+func TestLoggerGet(t *testing.T) {
+	c := check.New(t)
+	cfg := basicTestConfig(c)
+
+	l, err := New(cfg)
+	c.MustNotError(err)
+
+	lg := l.Get(" .base. ")
+	lg.Info("first")
+
+	lg = lg.Get(" .sub. ")
+	lg.Info("second")
+
+	c.Equal(1,
+		strings.Count(
+			c.FS.SReadFile("test"),
+			`level=info module=base msg=first`))
+	c.Equal(1,
+		strings.Count(
+			c.FS.SReadFile("test"),
+			`level=info module=base.sub msg=second`))
 }

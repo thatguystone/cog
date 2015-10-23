@@ -237,3 +237,11 @@ func (lg *logger) Fatald(d Data, format string, args ...interface{}) {
 func (lg *logger) Fatalf(format string, args ...interface{}) {
 	lg.logFormat(Fatal, 1, format, args...)
 }
+
+// Get gets `sub` as a child of this logger. That is, if the current logger is
+// something like "base", and this is called sub="child", it would return a
+// logger for the module "base.child".
+func (lg *logger) Get(sub string) *Logger {
+	_, sub = modulePrefix(sub)
+	return lg.l.Get(fmt.Sprintf("%s.%s", lg.key, sub))
+}
