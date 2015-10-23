@@ -154,14 +154,14 @@
 // Instead, you would configure it directly in Config itself, as follows:
 //
 //     Config{
-//         Output: map[string]*ConfigOutput{
+//         Outputs: map[string]*ConfigOutput{
 //             "testlog": {
 //                 Which: "testlog",
 //                 Args: ConfigOutputArgs{
 //                     "log": t, // a *testing.T
-//                 }
-//             }
-//         }
+//                 },
+//             },
+//         },
 //     }
 //
 // In the above example, you pass a *testing.T as the argument; really, it will
