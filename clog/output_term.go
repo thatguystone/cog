@@ -8,6 +8,12 @@ import (
 // TermOutput writes messages to the terminal on stdout
 type TermOutput struct {
 	Formatter
+	out *os.File
+
+	args struct {
+		// If this should log to stdout instead of stderr
+		Stdout bool
+	}
 }
 
 func init() {
@@ -20,8 +26,19 @@ func newTermOutput(a ConfigOutputArgs) (o Outputter, err error) {
 
 	err = a.ApplyTo(&hf.Args)
 	if err == nil {
-		o = &TermOutput{
+		to := &TermOutput{
 			Formatter: hf,
+		}
+
+		err = a.ApplyTo(&to.args)
+		if err == nil {
+			if to.args.Stdout {
+				to.out = os.Stdout
+			} else {
+				to.out = os.Stderr
+			}
+
+			o = to
 		}
 	}
 
@@ -29,7 +46,8 @@ func newTermOutput(a ConfigOutputArgs) (o Outputter, err error) {
 }
 
 func (s *TermOutput) Write(b []byte) error {
-	_, err := os.Stderr.Write(b)
+	b = append(b, '\n')
+	_, err := s.out.Write(b)
 	return err
 }
 

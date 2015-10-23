@@ -44,7 +44,9 @@ func newFileOutputter(a ConfigOutputArgs, fmttr Formatter) (Outputter, error) {
 			fmttr = LogfmtFormat{}
 
 		case "human":
-			fmttr = HumanFormat{}
+			hf := HumanFormat{}
+			err = a.ApplyTo(&hf)
+			fmttr = hf
 
 		case "json":
 			fmttr = JSONFormat{}

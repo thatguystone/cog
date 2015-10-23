@@ -1,5 +1,3 @@
-// Package clog implements a python-like, module-based logger with a variety of
-// backends and formats.
 package clog
 
 import (
@@ -97,8 +95,44 @@ func (l *CLog) Reconfigure(cfg Config) error {
 		modules: patricia.NewTrie(),
 	}
 
-	if cfg.File != "" {
+	if cfg.Outputs == nil {
+		cfg.Outputs = map[string]*ConfigOutput{}
+	}
 
+	if cfg.Modules == nil {
+		cfg.Modules = map[string]*ConfigModule{}
+	}
+
+	if cfg.File != "" {
+		cfg.Outputs[defaultConfigFileOutputName] = &ConfigOutput{
+			Which: "jsonfile",
+			Level: Info,
+			Args: ConfigOutputArgs{
+				"path": cfg.File,
+			},
+		}
+
+		m, ok := cfg.Modules[""]
+		if !ok {
+			m = &ConfigModule{
+				Level: Info,
+			}
+			cfg.Modules[""] = m
+		}
+
+		m.Outputs = append(m.Outputs, defaultConfigFileOutputName)
+	}
+
+	if len(cfg.Modules) == 0 {
+		cfg.Outputs[defaultTermOutputName] = &ConfigOutput{
+			Which: "term",
+			Level: Info,
+		}
+
+		cfg.Modules[""] = &ConfigModule{
+			Outputs: []string{defaultTermOutputName},
+			Level:   Info,
+		}
 	}
 
 	es := cog.Errors{}
@@ -131,10 +165,6 @@ func (l *CLog) Reconfigure(cfg Config) error {
 	}
 
 	if es.Empty() {
-		if len(cfg.Modules) == 0 {
-			// cfg.Modules = default term logger
-		}
-
 		for name, mcfg := range cfg.Modules {
 			pfx, name := modulePrefix(name)
 

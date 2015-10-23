@@ -37,5 +37,5 @@ func (f HumanFormat) FormatEntry(e Entry) ([]byte, error) {
 		fmt.Fprintf(&b, " data.%s=%#v", k, v)
 	}
 
-	return b.Bytes(), nil
+	return bytes.TrimSpace(b.Bytes()), nil
 }

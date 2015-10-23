@@ -18,7 +18,7 @@ type testLog interface {
 }
 
 func init() {
-	RegisterOutputter("testLog",
+	RegisterOutputter("TestLog",
 		func(a ConfigOutputArgs) (Outputter, error) {
 			var log testLog
 

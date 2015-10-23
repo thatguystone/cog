@@ -10,6 +10,7 @@ import (
 func modulePrefix(name string) (patricia.Prefix, string) {
 	var pfx patricia.Prefix
 
+	name = strings.TrimSpace(name)
 	name = strings.Trim(name, ".")
 
 	if len(name) > 0 {

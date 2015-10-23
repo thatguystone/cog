@@ -44,3 +44,25 @@ func TestTestLogCoverage(t *testing.T) {
 	o.Reopen()
 	_ = o.String()
 }
+
+func ExampleTestLogOutput() {
+	// Typically this comes from a test function
+	t := &testing.T{}
+
+	cfg := Config{
+		Outputs: map[string]*ConfigOutput{
+			"testlog": {
+				Which: "testlog",
+				Args: ConfigOutputArgs{
+					// This output logs directly to t.Log()
+					"log": t,
+				},
+			},
+		},
+	}
+
+	_, err := New(cfg)
+	if err != nil {
+		panic(err)
+	}
+}

@@ -2,7 +2,17 @@ package clog
 
 import "encoding/json"
 
+const (
+	defaultConfigFileOutputName = "__default_config_file__"
+	defaultTermOutputName       = "__default_term__"
+)
+
 // Config specifies basic config for logging.
+//
+// The Config struct is meant to be embedded directly into some other struct
+// that you're Unmarshaling your application's config into (typically, this is a
+// struct that is being filled by json.Unmarshal, yaml.Unmarshal, etc on
+// application start).
 type Config struct {
 	// File is the simplest way of configuring this logger. It sets up a
 	// JSONFile writing to the given path, with a root logger that only accepts
@@ -15,6 +25,9 @@ type Config struct {
 
 	// Identifies all modules that you want to configure. They keys in this map
 	// identify the module to work on.
+	//
+	// If no modules are given, everything at level Info and above goes to the
+	// terminal by default.
 	Modules map[string]*ConfigModule
 }
 

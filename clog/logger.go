@@ -78,6 +78,8 @@ func (lg *logger) LogEntry(e Entry) {
 	e.Time = time.Now()
 	e.Src = stack.Caller(e.Depth)
 
+	e.Msg = strings.TrimSpace(e.Msg)
+
 	e.Module = lg.key
 	if e.Module == "" {
 		e.Module = "(root)"

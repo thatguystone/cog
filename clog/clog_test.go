@@ -296,3 +296,88 @@ func TestDontPropagate(t *testing.T) {
 			c.FS.SReadFile("test"),
 			`dont propagate`))
 }
+
+func TestExtraSpaces(t *testing.T) {
+	c := check.New(t)
+	cfg := basicTestConfig(c)
+
+	l, err := New(cfg)
+	c.MustNotError(err)
+
+	lg := l.Get(" module.spaces ")
+	lg.Info("         tons of spaces           ")
+
+	c.Log(c.FS.SReadFile("test"))
+
+	c.Equal(1,
+		strings.Count(
+			c.FS.SReadFile("test"),
+			`level=info module=module.spaces msg="tons of spaces"`))
+}
+
+func TestEmptyConfig(t *testing.T) {
+	c := check.New(t)
+	cfg := Config{}
+
+	_, err := New(cfg)
+	c.NotError(err)
+}
+
+func TestDefaultFile(t *testing.T) {
+	c := check.New(t)
+	cfg := Config{
+		File: c.FS.Path("log"),
+	}
+
+	l, err := New(cfg)
+	c.MustNotError(err)
+
+	lg := l.Get("test")
+	lg.Debugf("some %s", "log")
+	lg.Infof("some %s", "log")
+
+	c.Equal(1,
+		strings.Count(
+			c.FS.SReadFile("log"),
+			`some log`))
+}
+
+func TestDefaultFileWithOthers(t *testing.T) {
+	c := check.New(t)
+
+	cfg := basicTestConfig(c)
+	cfg.File = c.FS.Path("default_file")
+
+	l, err := New(cfg)
+	c.MustNotError(err)
+
+	lg := l.Get("test")
+	lg.Debugf("some %s", "log")
+	lg.Infof("some %s", "log")
+
+	c.Equal(1,
+		strings.Count(
+			c.FS.SReadFile("default_file"),
+			`some log`))
+	c.Equal(2,
+		strings.Count(
+			c.FS.SReadFile("test"),
+			`some log`))
+}
+
+func TestDefaultTermLogger(t *testing.T) {
+	c := check.New(t)
+
+	cfg := basicTestConfig(c)
+	cfg.Modules = nil
+
+	l, err := New(cfg)
+	c.MustNotError(err)
+
+	lg := l.Get("test")
+	lg.Debugf("some %s", "log")
+	lg.Infof("some %s", "log")
+
+	// Not really a way to test that this output right since it's going to the
+	// console
+}
