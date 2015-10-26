@@ -16,6 +16,7 @@ Cog consists of the following modules:
 | clog   | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/clog?status.svg)](https://godoc.org/github.com/thatguystone/cog/clog) | a logging framework that looks a bit like python's logging |
 | cnet   | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/cnet?status.svg)](https://godoc.org/github.com/thatguystone/cog/cnet) | misc net utils and a socket implementation using channels |
 | ctime  | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/ctime?status.svg)](https://godoc.org/github.com/thatguystone/cog/ctime) | time utils |
+| node   | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/node?status.svg)](https://godoc.org/github.com/thatguystone/cog/node) | get information about the local node |
 | stack  | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/stack?status.svg)](https://godoc.org/github.com/thatguystone/cog/stack) | runtime call stack utils |
 
 Each module contains full documentation over on godoc, including tons of examples.
