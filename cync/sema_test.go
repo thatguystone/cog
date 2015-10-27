@@ -29,6 +29,7 @@ func TestSemaphore(t *testing.T) {
 	}()
 
 	s.Lock()
+	wg.Wait()
 
 	for i := 0; i < s.count*2; i++ {
 		s.Unlock()
