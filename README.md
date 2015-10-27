@@ -11,6 +11,7 @@ Cog consists of the following modules:
 | (root) | [![GoDoc](https://godoc.org/github.com/thatguystone/cog?status.svg)](https://godoc.org/github.com/thatguystone/cog) | generic utils that didn't fit anywhere else |
 | bytec  | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/bytec?status.svg)](https://godoc.org/github.com/thatguystone/cog/bytec) | extra byte slice utils |
 | capn   | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/capn?status.svg)](https://godoc.org/github.com/thatguystone/cog/capn) | some stupid stuff for capnproto |
+| cync   | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/cync?status.svg)](https://godoc.org/github.com/thatguystone/cog/cync) | some extra sync utils |
 | cfs    | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/cfs?status.svg)](https://godoc.org/github.com/thatguystone/cog/cfs) | filesystem utils |
 | check  | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/check?status.svg)](https://godoc.org/github.com/thatguystone/cog/check) | test assertions and isolated FS utils |
 | clog   | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/clog?status.svg)](https://godoc.org/github.com/thatguystone/cog/clog) | a logging framework that looks a bit like python's logging |
