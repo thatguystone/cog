@@ -19,7 +19,7 @@ func TestHumanDuration(t *testing.T) {
 
 	err := json.Unmarshal(b, &v)
 	gt.NotError(err)
-	gt.Equal(v.A.Duration, time.Second*10)
+	gt.Equal(v.A, time.Second*10)
 
 	res, err := json.Marshal(v)
 	gt.NotError(err)
@@ -35,7 +35,7 @@ func TestHumanDurationFallback(t *testing.T) {
 
 	err := json.Unmarshal([]byte(`{"A":10000000000}`), &v)
 	gt.NotError(err)
-	gt.Equal(v.A.Duration, time.Second*10)
+	gt.Equal(v.A, time.Second*10)
 
 	res, err := json.Marshal(v)
 	gt.NotError(err)

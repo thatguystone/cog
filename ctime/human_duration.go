@@ -8,8 +8,11 @@ import (
 // HumanDuration wraps time.Duration to provide human-usable duration parsing
 // from JSON. It parses values like "1s" to (time.Second), "10m" to
 // (10*time.Minute), and so forth.
-type HumanDuration struct {
-	time.Duration
+type HumanDuration time.Duration
+
+// D gets the HumanDuration as a time.Duration. This is a shortcut for casting.
+func (d HumanDuration) D() time.Duration {
+	return time.Duration(d)
 }
 
 // MarshalJSON is for JSON
@@ -30,7 +33,11 @@ func (d *HumanDuration) UnmarshalJSON(b []byte) (err error) {
 		val = time.Duration(i)
 	}
 
-	d.Duration = val
+	*d = HumanDuration(val)
 
 	return
+}
+
+func (d HumanDuration) String() string {
+	return d.D().String()
 }
