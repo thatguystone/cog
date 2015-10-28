@@ -22,3 +22,15 @@ func TestFSContentsEqual(t *testing.T) {
 	c.FS.ContentsEqual("test", []byte(cs))
 	c.FS.SContentsEqual("test", cs)
 }
+
+func TestFSExists(t *testing.T) {
+	c := New(t)
+
+	c.FS.SWriteFile("dir/file", "")
+
+	c.FS.FileExists("dir/file")
+	c.FS.DirExists("dir")
+
+	c.FS.FileNotExists("file")
+	c.FS.DirNotExists("dir2")
+}

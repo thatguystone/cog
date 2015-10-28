@@ -35,6 +35,34 @@ func (fs *FS) Path(parts ...string) string {
 	return path
 }
 
+// FileExists checks that the given file exists
+func (fs *FS) FileExists(path string) {
+	exists, err := cfs.FileExists(fs.Path(path))
+	fs.c.MustNotError(err)
+	fs.c.True(exists)
+}
+
+// FileNotExists checks that the given file does not exist
+func (fs *FS) FileNotExists(path string) {
+	exists, err := cfs.FileExists(fs.Path(path))
+	fs.c.MustNotError(err)
+	fs.c.False(exists)
+}
+
+// DirExists checks that the given directory exists
+func (fs *FS) DirExists(path string) {
+	exists, err := cfs.DirExists(fs.Path(path))
+	fs.c.MustNotError(err)
+	fs.c.True(exists)
+}
+
+// DirNotExists checks that the given directory exists
+func (fs *FS) DirNotExists(path string) {
+	exists, err := cfs.DirExists(fs.Path(path))
+	fs.c.MustNotError(err)
+	fs.c.False(exists)
+}
+
 // WriteFile writes the given contents to the given path in the test's data
 // dir, creating everything as necessary.
 func (fs *FS) WriteFile(path string, contents []byte) {
