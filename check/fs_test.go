@@ -12,3 +12,13 @@ func TestFSBasic(t *testing.T) {
 
 	c.Equal(cs, got)
 }
+
+func TestFSContentsEqual(t *testing.T) {
+	c := New(t)
+
+	cs := "file contents"
+	c.FS.SWriteFile("test", cs)
+
+	c.FS.ContentsEqual("test", []byte(cs))
+	c.FS.SContentsEqual("test", cs)
+}

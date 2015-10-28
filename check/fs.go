@@ -64,6 +64,19 @@ func (fs *FS) SReadFile(path string) string {
 	return string(fs.ReadFile(path))
 }
 
+// ContentsEqual checks that the contents of the given file exactly equal the
+// given byte slice.
+func (fs *FS) ContentsEqual(path string, b []byte) {
+	a := fs.ReadFile(path)
+	fs.c.Equal(b, a)
+}
+
+// SContentsEqual is like ContentsEqual, but with strings.
+func (fs *FS) SContentsEqual(path string, b string) {
+	a := fs.SReadFile(path)
+	fs.c.Equal(b, a)
+}
+
 // GetDataDir gets the test's data directory. On the first call, this also
 // clears out any data directory that existed previously, giving your test a
 // clean space to run.
