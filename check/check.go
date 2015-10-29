@@ -6,6 +6,7 @@ package check
 import (
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -17,10 +18,32 @@ type C struct {
 	FS FS
 }
 
+var (
+	// Used to ensure that t.Parallel() is only called once
+	mtx          sync.Mutex
+	parallelized = map[string]struct{}{}
+)
+
 // New creates a new C and marks this test as parallel
 func New(tb testing.TB) *C {
 	if t, ok := tb.(*testing.T); ok {
-		t.Parallel()
+		name := GetTestName()
+
+		alreadyParallel := func() bool {
+			mtx.Lock()
+			defer mtx.Unlock()
+
+			_, ok := parallelized[name]
+			if !ok {
+				parallelized[name] = struct{}{}
+			}
+
+			return ok
+		}()
+
+		if !alreadyParallel {
+			t.Parallel()
+		}
 	}
 
 	c := &C{
