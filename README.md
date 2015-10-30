@@ -6,18 +6,44 @@ Cog is a collection of utils for golang that I tend to use across many of my pro
 
 Cog consists of the following modules:
 
-| Module | Docs | Description |
-| ------ | ---- | ----------- |
-| (root) | [![GoDoc](https://godoc.org/github.com/thatguystone/cog?status.svg)](https://godoc.org/github.com/thatguystone/cog) | generic utils that didn't fit anywhere else |
-| bytec  | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/bytec?status.svg)](https://godoc.org/github.com/thatguystone/cog/bytec) | extra byte slice utils |
-| capn   | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/capn?status.svg)](https://godoc.org/github.com/thatguystone/cog/capn) | some stupid stuff for capnproto |
-| cync   | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/cync?status.svg)](https://godoc.org/github.com/thatguystone/cog/cync) | some extra sync utils |
-| cfs    | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/cfs?status.svg)](https://godoc.org/github.com/thatguystone/cog/cfs) | filesystem utils |
-| check  | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/check?status.svg)](https://godoc.org/github.com/thatguystone/cog/check) | test assertions and isolated FS utils |
-| clog   | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/clog?status.svg)](https://godoc.org/github.com/thatguystone/cog/clog) | a logging framework that looks a bit like python's logging |
-| cnet   | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/cnet?status.svg)](https://godoc.org/github.com/thatguystone/cog/cnet) | misc net utils and a socket implementation using channels |
-| ctime  | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/ctime?status.svg)](https://godoc.org/github.com/thatguystone/cog/ctime) | time utils |
-| node   | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/node?status.svg)](https://godoc.org/github.com/thatguystone/cog/node) | get information about the local node |
-| stack  | [![GoDoc](https://godoc.org/github.com/thatguystone/cog/stack?status.svg)](https://godoc.org/github.com/thatguystone/cog/stack) | runtime call stack utils |
+| Module        | Docs                                            | Description |
+| ------------- | ----------------------------------------------- | ----------- |
+| (root)        | [![GoDoc][root-status]][root]                   | generic utils that didn't fit anywhere else
+| bytec         | [![GoDoc][bytec-status]][bytec]                 | extra byte slice utils
+| cfs           | [![GoDoc][cfs-status]][cfs]                     | filesystem utils
+| check         | [![GoDoc][check-status]][check]                 | test assertions and isolated FS utils
+| clog          | [![GoDoc][clog-status]][clog]                   | a logging framework that looks a bit like python's logging
+| cnet          | [![GoDoc][cnet-status]][cnet]                   | misc net utils and a socket implementation using channels
+| ctime         | [![GoDoc][ctime-status]][ctime]                 | time utils
+| cync          | [![GoDoc][cync-status]][cync]                   | some extra sync utils
+| encoding/capn | [![GoDoc][encoding-capn-status]][encoding-capn] | capnproto Marshaling and Unmarshaling
+| encoding/path | [![GoDoc][encoding-path-status]][encoding-path] | path Marshaling and Unmarshaling
+| node          | [![GoDoc][node-status]][node]                   | get information about the local node
+| stack         | [![GoDoc][stack-status]][stack]                 | runtime call stack utils
+
+[root]: https://godoc.org/github.com/thatguystone/cog
+[root-status]: https://godoc.org/github.com/thatguystone/cog?status.svg
+[bytec]: https://godoc.org/github.com/thatguystone/cog/bytec
+[bytec-status]: https://godoc.org/github.com/thatguystone/cog/bytec?status.svg
+[cfs]: https://godoc.org/github.com/thatguystone/cog/cfs
+[cfs-status]: https://godoc.org/github.com/thatguystone/cog/cfs?status.svg
+[check]: https://godoc.org/github.com/thatguystone/cog/check
+[check-status]: https://godoc.org/github.com/thatguystone/cog/check?status.svg
+[clog]: https://godoc.org/github.com/thatguystone/cog/clog
+[clog-status]: https://godoc.org/github.com/thatguystone/cog/clog?status.svg
+[cnet]: https://godoc.org/github.com/thatguystone/cog/cnet
+[cnet-status]: https://godoc.org/github.com/thatguystone/cog/cnet?status.svg
+[ctime]: https://godoc.org/github.com/thatguystone/cog/ctime
+[ctime-status]: https://godoc.org/github.com/thatguystone/cog/ctime?status.svg
+[cync]: https://godoc.org/github.com/thatguystone/cog/cync
+[cync-status]: https://godoc.org/github.com/thatguystone/cog/cync?status.svg
+[encoding-capn]: https://godoc.org/github.com/thatguystone/cog/encoding/capn
+[encoding-capn-status]: https://godoc.org/github.com/thatguystone/cog/encoding/capn?status.svg
+[encoding-path]: https://godoc.org/github.com/thatguystone/cog/encoding/path
+[encoding-path-status]: https://godoc.org/github.com/thatguystone/cog/encoding/path?status.svg
+[node]: https://godoc.org/github.com/thatguystone/cog/node
+[node-status]: https://godoc.org/github.com/thatguystone/cog/node?status.svg
+[stack]: https://godoc.org/github.com/thatguystone/cog/stack
+[stack-status]: https://godoc.org/github.com/thatguystone/cog/stack?status.svg
 
 Each module contains full documentation over on godoc, including tons of examples.
