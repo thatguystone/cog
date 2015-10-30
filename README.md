@@ -12,6 +12,7 @@ Cog consists of the following modules:
 | bytec         | [![GoDoc][bytec-status]][bytec]                 | extra byte slice utils
 | cfs           | [![GoDoc][cfs-status]][cfs]                     | filesystem utils
 | check         | [![GoDoc][check-status]][check]                 | test assertions and isolated FS utils
+| cio           | [![GoDoc][cio-status]][cio]                     | extra io utils
 | clog          | [![GoDoc][clog-status]][clog]                   | a logging framework that looks a bit like python's logging
 | cnet          | [![GoDoc][cnet-status]][cnet]                   | misc net utils and a socket implementation using channels
 | ctime         | [![GoDoc][ctime-status]][ctime]                 | time utils
@@ -29,6 +30,8 @@ Cog consists of the following modules:
 [cfs-status]: https://godoc.org/github.com/thatguystone/cog/cfs?status.svg
 [check]: https://godoc.org/github.com/thatguystone/cog/check
 [check-status]: https://godoc.org/github.com/thatguystone/cog/check?status.svg
+[cio]: https://godoc.org/github.com/thatguystone/cog/cio
+[cio-status]: https://godoc.org/github.com/thatguystone/cog/cio?status.svg
 [clog]: https://godoc.org/github.com/thatguystone/cog/clog
 [clog-status]: https://godoc.org/github.com/thatguystone/cog/clog?status.svg
 [cnet]: https://godoc.org/github.com/thatguystone/cog/cnet
