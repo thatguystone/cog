@@ -1,7 +1,10 @@
 package path
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
+	"io"
 	"math"
 	"math/rand"
 	"sort"
@@ -9,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/thatguystone/cog/check"
+	"github.com/thatguystone/cog/cio"
 )
 
 type Empty struct{}
@@ -292,6 +296,43 @@ func TestMinMax(t *testing.T) {
 	wg.Wait()
 }
 
+func TestSeparator(t *testing.T) {
+	c := check.New(t)
+
+	pie := Pie{
+		A: "apple",
+		B: 1,
+		C: "pumpkin",
+		D: 2,
+		E: "berry",
+		F: 3,
+	}
+
+	s := NewSeparator('#')
+
+	p, err := s.Marshal(pie)
+	c.MustNotError(err)
+
+	p2 := Pie{}
+	err = s.Unmarshal(p, &p2)
+	c.MustNotError(err)
+	c.Equal(pie, p2)
+}
+
+func TestUnmarshalBufio(t *testing.T) {
+	c := check.New(t)
+
+	pie := Pie{}
+	b, err := Marshal(pie)
+	c.MustNotError(err)
+
+	p2 := Pie{}
+	err = UnmarshalBufio(bufio.NewReader(bytes.NewReader(b)), &p2)
+	c.MustNotError(err)
+
+	c.Equal(pie, p2)
+}
+
 func TestUnsupportedType(t *testing.T) {
 	c := check.New(t)
 
@@ -353,6 +394,58 @@ func TestWrongTag(t *testing.T) {
 	c.Error(err)
 }
 
+func TestWriteErrors(t *testing.T) {
+	c := check.New(t)
+
+	pie := Pie{
+		A: "apple",
+		B: 1,
+		C: "pumpkin",
+		D: 2,
+		E: "berry",
+		F: 3,
+	}
+
+	var p []byte
+	err := fmt.Errorf("")
+
+	i := int64(0)
+	for err != nil {
+		buff := &bytes.Buffer{}
+
+		err = MarshalInto(pie, &cio.LimitedWriter{
+			W: buff,
+			N: i,
+		})
+
+		if err == nil {
+			p = buff.Bytes()
+		}
+
+		i++
+	}
+
+	err = nil
+	p2 := Pie{}
+	for i := range p {
+		r := &io.LimitedReader{
+			R: bytes.NewReader(p),
+			N: int64(i),
+		}
+
+		err = UnmarshalReader(r, &p2)
+		c.Error(err)
+	}
+
+	r := &io.LimitedReader{
+		R: bytes.NewReader(p),
+		N: int64(len(p)),
+	}
+
+	err = UnmarshalReader(r, &p2)
+	c.NotError(err)
+}
+
 func BenchmarkMarshal(b *testing.B) {
 	pie := Pie{
 		A: "apple",
@@ -365,6 +458,27 @@ func BenchmarkMarshal(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		Marshal(pie)
+	}
+}
+
+func BenchmarkUnmarshal(b *testing.B) {
+	c := check.New(b)
+
+	pie := Pie{
+		A: "apple",
+		B: 1,
+		C: "apple",
+		D: 1,
+		E: "apple",
+		F: 1,
+	}
+
+	p, err := Marshal(pie)
+	c.MustNotError(err)
+
+	for i := 0; i < b.N; i++ {
+		p2 := Pie{}
+		Unmarshal(p, &p2)
 	}
 }
 

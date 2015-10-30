@@ -24,15 +24,31 @@ import (
 	"strings"
 )
 
+// Separator allows you to change the path separator used.
+type Separator struct {
+	b  byte
+	s  string
+	bs []byte
+}
+
 // Static is used to place a static, unchanging element into the path.
 type Static struct{}
 
 var staticType = reflect.TypeOf(Static{})
 
+// NewSeparator is used to change the path separator
+func NewSeparator(delim byte) Separator {
+	return Separator{
+		b:  delim,
+		s:  string(delim),
+		bs: []byte{delim},
+	}
+}
+
 // Marshal turns the given struct into a structured path
-func Marshal(p interface{}) (b []byte, err error) {
+func (s Separator) Marshal(p interface{}) (b []byte, err error) {
 	w := bytes.Buffer{}
-	err = MarshalInto(p, &w)
+	err = s.MarshalInto(p, &w)
 	if err == nil {
 		b = w.Bytes()
 	}
@@ -42,28 +58,28 @@ func Marshal(p interface{}) (b []byte, err error) {
 
 // MarshalInto works exactly like Marshal, except it writes the path to the
 // given Writer instead of returning a [ ]byte.
-func MarshalInto(p interface{}, w io.Writer) error {
-	err := marshalInto(p, w, true)
+func (s Separator) MarshalInto(p interface{}, w io.Writer) error {
+	err := s.marshalInto(p, w, true)
 	if err == nil {
-		_, err = w.Write([]byte{'/'})
+		_, err = w.Write(s.bs)
 	}
 
 	return err
 }
 
-func marshalInto(p interface{}, w io.Writer, needSlash bool) (err error) {
+func (s Separator) marshalInto(p interface{}, w io.Writer, needDelim bool) (err error) {
 	pt := reflect.TypeOf(p)
 
 	// A nil obviously returns a nil path
 	if pt == nil {
-		return fmt.Errorf("a nil cannot be turned into a path")
+		return fmt.Errorf("path: a nil cannot be turned into a path")
 	}
 
 	pv := reflect.ValueOf(p)
 
 	if pt.Kind() == reflect.Ptr {
 		if pv.IsNil() {
-			return fmt.Errorf("cannot Marshal a nil pointer, expected a struct")
+			return fmt.Errorf("path: cannot Marshal a nil pointer, expected a struct")
 		}
 
 		pv = reflect.Indirect(pv)
@@ -71,7 +87,7 @@ func marshalInto(p interface{}, w io.Writer, needSlash bool) (err error) {
 	}
 
 	if pt.Kind() != reflect.Struct {
-		return fmt.Errorf("paths may only be read into structs")
+		return fmt.Errorf("path: paths may only be read into structs")
 	}
 
 	n := pt.NumField()
@@ -82,11 +98,14 @@ func marshalInto(p interface{}, w io.Writer, needSlash bool) (err error) {
 			continue
 		}
 
-		if needSlash {
-			w.Write([]byte{'/'})
+		if needDelim {
+			_, err = w.Write(s.bs)
+			if err != nil {
+				return
+			}
 		}
 
-		needSlash = true
+		needDelim = true
 
 		switch v.Kind() {
 		case reflect.Bool:
@@ -121,17 +140,17 @@ func marshalInto(p interface{}, w io.Writer, needSlash bool) (err error) {
 			err = binary.Write(w, binary.BigEndian, v.Interface())
 
 		case reflect.String:
-			err = writeString(w, v.String())
+			err = s.writeString(w, v.String())
 
 		case reflect.Struct:
 			if v.Type() == staticType {
-				err = writeString(w, pt.Field(i).Tag.Get("path"))
+				err = s.writeString(w, pt.Field(i).Tag.Get("path"))
 			} else {
-				err = marshalInto(v.Interface(), w, false)
+				err = s.marshalInto(v.Interface(), w, false)
 			}
 
 		default:
-			err = fmt.Errorf("unsupported type: %s", v.Kind())
+			err = fmt.Errorf("path: unsupported type: %s", v.Kind())
 		}
 
 		if err != nil {
@@ -142,42 +161,49 @@ func marshalInto(p interface{}, w io.Writer, needSlash bool) (err error) {
 	return
 }
 
-func writeString(w io.Writer, s string) error {
-	if strings.Contains(s, "/") {
-		return fmt.Errorf("invalid string: may not contain a `/`")
+func (s Separator) writeString(w io.Writer, ss string) error {
+	if strings.Contains(ss, s.s) {
+		return fmt.Errorf("path: invalid string: may not contain a `%s`", s.s)
 	}
 
-	_, err := io.WriteString(w, s)
+	_, err := io.WriteString(w, ss)
 	return err
 }
 
 // Unmarshal is the reverse of Marshal, reading a serialized path into a struct.
-func Unmarshal(b []byte, p interface{}) error {
+func (s Separator) Unmarshal(b []byte, p interface{}) error {
 	r := bytes.NewReader(b)
-	return UnmarshalFrom(r, p)
+	return s.UnmarshalReader(r, p)
 }
 
-// UnmarshalFrom works exactly like Unmarshal, except it reads from the given
-// reader instead of a [ ]byte.
-func UnmarshalFrom(ir io.Reader, p interface{}) error {
+// UnmarshalReader works exactly like Unmarshal, except it reads from the given
+// reader instead of a [ ]byte. Be warned: a bufio.Reader is used, so this might
+// over-read.
+func (s Separator) UnmarshalReader(ir io.Reader, p interface{}) error {
 	r := bufio.NewReader(ir)
-	return unmarshalFrom(r, p, true)
+	return s.UnmarshalBufio(r, p)
 }
 
-func unmarshalFrom(r *bufio.Reader, p interface{}, expectSlash bool) (err error) {
+// UnmarshalBufio works exactly like Unmarshal, except it reads from the given
+// Reader.
+func (s Separator) UnmarshalBufio(r *bufio.Reader, p interface{}) (err error) {
+	return s.unmarshalBufio(r, p, true)
+}
+
+func (s Separator) unmarshalBufio(r *bufio.Reader, p interface{}, expectDelim bool) (err error) {
 	pv := reflect.ValueOf(p)
 
 	if pv.Kind() != reflect.Ptr || pv.IsNil() {
-		return fmt.Errorf("expected pointer to unmarshal into")
+		return fmt.Errorf("path: expected pointer to unmarshal into")
 	}
 
 	pv = reflect.Indirect(pv)
 	pt := pv.Type()
 
 	readString := func() (val string, err error) {
-		expectSlash = false
+		expectDelim = false
 
-		val, err = r.ReadString('/')
+		val, err = r.ReadString(s.b)
 		if err == nil {
 			val = val[:len(val)-1]
 		}
@@ -193,14 +219,14 @@ func unmarshalFrom(r *bufio.Reader, p interface{}, expectSlash bool) (err error)
 			continue
 		}
 
-		if expectSlash {
+		if expectDelim {
 			c, err := r.ReadByte()
-			if c != '/' || err != nil {
-				return fmt.Errorf("invalid path: missing delimiting slash")
+			if c != s.b || err != nil {
+				return fmt.Errorf("path: invalid path: missing delimiter")
 			}
 		}
 
-		expectSlash = true
+		expectDelim = true
 
 		switch v.Kind() {
 		case reflect.Bool:
@@ -214,7 +240,6 @@ func unmarshalFrom(r *bufio.Reader, p interface{}, expectSlash bool) (err error)
 			var ib, ibs []byte
 			ib, ibs, err = readInt(r, v)
 			if err == nil {
-
 				sign := ibs[0]&0x80 != 0
 				if sign {
 					ibs[0] ^= 0x80
@@ -289,14 +314,14 @@ func unmarshalFrom(r *bufio.Reader, p interface{}, expectSlash bool) (err error)
 				val, err = readString()
 				tag := pt.Field(i).Tag.Get("path")
 				if err == nil && val != tag {
-					err = fmt.Errorf("tag mismatch: %s != %s", val, tag)
+					err = fmt.Errorf("path: tag mismatch: %s != %s", val, tag)
 				}
 			} else {
-				err = unmarshalFrom(r, v.Addr().Interface(), false)
+				err = s.unmarshalBufio(r, v.Addr().Interface(), false)
 			}
 
 		default:
-			err = fmt.Errorf("unsupported type: %s", v.Kind())
+			err = fmt.Errorf("path: unsupported type: %s", v.Kind())
 		}
 
 		if err != nil {
@@ -314,7 +339,7 @@ func readInt(r io.Reader, v reflect.Value) ([]byte, []byte, error) {
 
 	_, err := io.ReadFull(r, ibs)
 	if err != nil {
-		return nil, nil, fmt.Errorf("invalid path: failed to read %s", v.Kind())
+		return nil, nil, fmt.Errorf("path: failed to read %s", v.Kind())
 	}
 
 	return ib, ibs, nil
