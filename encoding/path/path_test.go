@@ -1,10 +1,8 @@
 package path
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
-	"io"
 	"math"
 	"math/rand"
 	"sort"
@@ -12,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/thatguystone/cog/check"
-	"github.com/thatguystone/cog/cio"
 )
 
 type Empty struct{}
@@ -319,15 +316,16 @@ func TestSeparator(t *testing.T) {
 	c.Equal(pie, p2)
 }
 
-func TestUnmarshalBufio(t *testing.T) {
+func TestMarshalInto(t *testing.T) {
 	c := check.New(t)
 
+	b := bytes.Buffer{}
 	pie := Pie{}
-	b, err := Marshal(pie)
+	err := MarshalInto(pie, &b)
 	c.MustNotError(err)
 
 	p2 := Pie{}
-	err = UnmarshalBufio(bufio.NewReader(bytes.NewReader(b)), &p2)
+	err = UnmarshalFrom(&b, &p2)
 	c.MustNotError(err)
 
 	c.Equal(pie, p2)
@@ -394,7 +392,7 @@ func TestWrongTag(t *testing.T) {
 	c.Error(err)
 }
 
-func TestWriteErrors(t *testing.T) {
+func TestErrors(t *testing.T) {
 	c := check.New(t)
 
 	pie := Pie{
@@ -406,43 +404,17 @@ func TestWriteErrors(t *testing.T) {
 		F: 3,
 	}
 
-	var p []byte
-	err := fmt.Errorf("")
-
-	i := int64(0)
-	for err != nil {
-		buff := &bytes.Buffer{}
-
-		err = MarshalInto(pie, &cio.LimitedWriter{
-			W: buff,
-			N: i,
-		})
-
-		if err == nil {
-			p = buff.Bytes()
-		}
-
-		i++
-	}
+	p, err := Marshal(pie)
+	c.MustNotError(err)
 
 	err = nil
 	p2 := Pie{}
 	for i := range p {
-		r := &io.LimitedReader{
-			R: bytes.NewReader(p),
-			N: int64(i),
-		}
-
-		err = UnmarshalReader(r, &p2)
+		err = UnmarshalFrom(bytes.NewBuffer(p[0:i]), &p2)
 		c.Error(err)
 	}
 
-	r := &io.LimitedReader{
-		R: bytes.NewReader(p),
-		N: int64(len(p)),
-	}
-
-	err = UnmarshalReader(r, &p2)
+	err = UnmarshalFrom(bytes.NewBuffer(p), &p2)
 	c.NotError(err)
 }
 

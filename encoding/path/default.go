@@ -1,9 +1,6 @@
 package path
 
-import (
-	"bufio"
-	"io"
-)
+import "bytes"
 
 var defSep = NewSeparator('/')
 
@@ -13,9 +10,9 @@ func Marshal(p interface{}) (b []byte, err error) {
 }
 
 // MarshalInto works exactly like Marshal, except it writes the path to the
-// given Writer instead of returning a [ ]byte.
-func MarshalInto(p interface{}, w io.Writer) error {
-	return defSep.MarshalInto(p, w)
+// given Buffer instead of returning a [ ]byte.
+func MarshalInto(p interface{}, buff *bytes.Buffer) error {
+	return defSep.MarshalInto(p, buff)
 }
 
 // Unmarshal is the reverse of Marshal, reading a serialized path into a struct.
@@ -23,15 +20,8 @@ func Unmarshal(b []byte, p interface{}) error {
 	return defSep.Unmarshal(b, p)
 }
 
-// UnmarshalReader works exactly like Unmarshal, except it reads from the given
-// reader instead of a [ ]byte. Be warned: a bufio.Reader is used, so this might
-// over-read.
-func UnmarshalReader(r io.Reader, p interface{}) error {
-	return defSep.UnmarshalReader(r, p)
-}
-
-// UnmarshalBufio works exactly like Unmarshal, except it reads from the given
-// Reader.
-func UnmarshalBufio(r *bufio.Reader, p interface{}) error {
-	return defSep.UnmarshalBufio(r, p)
+// UnmarshalFrom works exactly like Unmarshal, except it reads from the given
+// Buffer instead of a [ ]byte.
+func UnmarshalFrom(buff *bytes.Buffer, p interface{}) error {
+	return defSep.UnmarshalFrom(buff, p)
 }

@@ -15,11 +15,9 @@
 package path
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"io"
 	"reflect"
 	"strings"
 )
@@ -57,17 +55,17 @@ func (s Separator) Marshal(p interface{}) (b []byte, err error) {
 }
 
 // MarshalInto works exactly like Marshal, except it writes the path to the
-// given Writer instead of returning a [ ]byte.
-func (s Separator) MarshalInto(p interface{}, w io.Writer) error {
-	err := s.marshalInto(p, w, true)
+// given Buffer instead of returning a [ ]byte.
+func (s Separator) MarshalInto(p interface{}, buff *bytes.Buffer) error {
+	err := s.marshalInto(p, buff, true)
 	if err == nil {
-		_, err = w.Write(s.bs)
+		buff.WriteByte(s.b)
 	}
 
 	return err
 }
 
-func (s Separator) marshalInto(p interface{}, w io.Writer, needDelim bool) (err error) {
+func (s Separator) marshalInto(p interface{}, buff *bytes.Buffer, needDelim bool) (err error) {
 	pt := reflect.TypeOf(p)
 
 	// A nil obviously returns a nil path
@@ -99,10 +97,7 @@ func (s Separator) marshalInto(p interface{}, w io.Writer, needDelim bool) (err 
 		}
 
 		if needDelim {
-			_, err = w.Write(s.bs)
-			if err != nil {
-				return
-			}
+			buff.WriteByte(s.b)
 		}
 
 		needDelim = true
@@ -114,7 +109,7 @@ func (s Separator) marshalInto(p interface{}, w io.Writer, needDelim bool) (err 
 				b = '\x01'
 			}
 
-			_, err = w.Write([]byte{b})
+			buff.WriteByte(b)
 
 		case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 			i := v.Int()
@@ -129,24 +124,24 @@ func (s Separator) marshalInto(p interface{}, w io.Writer, needDelim bool) (err 
 			ibs := ib[8-v.Type().Size():]
 			ibs[0] |= sign
 
-			_, err = w.Write(ibs)
+			_, err = buff.Write(ibs)
 
 		case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 			ib := make([]byte, 8)
 			binary.BigEndian.PutUint64(ib, v.Uint())
-			_, err = w.Write(ib[8-v.Type().Size():])
+			_, err = buff.Write(ib[8-v.Type().Size():])
 
 		case reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128:
-			err = binary.Write(w, binary.BigEndian, v.Interface())
+			err = binary.Write(buff, binary.BigEndian, v.Interface())
 
 		case reflect.String:
-			err = s.writeString(w, v.String())
+			err = s.writeString(buff, v.String())
 
 		case reflect.Struct:
 			if v.Type() == staticType {
-				err = s.writeString(w, pt.Field(i).Tag.Get("path"))
+				err = s.writeString(buff, pt.Field(i).Tag.Get("path"))
 			} else {
-				err = s.marshalInto(v.Interface(), w, false)
+				err = s.marshalInto(v.Interface(), buff, false)
 			}
 
 		default:
@@ -161,36 +156,28 @@ func (s Separator) marshalInto(p interface{}, w io.Writer, needDelim bool) (err 
 	return
 }
 
-func (s Separator) writeString(w io.Writer, ss string) error {
+func (s Separator) writeString(buff *bytes.Buffer, ss string) error {
 	if strings.Contains(ss, s.s) {
 		return fmt.Errorf("path: invalid string: may not contain a `%s`", s.s)
 	}
 
-	_, err := io.WriteString(w, ss)
+	_, err := buff.WriteString(ss)
 	return err
 }
 
 // Unmarshal is the reverse of Marshal, reading a serialized path into a struct.
 func (s Separator) Unmarshal(b []byte, p interface{}) error {
-	r := bytes.NewReader(b)
-	return s.UnmarshalReader(r, p)
+	buff := bytes.NewBuffer(b)
+	return s.UnmarshalFrom(buff, p)
 }
 
-// UnmarshalReader works exactly like Unmarshal, except it reads from the given
-// reader instead of a [ ]byte. Be warned: a bufio.Reader is used, so this might
-// over-read.
-func (s Separator) UnmarshalReader(ir io.Reader, p interface{}) error {
-	r := bufio.NewReader(ir)
-	return s.UnmarshalBufio(r, p)
+// UnmarshalFrom works exactly like Unmarshal, except it reads from the given
+// Buffer instead of a [ ]byte.
+func (s Separator) UnmarshalFrom(buff *bytes.Buffer, p interface{}) (err error) {
+	return s.unmarshalFrom(buff, p, true)
 }
 
-// UnmarshalBufio works exactly like Unmarshal, except it reads from the given
-// Reader.
-func (s Separator) UnmarshalBufio(r *bufio.Reader, p interface{}) (err error) {
-	return s.unmarshalBufio(r, p, true)
-}
-
-func (s Separator) unmarshalBufio(r *bufio.Reader, p interface{}, expectDelim bool) (err error) {
+func (s Separator) unmarshalFrom(buff *bytes.Buffer, p interface{}, expectDelim bool) (err error) {
 	pv := reflect.ValueOf(p)
 
 	if pv.Kind() != reflect.Ptr || pv.IsNil() {
@@ -203,7 +190,7 @@ func (s Separator) unmarshalBufio(r *bufio.Reader, p interface{}, expectDelim bo
 	readString := func() (val string, err error) {
 		expectDelim = false
 
-		val, err = r.ReadString(s.b)
+		val, err = buff.ReadString(s.b)
 		if err == nil {
 			val = val[:len(val)-1]
 		}
@@ -220,7 +207,7 @@ func (s Separator) unmarshalBufio(r *bufio.Reader, p interface{}, expectDelim bo
 		}
 
 		if expectDelim {
-			c, err := r.ReadByte()
+			c, err := buff.ReadByte()
 			if c != s.b || err != nil {
 				return fmt.Errorf("path: invalid path: missing delimiter")
 			}
@@ -231,14 +218,15 @@ func (s Separator) unmarshalBufio(r *bufio.Reader, p interface{}, expectDelim bo
 		switch v.Kind() {
 		case reflect.Bool:
 			var c byte
-			c, err = r.ReadByte()
+			c, err = buff.ReadByte()
 			if err == nil {
 				v.SetBool(c != '\x00')
 			}
 
 		case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			var ib, ibs []byte
-			ib, ibs, err = readInt(r, v)
+			var ibs []byte
+			ib := make([]byte, 8)
+			ibs, err = readInt(ib, buff, v)
 			if err == nil {
 				sign := ibs[0]&0x80 != 0
 				if sign {
@@ -267,36 +255,36 @@ func (s Separator) unmarshalBufio(r *bufio.Reader, p interface{}, expectDelim bo
 			}
 
 		case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			var ib []byte
-			ib, _, err = readInt(r, v)
+			ib := make([]byte, 8)
+			_, err = readInt(ib, buff, v)
 			if err == nil {
 				v.SetUint(binary.BigEndian.Uint64(ib))
 			}
 
 		case reflect.Float32:
 			val := float32(0)
-			err = binary.Read(r, binary.BigEndian, &val)
+			err = binary.Read(buff, binary.BigEndian, &val)
 			if err == nil {
 				v.SetFloat(float64(val))
 			}
 
 		case reflect.Float64:
 			val := float64(0)
-			err = binary.Read(r, binary.BigEndian, &val)
+			err = binary.Read(buff, binary.BigEndian, &val)
 			if err == nil {
 				v.SetFloat(val)
 			}
 
 		case reflect.Complex64:
 			val := complex64(0)
-			err = binary.Read(r, binary.BigEndian, &val)
+			err = binary.Read(buff, binary.BigEndian, &val)
 			if err == nil {
 				v.SetComplex(complex128(val))
 			}
 
 		case reflect.Complex128:
 			val := complex128(0)
-			err = binary.Read(r, binary.BigEndian, &val)
+			err = binary.Read(buff, binary.BigEndian, &val)
 			if err == nil {
 				v.SetComplex(val)
 			}
@@ -317,7 +305,7 @@ func (s Separator) unmarshalBufio(r *bufio.Reader, p interface{}, expectDelim bo
 					err = fmt.Errorf("path: tag mismatch: %s != %s", val, tag)
 				}
 			} else {
-				err = s.unmarshalBufio(r, v.Addr().Interface(), false)
+				err = s.unmarshalFrom(buff, v.Addr().Interface(), false)
 			}
 
 		default:
@@ -332,15 +320,14 @@ func (s Separator) unmarshalBufio(r *bufio.Reader, p interface{}, expectDelim bo
 	return
 }
 
-func readInt(r io.Reader, v reflect.Value) ([]byte, []byte, error) {
+func readInt(ib []byte, buff *bytes.Buffer, v reflect.Value) ([]byte, error) {
 	size := v.Type().Size()
-	ib := make([]byte, 8)
 	ibs := ib[8-size:]
 
-	_, err := io.ReadFull(r, ibs)
-	if err != nil {
-		return nil, nil, fmt.Errorf("path: failed to read %s", v.Kind())
+	n, err := buff.Read(ibs)
+	if err != nil || n != len(ibs) {
+		return nil, fmt.Errorf("path: failed to read %s", v.Kind())
 	}
 
-	return ib, ibs, nil
+	return ibs, nil
 }
