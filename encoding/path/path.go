@@ -34,7 +34,7 @@ type Static struct{}
 
 var staticType = reflect.TypeOf(Static{})
 
-// NewSeparator is used to change the path separator
+// NewSeparator uses the given delimiter instead of "/"
 func NewSeparator(delim byte) Separator {
 	return Separator{
 		b:  delim,
