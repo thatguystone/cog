@@ -68,7 +68,7 @@ func (s Separator) MarshalInto(p interface{}, buff *bytes.Buffer) error {
 func (s Separator) marshalInto(p interface{}, buff *bytes.Buffer, needDelim bool) (err error) {
 	pt := reflect.TypeOf(p)
 
-	// A nil obviously returns a nil path
+	// A nil obviously can't be a path
 	if pt == nil {
 		return fmt.Errorf("path: a nil cannot be turned into a path")
 	}
