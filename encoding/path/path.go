@@ -45,10 +45,10 @@ func NewSeparator(delim byte) Separator {
 
 // Marshal turns the given struct into a structured path
 func (s Separator) Marshal(p interface{}) (b []byte, err error) {
-	w := bytes.Buffer{}
-	err = s.MarshalInto(p, &w)
+	buff := bytes.Buffer{}
+	err = s.MarshalInto(p, &buff)
 	if err == nil {
-		b = w.Bytes()
+		b = buff.Bytes()
 	}
 
 	return
