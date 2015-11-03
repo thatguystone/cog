@@ -1,6 +1,7 @@
 package clog
 
 import (
+	"runtime"
 	"strings"
 	"testing"
 
@@ -60,6 +61,8 @@ func TestLoggerGet(t *testing.T) {
 
 	lg = lg.Get(" .sub. ")
 	lg.Info("second")
+
+	runtime.GC()
 
 	c.Equal(1,
 		strings.Count(
