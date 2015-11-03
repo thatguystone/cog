@@ -43,7 +43,7 @@ type xPacketConn struct {
 	x *xNet
 }
 
-// Returned from some operations when SetOffline(true) is called.
+// ErrOffline is returned from some operations when SetOffline(true) is called.
 var ErrOffline = errors.New("net is currently offline")
 
 // NewX creates a new instance of XNet.
