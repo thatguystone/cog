@@ -18,8 +18,11 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"io"
 	"reflect"
 	"strings"
+
+	"github.com/thatguystone/cog"
 )
 
 // Separator allows you to change the path separator used.
@@ -32,9 +35,21 @@ type Separator struct {
 // Static is used to place a static, unchanging element into the path.
 type Static struct{}
 
+// Marshaler is the interface implemented by objects that can marshal themselves
+// into a valid path
+type Marshaler interface {
+	MarshalPath(buff *bytes.Buffer, s Separator) error
+}
+
+// Unmarshaler is the interface implemented by objects that can unmarshal
+// themselves from a bytes.Buffer.
+type Unmarshaler interface {
+	UnmarshalPath(buff *bytes.Buffer, s Separator) error
+}
+
 var staticType = reflect.TypeOf(Static{})
 
-// NewSeparator uses the given delimiter instead of "/"
+// NewSeparator uses the given delimiter instead of "/".
 func NewSeparator(delim byte) Separator {
 	return Separator{
 		b:  delim,
@@ -44,9 +59,9 @@ func NewSeparator(delim byte) Separator {
 }
 
 // Marshal turns the given struct into a structured path
-func (s Separator) Marshal(p interface{}) (b []byte, err error) {
+func (s Separator) Marshal(v interface{}) (b []byte, err error) {
 	buff := bytes.Buffer{}
-	err = s.MarshalInto(p, &buff)
+	err = s.MarshalInto(v, &buff)
 	if err == nil {
 		b = buff.Bytes()
 	}
@@ -54,280 +69,672 @@ func (s Separator) Marshal(p interface{}) (b []byte, err error) {
 	return
 }
 
+// MustMarshal is like Marshal, except it panics on failure
+func (s Separator) MustMarshal(v interface{}) []byte {
+	b, err := s.Marshal(v)
+	cog.Must(err, "marshal failed")
+	return b
+}
+
 // MarshalInto works exactly like Marshal, except it writes the path to the
 // given Buffer instead of returning a [ ]byte.
-func (s Separator) MarshalInto(p interface{}, buff *bytes.Buffer) error {
-	err := s.marshalInto(p, buff, true)
-	if err == nil {
-		buff.WriteByte(s.b)
+func (s Separator) MarshalInto(v interface{}, buff *bytes.Buffer) error {
+	err := s.marshalInto(v, buff, true)
+	if err == nil && buff.Len() > 1 {
+		s.EmitDelim(buff)
 	}
 
 	return err
 }
 
-func (s Separator) marshalInto(p interface{}, buff *bytes.Buffer, needDelim bool) (err error) {
-	pt := reflect.TypeOf(p)
+// MustMarshalInto is like MarshalInto, except it panics on failure
+func (s Separator) MustMarshalInto(v interface{}, buff *bytes.Buffer) {
+	err := s.MarshalInto(v, buff)
+	cog.Must(err, "marshal failed")
+}
 
-	// A nil obviously can't be a path
-	if pt == nil {
-		return fmt.Errorf("path: a nil cannot be turned into a path")
+func (s Separator) marshalInto(v interface{}, buff *bytes.Buffer, needDelim bool) (err error) {
+	if needDelim {
+		s.EmitDelim(buff)
 	}
 
-	pv := reflect.ValueOf(p)
+	switch v := v.(type) {
+	case Marshaler:
+		return v.MarshalPath(buff, s)
 
-	if pt.Kind() == reflect.Ptr {
-		if pv.IsNil() {
-			return fmt.Errorf("path: cannot Marshal a nil pointer, expected a struct")
-		}
+	case bool:
+		s.EmitBool(v, buff)
+	case *bool:
+		s.EmitBool(*v, buff)
 
-		pv = reflect.Indirect(pv)
-		pt = pv.Type()
-	}
+	case int8:
+		s.EmitInt8(v, buff)
+	case *int8:
+		s.EmitInt8(*v, buff)
 
-	if pt.Kind() != reflect.Struct {
-		return fmt.Errorf("path: paths may only be read into structs")
-	}
+	case int16:
+		s.EmitInt16(v, buff)
+	case *int16:
+		s.EmitInt16(*v, buff)
 
-	n := pt.NumField()
-	for i := 0; i < n; i++ {
-		v := pv.Field(i)
+	case int32:
+		s.EmitInt32(v, buff)
+	case *int32:
+		s.EmitInt32(*v, buff)
 
-		if !v.CanInterface() { // unexported
-			continue
-		}
+	case int64:
+		s.EmitInt64(v, buff)
+	case *int64:
+		s.EmitInt64(*v, buff)
 
-		if needDelim {
-			buff.WriteByte(s.b)
-		}
+	case uint8:
+		s.EmitUint8(v, buff)
+	case *uint8:
+		s.EmitUint8(*v, buff)
 
-		needDelim = true
+	case uint16:
+		s.EmitUint16(v, buff)
+	case *uint16:
+		s.EmitUint16(*v, buff)
 
-		switch v.Kind() {
-		case reflect.Bool:
-			b := byte('\x00')
-			if v.Bool() {
-				b = '\x01'
-			}
+	case uint32:
+		s.EmitUint32(v, buff)
+	case *uint32:
+		s.EmitUint32(*v, buff)
 
-			buff.WriteByte(b)
+	case uint64:
+		s.EmitUint64(v, buff)
+	case *uint64:
+		s.EmitUint64(*v, buff)
 
-		case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			i := v.Int()
-			sign := byte(0)
-			if i < 0 {
-				i = -i
-				sign = 0x80
-			}
+	case float32, float64, complex64, complex128,
+		*float32, *float64, *complex64, *complex128:
+		err = binary.Write(buff, binary.BigEndian, v)
 
-			ib := make([]byte, 8)
-			binary.BigEndian.PutUint64(ib, uint64(i))
-			ibs := ib[8-v.Type().Size():]
-			ibs[0] |= sign
+	case string:
+		return s.EmitString(v, buff)
+	case *string:
+		return s.EmitString(*v, buff)
 
-			_, err = buff.Write(ibs)
+	case []byte:
+		return s.EmitBytes(v, buff)
+	case *[]byte:
+		return s.EmitBytes(*v, buff)
 
-		case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			ib := make([]byte, 8)
-			binary.BigEndian.PutUint64(ib, v.Uint())
-			_, err = buff.Write(ib[8-v.Type().Size():])
-
-		case reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128:
-			err = binary.Write(buff, binary.BigEndian, v.Interface())
-
-		case reflect.String:
-			err = s.writeString(buff, v.String())
-
-		case reflect.Struct:
-			if v.Type() == staticType {
-				err = s.writeString(buff, pt.Field(i).Tag.Get("path"))
-			} else {
-				err = s.marshalInto(v.Interface(), buff, false)
-			}
-
-		default:
-			err = fmt.Errorf("path: unsupported type: %s", v.Kind())
-		}
-
-		if err != nil {
-			return
-		}
+	default:
+		return s.marshalReflect(reflect.ValueOf(v), buff, false)
 	}
 
 	return
 }
 
-func (s Separator) writeString(buff *bytes.Buffer, ss string) error {
-	if strings.Contains(ss, s.s) {
+// EmitDelim writes the path separator into the buffer
+func (s Separator) EmitDelim(buff *bytes.Buffer) {
+	buff.WriteByte(s.b)
+}
+
+// EmitBool writes an encoded boolean value into the buffer
+func (Separator) EmitBool(v bool, buff *bytes.Buffer) {
+	b := byte('\x00')
+	if v {
+		b = '\x01'
+	}
+
+	buff.WriteByte(b)
+}
+
+// EmitInt writes an encoded int value into the buffer
+func (Separator) EmitInt(v int64, buff *bytes.Buffer, size int) {
+	sign := byte(0)
+	if v < 0 {
+		v = -v
+		sign = 0x80
+	}
+
+	ib := make([]byte, 8)
+	binary.BigEndian.PutUint64(ib, uint64(v))
+
+	ibs := ib[8-size:]
+	ibs[0] |= sign
+
+	buff.Write(ibs)
+}
+
+// EmitUint writes an encoded uint value into the buffer
+func (Separator) EmitUint(v uint64, buff *bytes.Buffer, size int) {
+	ib := make([]byte, 8)
+	binary.BigEndian.PutUint64(ib, v)
+	buff.Write(ib[8-size:])
+}
+
+// EmitInt8 is a wrapper around EmitIn that writes an int8
+func (s Separator) EmitInt8(v int8, buff *bytes.Buffer) {
+	s.EmitInt(int64(v), buff, 1)
+}
+
+// EmitInt16 is a wrapper around EmitInt that writes an int16
+func (s Separator) EmitInt16(v int16, buff *bytes.Buffer) {
+	s.EmitInt(int64(v), buff, 2)
+}
+
+// EmitInt32 is a wrapper around EmitInt that writes an int32
+func (s Separator) EmitInt32(v int32, buff *bytes.Buffer) {
+	s.EmitInt(int64(v), buff, 4)
+}
+
+// EmitInt64 is a wrapper around EmitInt that writes an int64
+func (s Separator) EmitInt64(v int64, buff *bytes.Buffer) {
+	s.EmitInt(v, buff, 8)
+}
+
+// EmitUint8 is a wrapper around EmitUin that writes an uint8
+func (s Separator) EmitUint8(v uint8, buff *bytes.Buffer) {
+	s.EmitUint(uint64(v), buff, 1)
+}
+
+// EmitUint16 is a wrapper around EmitUint that writes an uint16
+func (s Separator) EmitUint16(v uint16, buff *bytes.Buffer) {
+	s.EmitUint(uint64(v), buff, 2)
+}
+
+// EmitUint32 is a wrapper around EmitUint that writes an uint32
+func (s Separator) EmitUint32(v uint32, buff *bytes.Buffer) {
+	s.EmitUint(uint64(v), buff, 4)
+}
+
+// EmitUint64 is a wrapper around EmitUint that writes an uint64
+func (s Separator) EmitUint64(v uint64, buff *bytes.Buffer) {
+	s.EmitUint(v, buff, 8)
+}
+
+// EmitString writes an encoded string value into the buffer
+func (s Separator) EmitString(v string, buff *bytes.Buffer) error {
+	if strings.IndexByte(v, s.b) != -1 {
 		return fmt.Errorf("path: invalid string: may not contain a `%s`", s.s)
 	}
 
-	_, err := buff.WriteString(ss)
+	_, err := buff.WriteString(v)
 	return err
 }
 
+// EmitBytes writes an encoded byte slice value into the buffer
+func (s Separator) EmitBytes(v []byte, buff *bytes.Buffer) error {
+	if bytes.IndexByte(v, s.b) != -1 {
+		return fmt.Errorf("path: invalid []byte: may not contain a `%s`", s.s)
+	}
+
+	_, err := buff.Write(v)
+	return err
+}
+
+func (s Separator) marshalReflect(
+	rv reflect.Value,
+	buff *bytes.Buffer,
+	needDelim bool) error {
+
+	var rt reflect.Type
+	if rv.IsValid() {
+		rt = rv.Type()
+	}
+
+	// A nil obviously can't be a path
+	if rt == nil {
+		return fmt.Errorf("path: a nil cannot be turned into a path")
+	}
+
+	kind := rt.Kind()
+	if kind == reflect.Ptr {
+		return s.marshalReflect(reflect.Indirect(rv), buff, needDelim)
+	}
+
+	switch kind {
+	case reflect.Struct:
+		return s.marshalStruct(rt, rv, buff, needDelim)
+
+	case reflect.Array:
+		return s.marshalArray(rv, buff, needDelim)
+
+	default:
+		return fmt.Errorf("path: unsupported marshal kind: %s", kind)
+	}
+}
+
+func (s Separator) marshalStruct(
+	rt reflect.Type,
+	rv reflect.Value,
+	buff *bytes.Buffer,
+	needDelim bool) (err error) {
+
+	n := rv.NumField()
+	for i := 0; i < n; i++ {
+		f := rv.Field(i)
+
+		if f.Type() == staticType {
+			err = s.marshalInto(rt.Field(i).Tag.Get("path"), buff, needDelim)
+		} else {
+			if !f.CanInterface() { // unexported
+				continue
+			}
+
+			if f.Kind() == reflect.Ptr {
+				if f.IsNil() {
+					return fmt.Errorf("path: cannot Marshal into a nil pointer")
+				}
+
+				f = reflect.Indirect(f)
+			}
+
+			err = s.marshalInto(f.Interface(), buff, needDelim)
+		}
+
+		if err != nil {
+			return
+		}
+
+		needDelim = true
+	}
+
+	return
+}
+
+func (s Separator) marshalArray(
+	rv reflect.Value,
+	buff *bytes.Buffer,
+	needDelim bool) (err error) {
+
+	n := rv.Len()
+	for i := 0; i < n; i++ {
+		err = s.marshalInto(rv.Index(i).Interface(), buff, needDelim)
+		if err != nil {
+			break
+		}
+
+		needDelim = true
+	}
+
+	return
+}
+
 // Unmarshal is the reverse of Marshal, reading a serialized path into a struct.
-func (s Separator) Unmarshal(b []byte, p interface{}) error {
+func (s Separator) Unmarshal(b []byte, v interface{}) error {
 	buff := bytes.NewBuffer(b)
-	return s.UnmarshalFrom(buff, p)
+	return s.UnmarshalFrom(buff, v)
+}
+
+// MustUnmarshal is like Unmarshal, except it panics on failure
+func (s Separator) MustUnmarshal(b []byte, p interface{}) {
+	cog.Must(Unmarshal(b, p), "unmarshal failed")
 }
 
 // UnmarshalFrom works exactly like Unmarshal, except it reads from the given
 // Buffer instead of a [ ]byte.
-func (s Separator) UnmarshalFrom(buff *bytes.Buffer, p interface{}) (err error) {
-	return s.unmarshalFrom(buff, p, true)
+func (s Separator) UnmarshalFrom(buff *bytes.Buffer, v interface{}) error {
+	return s.unmarshalFrom(buff, v, true)
 }
 
-func (s Separator) unmarshalFrom(buff *bytes.Buffer, p interface{}, expectDelim bool) (err error) {
-	pv := reflect.ValueOf(p)
+// MustUnmarshalFrom is like UnmarshalFrom, except it panics on failure
+func (s Separator) MustUnmarshalFrom(buff *bytes.Buffer, p interface{}) {
+	cog.Must(UnmarshalFrom(buff, p), "unmarshal failed")
+}
 
-	if pv.Kind() != reflect.Ptr || pv.IsNil() {
-		return fmt.Errorf("path: expected pointer to unmarshal into")
-	}
+func (s Separator) unmarshalFrom(
+	buff *bytes.Buffer,
+	v interface{},
+	expectDelim bool) error {
 
-	pv = reflect.Indirect(pv)
-	pt := pv.Type()
-
-	readString := func() (val string, err error) {
-		expectDelim = false
-
-		val, err = buff.ReadString(s.b)
-		if err == nil {
-			val = val[:len(val)-1]
-		}
-
-		return
-	}
-
-	n := pv.NumField()
-	for i := 0; i < n; i++ {
-		v := pv.Field(i)
-
-		if !v.CanSet() {
-			continue
-		}
-
-		if expectDelim {
-			c, err := buff.ReadByte()
-			if c != s.b || err != nil {
-				return fmt.Errorf("path: invalid path: missing delimiter")
-			}
-		}
-
-		expectDelim = true
-
-		switch v.Kind() {
-		case reflect.Bool:
-			var c byte
-			c, err = buff.ReadByte()
-			if err == nil {
-				v.SetBool(c != '\x00')
-			}
-
-		case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			var ibs []byte
-			ib := make([]byte, 8)
-			ibs, err = readInt(ib, buff, v)
-			if err == nil {
-				sign := ibs[0]&0x80 != 0
-				if sign {
-					ibs[0] ^= 0x80
-
-					min := true
-					for _, b := range ibs {
-						if b != 0 {
-							min = false
-							break
-						}
-					}
-
-					if min {
-						ibs[0] |= 0x80
-					}
-				}
-
-				val := int64(binary.BigEndian.Uint64(ib))
-
-				if sign {
-					val = -val
-				}
-
-				v.SetInt(val)
-			}
-
-		case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			ib := make([]byte, 8)
-			_, err = readInt(ib, buff, v)
-			if err == nil {
-				v.SetUint(binary.BigEndian.Uint64(ib))
-			}
-
-		case reflect.Float32:
-			val := float32(0)
-			err = binary.Read(buff, binary.BigEndian, &val)
-			if err == nil {
-				v.SetFloat(float64(val))
-			}
-
-		case reflect.Float64:
-			val := float64(0)
-			err = binary.Read(buff, binary.BigEndian, &val)
-			if err == nil {
-				v.SetFloat(val)
-			}
-
-		case reflect.Complex64:
-			val := complex64(0)
-			err = binary.Read(buff, binary.BigEndian, &val)
-			if err == nil {
-				v.SetComplex(complex128(val))
-			}
-
-		case reflect.Complex128:
-			val := complex128(0)
-			err = binary.Read(buff, binary.BigEndian, &val)
-			if err == nil {
-				v.SetComplex(val)
-			}
-
-		case reflect.String:
-			var val string
-			val, err = readString()
-			if err == nil {
-				v.SetString(val)
-			}
-
-		case reflect.Struct:
-			if v.Type() == staticType {
-				var val string
-				val, err = readString()
-				tag := pt.Field(i).Tag.Get("path")
-				if err == nil && val != tag {
-					err = fmt.Errorf("path: tag mismatch: %s != %s", val, tag)
-				}
-			} else {
-				err = s.unmarshalFrom(buff, v.Addr().Interface(), false)
-			}
-
-		default:
-			err = fmt.Errorf("path: unsupported type: %s", v.Kind())
-		}
-
+	if expectDelim {
+		err := s.ExpectDelim(buff)
 		if err != nil {
-			return
+			return err
+		}
+	}
+
+	switch v := v.(type) {
+	case Unmarshaler:
+		return v.UnmarshalPath(buff, s)
+
+	case *bool:
+		return s.ExpectBool(v, buff)
+
+	case *int8:
+		return s.ExpectInt8(v, buff)
+
+	case *int16:
+		return s.ExpectInt16(v, buff)
+
+	case *int32:
+		return s.ExpectInt32(v, buff)
+
+	case *int64:
+		return s.ExpectInt64(v, buff)
+
+	case *uint8:
+		return s.ExpectUint8(v, buff)
+
+	case *uint16:
+		return s.ExpectUint16(v, buff)
+
+	case *uint32:
+		return s.ExpectUint32(v, buff)
+
+	case *uint64:
+		return s.ExpectUint64(v, buff)
+
+	case *float32, *float64, *complex64, *complex128:
+		return binary.Read(buff, binary.BigEndian, v)
+
+	case *string:
+		return s.ExpectString(v, buff)
+
+	case *[]byte:
+		return s.ExpectBytes(v, buff)
+
+	default:
+		return s.unmarshalReflect(v, buff, false)
+	}
+}
+
+// ExpectDelim looks for the delimiter as the next byte in the buffer
+func (s Separator) ExpectDelim(buff *bytes.Buffer) error {
+	c, err := buff.ReadByte()
+	if c != s.b || err != nil {
+		err = fmt.Errorf("path: invalid path: missing delimiter")
+	}
+
+	return err
+}
+
+// ExpectBool decodes an encoded boolean value from the buffer
+func (Separator) ExpectBool(v *bool, buff *bytes.Buffer) (err error) {
+	var c byte
+	c, err = buff.ReadByte()
+	if err == nil {
+		*v = c != '\x00'
+	}
+
+	return
+}
+
+// ExpectInt decodes an encoded int value from the buffer
+func (Separator) ExpectInt(buff *bytes.Buffer, size int) (int64, error) {
+	ib := make([]byte, 8)
+	ibs := ib[8-size:]
+
+	n, err := buff.Read(ibs)
+	if err != nil || n != len(ibs) {
+		return 0, fmt.Errorf("path: failed to read int")
+	}
+
+	sign := ibs[0]&0x80 != 0
+	if sign {
+		ibs[0] ^= 0x80
+
+		min := true
+		for _, b := range ibs {
+			if b != 0 {
+				min = false
+				break
+			}
+		}
+
+		if min {
+			ibs[0] |= 0x80
+		}
+	}
+
+	v := int64(binary.BigEndian.Uint64(ib))
+
+	if sign {
+		v = -v
+	}
+
+	return v, nil
+}
+
+// ExpectUint decodes an encoded uint value from the buffer
+func (Separator) ExpectUint(buff *bytes.Buffer, size int) (uint64, error) {
+	ib := make([]byte, 8)
+	ibs := ib[8-size:]
+
+	n, err := buff.Read(ibs)
+	if err != nil || n != len(ibs) {
+		return 0, fmt.Errorf("path: failed to read uint")
+	}
+
+	return binary.BigEndian.Uint64(ib), nil
+}
+
+// ExpectInt8 decodes an encoded int8 value from the buffer
+func (s Separator) ExpectInt8(v *int8, buff *bytes.Buffer) error {
+	i, err := s.ExpectInt(buff, 1)
+	if err == nil {
+		*v = int8(i)
+	}
+	return err
+}
+
+// ExpectInt16 decodes an encoded int16 value from the buffer
+func (s Separator) ExpectInt16(v *int16, buff *bytes.Buffer) error {
+	i, err := s.ExpectInt(buff, 2)
+	if err == nil {
+		*v = int16(i)
+	}
+	return err
+}
+
+// ExpectInt32 decodes an encoded int32 value from the buffer
+func (s Separator) ExpectInt32(v *int32, buff *bytes.Buffer) error {
+	i, err := s.ExpectInt(buff, 4)
+	if err == nil {
+		*v = int32(i)
+	}
+	return err
+}
+
+// ExpectInt64 decodes an encoded int64 value from the buffer
+func (s Separator) ExpectInt64(v *int64, buff *bytes.Buffer) error {
+	i, err := s.ExpectInt(buff, 8)
+	if err == nil {
+		*v = int64(i)
+	}
+	return err
+}
+
+// ExpectUint8 decodes an encoded uint8 value from the buffer
+func (s Separator) ExpectUint8(v *uint8, buff *bytes.Buffer) error {
+	i, err := s.ExpectUint(buff, 1)
+	if err == nil {
+		*v = uint8(i)
+	}
+	return err
+}
+
+// ExpectUint16 decodes an encoded uint16 value from the buffer
+func (s Separator) ExpectUint16(v *uint16, buff *bytes.Buffer) error {
+	i, err := s.ExpectUint(buff, 2)
+	if err == nil {
+		*v = uint16(i)
+	}
+	return err
+}
+
+// ExpectUint32 decodes an encoded uint32 value from the buffer
+func (s Separator) ExpectUint32(v *uint32, buff *bytes.Buffer) error {
+	i, err := s.ExpectUint(buff, 4)
+	if err == nil {
+		*v = uint32(i)
+	}
+	return err
+}
+
+// ExpectUint64 decodes an encoded uint64 value from the buffer
+func (s Separator) ExpectUint64(v *uint64, buff *bytes.Buffer) error {
+	i, err := s.ExpectUint(buff, 8)
+	if err == nil {
+		*v = uint64(i)
+	}
+	return err
+}
+
+// ExpectString decodes an encoded string value from the buffer
+func (s Separator) ExpectString(v *string, buff *bytes.Buffer) (err error) {
+	ss, err := buff.ReadString(s.b)
+	if err == nil {
+		// Put the delim back
+		buff.UnreadByte()
+
+		*v = ss[:len(ss)-1]
+	}
+
+	return
+}
+
+// ExpectTag reads expects the next string it reads from the buffer to be the
+// given tag
+func (s Separator) ExpectTag(tag string, buff *bytes.Buffer) (err error) {
+	ss, err := buff.ReadString(s.b)
+	if err == nil {
+		// Put the delim back
+		buff.UnreadByte()
+
+		ss = ss[:len(ss)-1]
+		if ss != tag {
+			err = fmt.Errorf("path: tag mismatch: %s != %s", ss, tag)
 		}
 	}
 
 	return
 }
 
-func readInt(ib []byte, buff *bytes.Buffer, v reflect.Value) ([]byte, error) {
-	size := v.Type().Size()
-	ibs := ib[8-size:]
-
-	n, err := buff.Read(ibs)
-	if err != nil || n != len(ibs) {
-		return nil, fmt.Errorf("path: failed to read %s", v.Kind())
+// ExpectTagBytes reads expects the next byte slice it reads from the buffer to
+// be the given tag. This is a faster version of ExpectTag since it requires no
+// memory allocations (assuming you pass in a pre-allocated, read-only byte
+// slice).
+func (s Separator) ExpectTagBytes(tag []byte, buff *bytes.Buffer) (err error) {
+	i := bytes.IndexByte(buff.Bytes(), s.b)
+	if i == -1 {
+		err = io.EOF
+	} else {
+		b := buff.Next(i)
+		if !bytes.Equal(b, tag) {
+			err = fmt.Errorf("path: tag mismatch: %s != %s",
+				string(b),
+				string(tag))
+		}
 	}
 
-	return ibs, nil
+	return
+}
+
+// ExpectBytes decodes an encoded byte slice value from the buffer
+func (s Separator) ExpectBytes(v *[]byte, buff *bytes.Buffer) (err error) {
+	b, err := buff.ReadBytes(s.b)
+	if err == nil {
+		// Put the delim back
+		buff.UnreadByte()
+
+		*v = b[:len(b)-1]
+	}
+
+	return
+}
+
+func (s Separator) unmarshalReflect(
+	v interface{},
+	buff *bytes.Buffer,
+	expectDelim bool) error {
+
+	rt := reflect.TypeOf(v)
+
+	// A nil obviously can't be a path
+	if rt == nil {
+		return fmt.Errorf("path: cannot unmarshal into a nil value")
+	}
+
+	kind := rt.Kind()
+	if kind != reflect.Ptr {
+		return fmt.Errorf("path: need a pointer to unmarshal into")
+	}
+
+	rv := reflect.Indirect(reflect.ValueOf(v))
+	rt = rv.Type()
+	kind = rt.Kind()
+
+	switch kind {
+	case reflect.Struct:
+		return s.unmarshalStruct(rt, rv, buff, expectDelim)
+
+	case reflect.Array:
+		return s.unmarshalArray(rv, buff, expectDelim)
+
+	default:
+		return fmt.Errorf("path: unsupported unmarshal kind: %s", kind)
+	}
+}
+
+func (s Separator) unmarshalStruct(
+	rt reflect.Type,
+	v reflect.Value,
+	buff *bytes.Buffer,
+	expectDelim bool) (err error) {
+
+	n := v.NumField()
+	for i := 0; i < n; i++ {
+		f := v.Field(i)
+
+		if f.Type() == staticType {
+			var ss string
+			err = s.unmarshalFrom(
+				buff,
+				&ss,
+				expectDelim)
+			tag := rt.Field(i).Tag.Get("path")
+			if err == nil && ss != tag {
+				err = fmt.Errorf("path: tag mismatch: %s != %s", ss, tag)
+			}
+		} else {
+			if !f.CanSet() { // unexported
+				continue
+			}
+
+			var i interface{}
+
+			if f.Kind() == reflect.Ptr {
+				i = f.Interface()
+			} else {
+				i = f.Addr().Interface()
+			}
+
+			err = s.unmarshalFrom(buff, i, expectDelim)
+		}
+
+		if err != nil {
+			return
+		}
+
+		expectDelim = true
+	}
+
+	return
+}
+
+func (s Separator) unmarshalArray(
+	rv reflect.Value,
+	buff *bytes.Buffer,
+	needDelim bool) (err error) {
+
+	n := rv.Len()
+	for i := 0; i < n; i++ {
+		err = s.unmarshalFrom(
+			buff,
+			rv.Index(i).Addr().Interface(),
+			needDelim)
+		if err != nil {
+			break
+		}
+
+		needDelim = true
+	}
+
+	return
 }
