@@ -4,6 +4,7 @@
 package check
 
 import (
+	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
@@ -78,13 +79,13 @@ func GetTestName() string {
 		pc, _, _, ok = runtime.Caller(i)
 		if ok {
 			fn := runtime.FuncForPC(pc)
-			fnName := fn.Name()
+			fnName := filepath.Ext(fn.Name())
 
 			isTest := strings.Contains(fnName, ".Test") ||
 				strings.Contains(fnName, ".Benchmark") ||
 				strings.Contains(fnName, ".Example")
 			if isTest {
-				name = fnName[strings.LastIndex(fnName, ".")+1:]
+				name = fnName[1:]
 				break
 			}
 		}
