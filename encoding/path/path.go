@@ -292,7 +292,7 @@ func (s Separator) marshalReflect(
 		return s.marshalStruct(rt, rv, buff, needDelim)
 
 	case reflect.Array:
-		return s.marshalArray(rv, buff, needDelim)
+		return s.marshalArray(rt, rv, buff, needDelim)
 
 	default:
 		return fmt.Errorf("path: unsupported marshal kind: %s", kind)
@@ -338,9 +338,12 @@ func (s Separator) marshalStruct(
 }
 
 func (s Separator) marshalArray(
+	rt reflect.Type,
 	rv reflect.Value,
 	buff *bytes.Buffer,
 	needDelim bool) (err error) {
+
+	needNextDelim := !s.hasFixedSize(rt.Elem().Kind())
 
 	n := rv.Len()
 	for i := 0; i < n; i++ {
@@ -349,7 +352,7 @@ func (s Separator) marshalArray(
 			break
 		}
 
-		needDelim = true
+		needDelim = needNextDelim
 	}
 
 	return
@@ -665,7 +668,7 @@ func (s Separator) unmarshalReflect(
 		return s.unmarshalStruct(rt, rv, buff, expectDelim)
 
 	case reflect.Array:
-		return s.unmarshalArray(rv, buff, expectDelim)
+		return s.unmarshalArray(rt, rv, buff, expectDelim)
 
 	default:
 		return fmt.Errorf("path: unsupported unmarshal kind: %s", kind)
@@ -719,9 +722,12 @@ func (s Separator) unmarshalStruct(
 }
 
 func (s Separator) unmarshalArray(
+	rt reflect.Type,
 	rv reflect.Value,
 	buff *bytes.Buffer,
 	needDelim bool) (err error) {
+
+	needNextDelim := !s.hasFixedSize(rt.Elem().Kind())
 
 	n := rv.Len()
 	for i := 0; i < n; i++ {
@@ -733,8 +739,12 @@ func (s Separator) unmarshalArray(
 			break
 		}
 
-		needDelim = true
+		needDelim = needNextDelim
 	}
 
 	return
+}
+
+func (s Separator) hasFixedSize(kind reflect.Kind) bool {
+	return kind >= reflect.Bool && kind <= reflect.Complex128
 }

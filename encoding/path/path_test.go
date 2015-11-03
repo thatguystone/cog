@@ -540,13 +540,26 @@ func TestMinMax(t *testing.T) {
 	wg.Wait()
 }
 
-func TestArray(t *testing.T) {
+func TestFixedArray(t *testing.T) {
 	c := check.New(t)
 
 	in := [3]int32{1, 2, 3}
 	out := [3]int32{}
 
-	trampoline(c, &in, &out, nil)
+	trampoline(
+		c, &in, &out,
+		[]byte("/\x00\x00\x00\x01\x00\x00\x00\x02\x00\x00\x00\x03/"))
+}
+
+func TestVariableArray(t *testing.T) {
+	c := check.New(t)
+
+	in := [3]string{"test", "something", "fun"}
+	out := [3]string{}
+
+	trampoline(
+		c, &in, &out,
+		[]byte("/test/something/fun/"))
 }
 
 func TestSeparator(t *testing.T) {
