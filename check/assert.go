@@ -289,7 +289,7 @@ func (c *C) MustNotEqual(e, g interface{}, msg ...interface{}) {
 
 // Len checks that the length of the given v is l. Returns true if equal,
 // false otherwise.
-func (c *C) Len(v, l interface{}, msg ...interface{}) (eq bool) {
+func (c *C) Len(v interface{}, l int, msg ...interface{}) (eq bool) {
 	defer func() {
 		if e := recover(); e != nil {
 			eq = false
@@ -306,7 +306,7 @@ func (c *C) Len(v, l interface{}, msg ...interface{}) (eq bool) {
 }
 
 // MustLen is like Len, except it panics on failure.
-func (c *C) MustLen(v, l interface{}, msg ...interface{}) {
+func (c *C) MustLen(v interface{}, l int, msg ...interface{}) {
 	if !c.Len(v, l, msg...) {
 		c.FailNow()
 	}
@@ -314,7 +314,7 @@ func (c *C) MustLen(v, l interface{}, msg ...interface{}) {
 
 // LenNot checks that the length of the given v is not l. Returns true if not
 // equal, false otherwise.
-func (c *C) LenNot(v, l interface{}, msg ...interface{}) (eq bool) {
+func (c *C) LenNot(v interface{}, l int, msg ...interface{}) (eq bool) {
 	defer func() {
 		if e := recover(); e != nil {
 			eq = false
@@ -331,7 +331,7 @@ func (c *C) LenNot(v, l interface{}, msg ...interface{}) (eq bool) {
 }
 
 // MustLenNot is like LenNot, except it panics on failure.
-func (c *C) MustLenNot(v, l interface{}, msg ...interface{}) {
+func (c *C) MustLenNot(v interface{}, l int, msg ...interface{}) {
 	if !c.LenNot(v, l, msg...) {
 		c.FailNow()
 	}
