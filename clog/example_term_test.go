@@ -57,7 +57,7 @@ func Example_terminal() {
 	rude.Error("I'm better than you")
 
 	// Output:
-	// [000000] example_term_test.go:51 : I-polite.module : You're very pretty
-	// [000000] example_term_test.go:52 : I-polite.module : I like you
-	// [000000] example_term_test.go:57 : E-rude.module : I'm better than you
+	// [000000] I-polite.module : example_term_test.go:51 : You're very pretty
+	// [000000] I-polite.module : example_term_test.go:52 : I like you
+	// [000000] E-rude.module : example_term_test.go:57 : I'm better than you
 }

@@ -26,11 +26,11 @@ func (f HumanFormat) FormatEntry(e Entry) ([]byte, error) {
 		timeS = e.Time.Format(time.StampMicro)
 	}
 
-	fmt.Fprintf(&b, "[%s] %s : %c-%s : %-44s",
+	fmt.Fprintf(&b, "[%s] %c-%s : %s : %-44s",
 		timeS,
-		e.Src,
 		e.Level.Rune(),
 		e.Module,
+		e.Src,
 		e.Msg)
 
 	for k, v := range e.Data {
