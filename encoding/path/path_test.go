@@ -1,7 +1,6 @@
 package path
 
 import (
-	"bytes"
 	"fmt"
 	"math"
 	"math/rand"
@@ -83,24 +82,18 @@ type Nesting struct {
 	NestingU
 }
 
-func (p PieWithInterface) MarshalPath(b *bytes.Buffer, s Separator) error {
-	s.EmitString("pie", b)
-	s.EmitDelim(b)
-	s.EmitString(p.A, b)
-	s.EmitDelim(b)
-	s.EmitUint(uint64(p.B), b, 1)
-	s.EmitDelim(b)
-	s.EmitString(p.C, b)
-	s.EmitDelim(b)
-	s.EmitUint(uint64(p.D), b, 1)
-	s.EmitDelim(b)
-	s.EmitString(p.E, b)
-	s.EmitDelim(b)
-	s.EmitUint(uint64(p.F), b, 1)
-	s.EmitDelim(b)
-	s.EmitString("end", b)
+func (p PieWithInterface) MarshalPath(s State) State {
+	s.MaybeEmitSep()
+	s.B = append(s.B, "pie/"...)
+	s = s.EmitString(p.A)
+	s = s.EmitUint8(p.B)
+	s = s.EmitString(p.C)
+	s = s.EmitUint8(p.D)
+	s = s.EmitString(p.E)
+	s = s.EmitUint8(p.F)
+	s.B = append(s.B, "end/"...)
 
-	return nil
+	return s
 }
 
 var (
@@ -108,81 +101,49 @@ var (
 	pieWithInterfaceTag1 = []byte("end")
 )
 
-func (p *PieWithInterface) UnmarshalPath(b *bytes.Buffer, s Separator) error {
-	err := s.ExpectTagBytes(pieWithInterfaceTag0, b)
+func (p *PieWithInterface) UnmarshalPath(s State) State {
+	s = s.ExpectTagBytes(pieWithInterfaceTag0)
 
-	if err == nil {
-		err = s.ExpectDelim(b)
+	if s.Err == nil {
+		s = s.ExpectString(&p.A)
 	}
 
-	if err == nil {
-		err = s.ExpectString(&p.A, b)
+	if s.Err == nil {
+		s = s.ExpectUint8(&p.B)
 	}
 
-	if err == nil {
-		err = s.ExpectDelim(b)
+	if s.Err == nil {
+		s = s.ExpectString(&p.C)
 	}
 
-	if err == nil {
-		err = s.ExpectUint8(&p.B, b)
+	if s.Err == nil {
+		s = s.ExpectUint8(&p.D)
 	}
 
-	if err == nil {
-		err = s.ExpectDelim(b)
+	if s.Err == nil {
+		s = s.ExpectString(&p.E)
 	}
 
-	if err == nil {
-		err = s.ExpectString(&p.C, b)
+	if s.Err == nil {
+		s = s.ExpectUint8(&p.F)
 	}
 
-	if err == nil {
-		err = s.ExpectDelim(b)
+	if s.Err == nil {
+		s = s.ExpectTagBytes(pieWithInterfaceTag1)
 	}
 
-	if err == nil {
-		err = s.ExpectUint8(&p.D, b)
-	}
-
-	if err == nil {
-		err = s.ExpectDelim(b)
-	}
-
-	if err == nil {
-		err = s.ExpectString(&p.E, b)
-	}
-
-	if err == nil {
-		err = s.ExpectDelim(b)
-	}
-
-	if err == nil {
-		err = s.ExpectUint8(&p.F, b)
-	}
-
-	if err == nil {
-		err = s.ExpectDelim(b)
-	}
-
-	if err == nil {
-		err = s.ExpectTagBytes(pieWithInterfaceTag1, b)
-	}
-
-	if err == nil {
-		err = s.ExpectDelim(b)
-	}
-
-	return err
+	return s
 }
 
 func trampoline(c *check.C, in interface{}, out interface{}, path []byte) {
-	p, err := Marshal(in)
+	p, err := Marshal(in, nil)
 	c.MustNotError(err)
 
 	if path != nil {
 		c.Equal(path, p)
 	}
 
-	err = Unmarshal(p, out)
+	_, err = Unmarshal(p, out)
 	c.MustNotError(err)
 	c.Equal(in, out)
 }
@@ -199,17 +160,17 @@ func TestEmpty(t *testing.T) {
 func TestNils(t *testing.T) {
 	c := check.New(t)
 
-	_, err := Marshal(nil)
+	_, err := Marshal(nil, nil)
 	c.Error(err)
 
-	_, err = Marshal(EverythingPtr{})
+	_, err = Marshal(EverythingPtr{}, nil)
 	c.Error(err)
 
 	e := Everything{}
-	err = Unmarshal(nil, &e)
+	_, err = Unmarshal(nil, &e)
 	c.Error(err)
 
-	err = Unmarshal([]byte("/test/"), nil)
+	_, err = Unmarshal([]byte("/test/"), nil)
 	c.Error(err)
 }
 
@@ -226,13 +187,17 @@ func TestNilPtrs(t *testing.T) {
 		(*uint16)(nil),
 		(*uint32)(nil),
 		(*uint64)(nil),
+		(*float32)(nil),
+		(*float64)(nil),
+		(*complex64)(nil),
+		(*complex128)(nil),
 		(*string)(nil),
 		(*[]byte)(nil),
 	}
 
 	for _, t := range tests {
 		c.Panic(func() {
-			Marshal(t)
+			Marshal(t, nil)
 		})
 	}
 }
@@ -250,12 +215,16 @@ func TestNonNilPtrs(t *testing.T) {
 		new(uint16),
 		new(uint32),
 		new(uint64),
+		new(float32),
+		new(float64),
+		new(complex64),
+		new(complex128),
 		new(string),
 	}
 
 	for _, t := range tests {
 		c.NotPanic(func() {
-			_, err := Marshal(t)
+			_, err := Marshal(t, nil)
 			c.NotError(err)
 		})
 	}
@@ -343,10 +312,10 @@ func TestBytes(t *testing.T) {
 
 	trampoline(c, &i, &i2, out)
 
-	p, err := Marshal(i)
+	p, err := Marshal(i, nil)
 	c.MustNotError(err)
 	c.Equal(out, p)
-	err = Unmarshal(p, &i2)
+	_, err = Unmarshal(p, &i2)
 	c.MustNotError(err)
 	c.Equal(i, i2)
 }
@@ -355,7 +324,7 @@ func TestNonStructPtr(t *testing.T) {
 	c := check.New(t)
 
 	var i *int
-	_, err := Marshal(i)
+	_, err := Marshal(i, nil)
 	c.Error(err)
 }
 
@@ -373,12 +342,12 @@ func TestPieTrampoline(t *testing.T) {
 		h: 123,
 	}
 
-	p, err := Marshal(pie)
+	p, err := Marshal(pie, nil)
 	c.MustNotError(err)
 	c.Equal("/pie/apple/\x01/pumpkin/\x02/berry/\x03/end/", string(p))
 
 	p2 := Pie{}
-	err = Unmarshal(p, &p2)
+	_, err = Unmarshal(p, &p2)
 	c.MustNotError(err)
 	c.Equal(pie.A, p2.A)
 	c.Equal(pie.B, p2.B)
@@ -442,7 +411,7 @@ func TestSort(t *testing.T) {
 	bs := []string{}
 
 	for _, v := range vs {
-		path, err := Marshal(v)
+		path, err := Marshal(v, nil)
 		c.MustNotError(err)
 
 		bs = append(bs, string(path))
@@ -574,32 +543,14 @@ func TestSeparator(t *testing.T) {
 		F: 3,
 	}
 
-	s := NewSeparator('#')
+	s := Separator('#')
 
-	p, err := s.Marshal(pie)
+	p, err := s.Marshal(pie, nil)
 	c.MustNotError(err)
 
 	p2 := Pie{}
-	err = s.Unmarshal(p, &p2)
+	_, err = s.Unmarshal(p, &p2)
 	c.MustNotError(err)
-	c.Equal(pie, p2)
-}
-
-func TestMarshalInto(t *testing.T) {
-	c := check.New(t)
-
-	b := bytes.Buffer{}
-	pie := Pie{}
-	MustMarshalInto(pie, &b)
-	err := MarshalInto(pie, &b)
-	c.MustNotError(err)
-
-	p2 := Pie{}
-	b2 := bytes.NewBuffer(b.Bytes())
-	MustUnmarshalFrom(b2, &p2)
-	err = UnmarshalFrom(&b, &p2)
-	c.MustNotError(err)
-
 	c.Equal(pie, p2)
 }
 
@@ -614,7 +565,7 @@ func TestUnsupportedMarshalTypes(t *testing.T) {
 	}
 
 	for i, t := range tests {
-		_, err := Marshal(t)
+		_, err := Marshal(t, nil)
 		c.Error(err, "%d did not error", i)
 	}
 }
@@ -630,7 +581,7 @@ func TestUnsupportedUnmarshalTypes(t *testing.T) {
 	}
 
 	for i, t := range tests {
-		err := Unmarshal([]byte("/test/"), t)
+		_, err := Unmarshal([]byte("/test/"), t)
 		c.Error(err, "%d did not error", i)
 	}
 }
@@ -644,12 +595,12 @@ func TestInvalidString(t *testing.T) {
 	}
 
 	for i, t := range tests {
-		_, err := Marshal(t)
+		_, err := Marshal(t, nil)
 		c.Error(err, "%d did not error", i)
 	}
 }
 
-func TestTruncatedInts(t *testing.T) {
+func TestTruncated(t *testing.T) {
 	c := check.New(t)
 
 	tests := []interface{}{
@@ -661,20 +612,88 @@ func TestTruncatedInts(t *testing.T) {
 		new(uint16),
 		new(uint32),
 		new(uint64),
+		new(float32),
+		new(float64),
+		new(complex64),
+		new(complex128),
 		struct{ A uint64 }{},
 	}
 
 	for i, t := range tests {
-		err := Unmarshal([]byte("/"), t)
+		_, err := Unmarshal([]byte("/"), t)
 		c.Error(err, "%d did not fail", i)
 	}
+}
+
+func TestEverythingTruncated(t *testing.T) {
+	c := check.New(t)
+
+	e := Everything{
+		A: math.MinInt8,
+		B: math.MinInt16,
+		C: math.MinInt32,
+		D: math.MinInt64,
+		E: math.MaxUint8,
+		F: math.MaxUint16,
+		G: math.MaxUint32,
+		H: math.MaxUint64,
+		I: float32(1.2),
+		J: float64(1123131.298488474),
+		K: 1 + 0i,
+		L: 1 + 0i,
+		M: true,
+	}
+
+	b := MustMarshal(e, nil)
+	for i := range b {
+		e2 := Everything{}
+
+		_, err := Unmarshal(b[:i], &e2)
+		c.Error(err, "%d did not fail", i)
+	}
+}
+
+func TestTruncatedExpects(t *testing.T) {
+	c := check.New(t)
+
+	s := State{NeedSep: true}
+	s = s.ExpectBool(new(bool))
+	c.Error(s.Err)
+
+	s = State{NeedSep: true}
+	s = s.ExpectInt64(new(int64))
+	c.Error(s.Err)
+
+	s = State{NeedSep: true}
+	s = s.ExpectUint64(new(uint64))
+	c.Error(s.Err)
+
+	s = State{NeedSep: true}
+	s = s.ExpectComplex128(new(complex128))
+	c.Error(s.Err)
+
+	s = State{NeedSep: true}
+	s = s.ExpectTag("meh")
+	c.Error(s.Err)
+
+	s = State{NeedSep: true}
+	s = s.ExpectTagBytes(nil)
+	c.Error(s.Err)
+
+	s = State{NeedSep: true}
+	s = s.ExpectBytes(nil)
+	c.Error(s.Err)
+
+	s = State{B: []byte("blah")}
+	s = s.ExpectBytes(nil)
+	c.Error(s.Err)
 }
 
 func TestUnmarshalWithoutPointer(t *testing.T) {
 	c := check.New(t)
 	v := struct{ A int }{}
 
-	err := Unmarshal(nil, v)
+	_, err := Unmarshal(nil, v)
 	c.Error(err)
 }
 
@@ -688,10 +707,10 @@ func TestWrongTag(t *testing.T) {
 		_ Static `path:"out"`
 	}{}
 
-	b, err := Marshal(in)
+	b, err := Marshal(in, nil)
 	c.MustNotError(err)
 
-	err = Unmarshal(b, &out)
+	_, err = Unmarshal(b, &out)
 	c.Error(err)
 }
 
@@ -707,28 +726,39 @@ func TestErrors(t *testing.T) {
 		F: 3,
 	}
 
-	p, err := Marshal(pie)
+	p, err := Marshal(pie, nil)
 	c.MustNotError(err)
 
 	err = nil
 	p2 := Pie{}
 	for i := range p {
-		err = UnmarshalFrom(bytes.NewBuffer(p[0:i]), &p2)
+		_, err = Unmarshal(p[0:i], &p2)
 		c.Error(err)
 	}
 
-	err = UnmarshalFrom(bytes.NewBuffer(p), &p2)
+	_, err = Unmarshal(p, &p2)
 	c.NotError(err)
 }
 
 func TestExpectTagCoverage(t *testing.T) {
 	c := check.New(t)
-	c.Error(defSep.ExpectTag("test", bytes.NewBufferString("/hai/")))
-	c.Error(defSep.ExpectTagBytes([]byte("test"), bytes.NewBufferString("hai")))
-	c.Error(defSep.ExpectTagBytes([]byte("test"), bytes.NewBufferString("/hai/")))
+
+	s := State{B: []byte("/hai/"), s: '/'}
+	s = s.ExpectTag("test")
+	c.Error(s.Err)
+
+	s = State{B: []byte("/hai/"), s: '/'}
+	s = s.ExpectTagBytes([]byte("test"))
+	c.Error(s.Err)
+
+	s = State{B: []byte("hai"), s: '/'}
+	s = s.ExpectTagBytes([]byte("test"))
+	c.Error(s.Err)
 }
 
 func BenchmarkMarshal(b *testing.B) {
+	b.ReportAllocs()
+
 	pie := Pie{
 		A: "apple",
 		B: 1,
@@ -738,16 +768,18 @@ func BenchmarkMarshal(b *testing.B) {
 		F: 1,
 	}
 
-	buff := bytes.Buffer{}
+	var out []byte
+	buff := make([]byte, 0, 1024)
 	for i := 0; i < b.N; i++ {
-		buff.Reset()
-		MustMarshalInto(pie, &buff)
+		out = MustMarshal(pie, buff)
 	}
 
-	b.SetBytes(int64(buff.Len()))
+	b.SetBytes(int64(len(out)))
 }
 
 func BenchmarkMarshalPathInterface(b *testing.B) {
+	b.ReportAllocs()
+
 	pie := PieWithInterface{
 		Pie{
 			A: "apple",
@@ -759,16 +791,18 @@ func BenchmarkMarshalPathInterface(b *testing.B) {
 		},
 	}
 
-	buff := bytes.Buffer{}
+	var out []byte
+	buff := make([]byte, 0, 1024)
 	for i := 0; i < b.N; i++ {
-		buff.Reset()
-		MustMarshalInto(pie, &buff)
+		out = MustMarshal(pie, buff)
 	}
 
-	b.SetBytes(int64(buff.Len()))
+	b.SetBytes(int64(len(out)))
 }
 
 func BenchmarkMarshalPathRaw(b *testing.B) {
+	b.ReportAllocs()
+
 	c := check.New(b)
 
 	pie := PieWithInterface{
@@ -782,18 +816,23 @@ func BenchmarkMarshalPathRaw(b *testing.B) {
 		},
 	}
 
-	buff := bytes.Buffer{}
+	var out []byte
+	buff := make([]byte, 0, 1024)
 	for i := 0; i < b.N; i++ {
-		buff.Reset()
-		err := pie.MarshalPath(&buff, defSep)
-		c.MustNotError(err)
+		s := pie.MarshalPath(State{
+			B:       buff,
+			NeedSep: true,
+			s:       byte(defSep),
+		})
+		c.MustNotError(s.Err)
+		out = s.B
 	}
 
-	b.SetBytes(int64(buff.Len()))
+	b.SetBytes(int64(len(out)))
 }
 
 func BenchmarkUnmarshal(b *testing.B) {
-	c := check.New(b)
+	b.ReportAllocs()
 
 	pie := Pie{
 		A: "apple",
@@ -804,8 +843,7 @@ func BenchmarkUnmarshal(b *testing.B) {
 		F: 1,
 	}
 
-	pb, err := Marshal(pie)
-	c.MustNotError(err)
+	pb := MustMarshal(pie, nil)
 	b.SetBytes(int64(len(pb)))
 
 	for i := 0; i < b.N; i++ {
@@ -815,7 +853,7 @@ func BenchmarkUnmarshal(b *testing.B) {
 }
 
 func BenchmarkUnmarshalPath(b *testing.B) {
-	c := check.New(b)
+	b.ReportAllocs()
 
 	pie := PieWithInterface{
 		Pie{
@@ -828,8 +866,7 @@ func BenchmarkUnmarshalPath(b *testing.B) {
 		},
 	}
 
-	pb, err := Marshal(pie)
-	c.MustNotError(err)
+	pb := MustMarshal(pie, nil)
 	b.SetBytes(int64(len(pb)))
 
 	for i := 0; i < b.N; i++ {
@@ -839,6 +876,8 @@ func BenchmarkUnmarshalPath(b *testing.B) {
 }
 
 func BenchmarkUnmarshalPathRaw(b *testing.B) {
+	b.ReportAllocs()
+
 	c := check.New(b)
 
 	pie := PieWithInterface{
@@ -852,15 +891,17 @@ func BenchmarkUnmarshalPathRaw(b *testing.B) {
 		},
 	}
 
-	pb, err := Marshal(pie)
-	c.MustNotError(err)
+	pb := MustMarshal(pie, nil)
 	b.SetBytes(int64(len(pb)))
 
-	pb = pb[1:]
 	for i := 0; i < b.N; i++ {
 		p2 := PieWithInterface{}
-		err := p2.UnmarshalPath(bytes.NewBuffer(pb), defSep)
-		c.MustNotError(err)
+		s := p2.UnmarshalPath(State{
+			B:       pb,
+			NeedSep: true,
+			s:       byte(defSep),
+		})
+		c.MustNotError(s.Err)
 	}
 }
 
@@ -876,7 +917,7 @@ func Example_usage() {
 	}
 
 	// This path isn't human-readable, so printing it anywhere is pointless
-	path := MustMarshal(v)
+	path := MustMarshal(v, nil)
 
 	// Reset everything, just in case
 	v.Type = ""
@@ -904,7 +945,7 @@ func ExampleStatic() {
 		Taste: "fantastic",
 	}
 
-	path := MustMarshal(v)
+	path := MustMarshal(v, nil)
 	fmt.Println(string(path))
 
 	// Output:
