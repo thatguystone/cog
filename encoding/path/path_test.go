@@ -743,9 +743,11 @@ func BenchmarkMarshal(b *testing.B) {
 		buff.Reset()
 		MustMarshalInto(pie, &buff)
 	}
+
+	b.SetBytes(int64(buff.Len()))
 }
 
-func BenchmarkMarshalPath(b *testing.B) {
+func BenchmarkMarshalPathInterface(b *testing.B) {
 	pie := PieWithInterface{
 		Pie{
 			A: "apple",
@@ -762,6 +764,32 @@ func BenchmarkMarshalPath(b *testing.B) {
 		buff.Reset()
 		MustMarshalInto(pie, &buff)
 	}
+
+	b.SetBytes(int64(buff.Len()))
+}
+
+func BenchmarkMarshalPathRaw(b *testing.B) {
+	c := check.New(b)
+
+	pie := PieWithInterface{
+		Pie{
+			A: "apple",
+			B: 1,
+			C: "apple",
+			D: 1,
+			E: "apple",
+			F: 1,
+		},
+	}
+
+	buff := bytes.Buffer{}
+	for i := 0; i < b.N; i++ {
+		buff.Reset()
+		err := pie.MarshalPath(&buff, defSep)
+		c.MustNotError(err)
+	}
+
+	b.SetBytes(int64(buff.Len()))
 }
 
 func BenchmarkUnmarshal(b *testing.B) {
@@ -778,6 +806,7 @@ func BenchmarkUnmarshal(b *testing.B) {
 
 	pb, err := Marshal(pie)
 	c.MustNotError(err)
+	b.SetBytes(int64(len(pb)))
 
 	for i := 0; i < b.N; i++ {
 		p2 := Pie{}
@@ -801,10 +830,37 @@ func BenchmarkUnmarshalPath(b *testing.B) {
 
 	pb, err := Marshal(pie)
 	c.MustNotError(err)
+	b.SetBytes(int64(len(pb)))
 
 	for i := 0; i < b.N; i++ {
 		p2 := PieWithInterface{}
 		MustUnmarshal(pb, &p2)
+	}
+}
+
+func BenchmarkUnmarshalPathRaw(b *testing.B) {
+	c := check.New(b)
+
+	pie := PieWithInterface{
+		Pie{
+			A: "apple",
+			B: 1,
+			C: "apple",
+			D: 1,
+			E: "apple",
+			F: 1,
+		},
+	}
+
+	pb, err := Marshal(pie)
+	c.MustNotError(err)
+	b.SetBytes(int64(len(pb)))
+
+	pb = pb[1:]
+	for i := 0; i < b.N; i++ {
+		p2 := PieWithInterface{}
+		err := p2.UnmarshalPath(bytes.NewBuffer(pb), defSep)
+		c.MustNotError(err)
 	}
 }
 
@@ -819,7 +875,7 @@ func Example_usage() {
 		Desirability: 99828,
 	}
 
-	// This path isn't human-readable, so printing it anywhere it pointless
+	// This path isn't human-readable, so printing it anywhere is pointless
 	path := MustMarshal(v)
 
 	// Reset everything, just in case
