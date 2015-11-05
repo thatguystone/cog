@@ -12,6 +12,12 @@ type Exit struct {
 	once sync.Once
 }
 
+// Exiter is anything that can cleanup after itself at any arbitrary point in
+// time.
+type Exiter interface {
+	Exit()
+}
+
 // NewExit creates a new Exit, useful for ensuring termination of goroutines on
 // exit.
 func NewExit() *Exit {
