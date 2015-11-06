@@ -3,6 +3,7 @@ package cfs
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -78,5 +79,22 @@ func TestTempFile(t *testing.T) {
 
 	if !strings.Contains(f.Name(), ".aac") {
 		t.Errorf("%s doesn't contain %s", f.Name(), ".aac")
+	}
+}
+
+func TestImportPath(t *testing.T) {
+	t.Parallel()
+
+	_, err := ImportPath("does not exist")
+	if err == nil {
+		t.Errorf("Found a file that doesn't exist...")
+	}
+
+	_, filename, _, _ := runtime.Caller(0)
+	path, err := ImportPath(filename)
+	if err != nil {
+		t.Errorf("File should have been found: %s", filename)
+	} else if path != "github.com/thatguystone/cog/cfs" {
+		t.Errorf("Wrong path returned: %s", path)
 	}
 }

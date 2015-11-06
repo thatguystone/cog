@@ -67,8 +67,12 @@ func DirExists(path string) (bool, error) {
 // TempFile creates a new temporary file in /tmp/ (or equivalent) with the given
 // prefix and, unlike ioutil.TempFile, extension.
 func TempFile(prefix, ext string) (f *os.File, err error) {
-	dir := os.TempDir()
+	return TempFileIn(os.TempDir(), prefix, ext)
+}
 
+// TempFileIn creates a new temporary file in the given directory with the given
+// prefix and, unlike ioutil.TempFile, extension.
+func TempFileIn(dir, prefix, ext string) (f *os.File, err error) {
 	if !strings.HasPrefix(ext, ".") {
 		ext = "." + ext
 	}
@@ -86,4 +90,21 @@ func TempFile(prefix, ext string) (f *os.File, err error) {
 	}
 
 	return
+}
+
+// ImportPath takes the given absolute path and returns the package that
+// contains the file, in "github.com/thatguystone/cog" form.
+func ImportPath(absPath string) (string, error) {
+	paths := strings.Split(os.Getenv("GOPATH"), string(os.PathListSeparator))
+	for _, path := range paths {
+		if strings.HasPrefix(absPath, path) {
+			imp := strings.TrimPrefix(absPath, path)
+			imp = strings.Trim(imp, string(filepath.Separator))
+			imp = strings.TrimPrefix(imp, "src/")
+
+			return filepath.Dir(imp), nil
+		}
+	}
+
+	return "", fmt.Errorf("could not find %s in $GOPATH", absPath)
 }
