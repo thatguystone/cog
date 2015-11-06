@@ -364,7 +364,7 @@ func (s State) marshalStruct(rt reflect.Type, rv reflect.Value) State {
 
 			if f.Kind() == reflect.Ptr {
 				if f.IsNil() {
-					s.Err = fmt.Errorf("path: cannot Marshal into a nil pointer")
+					s.Err = fmt.Errorf("path: cannot Marshal from a nil pointer")
 					return s
 				}
 
@@ -828,23 +828,16 @@ func (s State) unmarshalStruct(rt reflect.Type, v reflect.Value) State {
 	n := v.NumField()
 	for i := 0; i < n; i++ {
 		f := v.Field(i)
+		ft := f.Type()
 
-		if f.Type() == staticType {
+		if ft == staticType {
 			s = s.ExpectTag(rt.Field(i).Tag.Get("path"))
 		} else {
 			if !f.CanSet() { // unexported
 				continue
 			}
 
-			var i interface{}
-
-			if f.Kind() == reflect.Ptr {
-				i = f.Interface()
-			} else {
-				i = f.Addr().Interface()
-			}
-
-			s = s.Unmarshal(i)
+			s = s.Unmarshal(s.getSettableInterface(ft, f))
 		}
 
 		if s.Err != nil {
@@ -856,14 +849,15 @@ func (s State) unmarshalStruct(rt reflect.Type, v reflect.Value) State {
 }
 
 func (s State) unmarshalArray(rt reflect.Type, rv reflect.Value) State {
-	fixed := s.hasFixedSize(rt.Elem().Kind())
+	et := rt.Elem()
+	fixed := s.hasFixedSize(et.Kind())
 
 	disabled := s.DisableSep
 	s.DisableSep = fixed
 
 	n := rv.Len()
 	for i := 0; i < n; i++ {
-		s = s.Unmarshal(rv.Index(i).Addr().Interface())
+		s = s.Unmarshal(s.getSettableInterface(et, rv.Index(i)))
 		if s.Err != nil {
 			break
 		}
@@ -873,6 +867,22 @@ func (s State) unmarshalArray(rt reflect.Type, rv reflect.Value) State {
 	s.NeedSep = fixed
 
 	return s.MaybeExpectSep()
+}
+
+func (s State) getSettableInterface(t reflect.Type, v reflect.Value) (i interface{}) {
+	if t.Kind() == reflect.Ptr {
+		if v.IsNil() {
+			nv := reflect.New(t.Elem())
+			v.Set(nv)
+			i = nv.Interface()
+		} else {
+			i = v.Interface()
+		}
+	} else {
+		i = v.Addr().Interface()
+	}
+
+	return
 }
 
 func (s State) hasFixedSize(kind reflect.Kind) bool {

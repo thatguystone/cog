@@ -262,15 +262,6 @@ func TestNonNils(t *testing.T) {
 		B: new(int16),
 		C: new(int32),
 		D: new(int64),
-		E: new(uint8),
-		F: new(uint16),
-		G: new(uint32),
-		H: new(uint64),
-		I: new(float32),
-		J: new(float64),
-		K: new(complex64),
-		L: new(complex128),
-		M: new(bool),
 	}
 
 	trampoline(c, &p, &p2, nil)
