@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"reflect"
 	"sort"
 	"sync"
 	"testing"
@@ -82,18 +83,47 @@ type Nesting struct {
 	NestingU
 }
 
-func (p PieWithInterface) MarshalPath(s State) State {
-	s.MaybeEmitSep()
-	s.B = append(s.B, "pie/"...)
-	s = s.EmitString(p.A)
-	s = s.EmitUint8(p.B)
-	s = s.EmitString(p.C)
-	s = s.EmitUint8(p.D)
-	s = s.EmitString(p.E)
-	s = s.EmitUint8(p.F)
-	s.B = append(s.B, "end/"...)
+type b bool
+type i8 int8
+type i16 int16
+type i32 int32
+type i64 int64
+type u8 uint8
+type u16 uint16
+type u32 uint32
+type u64 uint64
+type f32 float32
+type f64 float64
+type c64 complex64
+type c128 complex128
 
-	return s
+type bp *bool
+type i8p *int8
+type i16p *int16
+type i32p *int32
+type i64p *int64
+type u8p *uint8
+type u16p *uint16
+type u32p *uint32
+type u64p *uint64
+type f32p *float32
+type f64p *float64
+type c64p *complex64
+type c128p *complex128
+
+func (p PieWithInterface) MarshalPath(e Encoder) Encoder {
+	e.B = append(e.B, "pie"...)
+	e = e.EmitSep()
+	e = e.EmitString(p.A)
+	e = e.EmitUint8(p.B)
+	e = e.EmitString(p.C)
+	e = e.EmitUint8(p.D)
+	e = e.EmitString(p.E)
+	e = e.EmitUint8(p.F)
+	e.B = append(e.B, "end"...)
+	e = e.EmitSep()
+
+	return e
 }
 
 var (
@@ -101,38 +131,38 @@ var (
 	pieWithInterfaceTag1 = []byte("end")
 )
 
-func (p *PieWithInterface) UnmarshalPath(s State) State {
-	s = s.ExpectTagBytes(pieWithInterfaceTag0)
+func (p *PieWithInterface) UnmarshalPath(d Decoder) Decoder {
+	d = d.ExpectTagBytes(pieWithInterfaceTag0)
 
-	if s.Err == nil {
-		s = s.ExpectString(&p.A)
+	if d.Err == nil {
+		d = d.ExpectString(&p.A)
 	}
 
-	if s.Err == nil {
-		s = s.ExpectUint8(&p.B)
+	if d.Err == nil {
+		d = d.ExpectUint8(&p.B)
 	}
 
-	if s.Err == nil {
-		s = s.ExpectString(&p.C)
+	if d.Err == nil {
+		d = d.ExpectString(&p.C)
 	}
 
-	if s.Err == nil {
-		s = s.ExpectUint8(&p.D)
+	if d.Err == nil {
+		d = d.ExpectUint8(&p.D)
 	}
 
-	if s.Err == nil {
-		s = s.ExpectString(&p.E)
+	if d.Err == nil {
+		d = d.ExpectString(&p.E)
 	}
 
-	if s.Err == nil {
-		s = s.ExpectUint8(&p.F)
+	if d.Err == nil {
+		d = d.ExpectUint8(&p.F)
 	}
 
-	if s.Err == nil {
-		s = s.ExpectTagBytes(pieWithInterfaceTag1)
+	if d.Err == nil {
+		d = d.ExpectTagBytes(pieWithInterfaceTag1)
 	}
 
-	return s
+	return d
 }
 
 func trampoline(c *check.C, in interface{}, out interface{}, path []byte) {
@@ -508,7 +538,7 @@ func TestFixedArray(t *testing.T) {
 
 	trampoline(
 		c, &in, &out,
-		[]byte("/\x00\x00\x00\x01\x00\x00\x00\x02\x00\x00\x00\x03/"))
+		[]byte("/\x00\x00\x00\x01/\x00\x00\x00\x02/\x00\x00\x00\x03/"))
 }
 
 func TestVariableArray(t *testing.T) {
@@ -644,42 +674,6 @@ func TestEverythingTruncated(t *testing.T) {
 	}
 }
 
-func TestTruncatedExpects(t *testing.T) {
-	c := check.New(t)
-
-	s := State{NeedSep: true}
-	s = s.ExpectBool(new(bool))
-	c.Error(s.Err)
-
-	s = State{NeedSep: true}
-	s = s.ExpectInt64(new(int64))
-	c.Error(s.Err)
-
-	s = State{NeedSep: true}
-	s = s.ExpectUint64(new(uint64))
-	c.Error(s.Err)
-
-	s = State{NeedSep: true}
-	s = s.ExpectComplex128(new(complex128))
-	c.Error(s.Err)
-
-	s = State{NeedSep: true}
-	s = s.ExpectTag("meh")
-	c.Error(s.Err)
-
-	s = State{NeedSep: true}
-	s = s.ExpectTagBytes(nil)
-	c.Error(s.Err)
-
-	s = State{NeedSep: true}
-	s = s.ExpectBytes(nil)
-	c.Error(s.Err)
-
-	s = State{B: []byte("blah")}
-	s = s.ExpectBytes(nil)
-	c.Error(s.Err)
-}
-
 func TestUnmarshalWithoutPointer(t *testing.T) {
 	c := check.New(t)
 	v := struct{ A int }{}
@@ -731,20 +725,146 @@ func TestErrors(t *testing.T) {
 	c.NotError(err)
 }
 
+func TestMarshalIndirectTypes(t *testing.T) {
+	c := check.New(t)
+
+	path := []byte("/\x00\x00\x00\x01/")
+	arrayPath := []byte("/\x00\x00\x00\x01/\x00\x00\x00\x02/")
+
+	type ptr *int32
+	var p ptr = new(int32)
+	*p = 1
+	b := MustMarshal(p, nil)
+	c.Equal(path, b)
+
+	pa := [...]ptr{new(int32), new(int32)}
+	*pa[0] = 1
+	*pa[1] = 2
+	b = MustMarshal(pa, nil)
+	c.Equal(arrayPath, b)
+
+	type direct int32
+	var d direct = 1
+	b = MustMarshal(d, nil)
+	c.Equal(path, b)
+
+	pd := [...]direct{1, 2}
+	b = MustMarshal(pd, nil)
+	c.Equal(arrayPath, b)
+}
+
+func TestUnmarshalIndirectTypes(t *testing.T) {
+	c := check.New(t)
+
+	path := []byte("/\x00\x00\x00\x01/")
+	arrayPath := []byte("/\x00\x00\x00\x01/\x00\x00\x00\x02/")
+
+	type ptr *int32
+	var p ptr = new(int32)
+	MustUnmarshal(path, &p)
+	c.Equal(1, *p)
+
+	pa := [...]ptr{new(int32), new(int32)}
+	MustUnmarshal(arrayPath, &pa)
+	c.Equal(*pa[0], 1)
+	c.Equal(*pa[1], 2)
+
+	type direct int32
+	var d direct
+	MustUnmarshal(path, &d)
+	c.Equal(1, d)
+
+	pd := [...]direct{1, 2}
+	MustUnmarshal(arrayPath, &pd)
+	c.Equal(pd[0], 1)
+	c.Equal(pd[1], 2)
+}
+
+func TestIndirectTypesCoverage(t *testing.T) {
+	c := check.New(t)
+
+	tests := []interface{}{
+		b(false),
+		i8(1),
+		i16(1),
+		i32(1),
+		i64(1),
+		u8(1),
+		u16(1),
+		u32(1),
+		u64(1),
+		f32(1),
+		f64(1),
+		c64(1),
+		c128(1),
+	}
+
+	for i, test := range tests {
+		pb, err := Marshal(test, nil)
+		c.MustNotError(err, "direct failed at %d", i)
+
+		_, err = Unmarshal(pb, reflect.New(reflect.TypeOf(test)).Interface())
+		c.MustNotError(err, "direct failed at %d", i)
+	}
+
+	tests = []interface{}{
+		bp(new(bool)),
+		i8p(new(int8)),
+		i16p(new(int16)),
+		i32p(new(int32)),
+		i64p(new(int64)),
+		u8p(new(uint8)),
+		u16p(new(uint16)),
+		u32p(new(uint32)),
+		u64p(new(uint64)),
+		f32p(new(float32)),
+		f64p(new(float64)),
+		c64p(new(complex64)),
+		c128p(new(complex128)),
+	}
+
+	for i, test := range tests {
+		pb, err := Marshal(test, nil)
+		c.NotError(err, "ptr failed at %d", i)
+
+		_, err = Unmarshal(pb, reflect.New(reflect.TypeOf(test)).Interface())
+		c.MustNotError(err, "ptr failed at %d", i)
+	}
+}
+
 func TestExpectTagCoverage(t *testing.T) {
 	c := check.New(t)
 
-	s := State{B: []byte("/hai/"), s: '/'}
-	s = s.ExpectTag("test")
-	c.Error(s.Err)
+	d := defSep.NewDecoder([]byte("/hai/"))
+	d = d.ExpectTag("test")
+	c.Error(d.Err)
 
-	s = State{B: []byte("/hai/"), s: '/'}
-	s = s.ExpectTagBytes([]byte("test"))
-	c.Error(s.Err)
+	d = defSep.NewDecoder([]byte("/hai/"))
+	d = d.ExpectTagBytes([]byte("test"))
+	c.Error(d.Err)
 
-	s = State{B: []byte("hai"), s: '/'}
-	s = s.ExpectTagBytes([]byte("test"))
-	c.Error(s.Err)
+	d = defSep.NewDecoder([]byte("/hai"))
+	d = d.ExpectTagBytes([]byte("test"))
+	c.Error(d.Err)
+}
+
+func TestExpectBytesCoverage(t *testing.T) {
+	c := check.New(t)
+
+	d := defSep.NewDecoder([]byte("/hai"))
+	d = d.ExpectBytes(nil)
+	c.Error(d.Err)
+
+	ba := [3]uint8{}
+	d = defSep.NewDecoder([]byte("/\x01\x02\x03/"))
+	d = d.ExpectByteArray(ba[:])
+	c.MustNotError(d.Err)
+	c.Equal([3]uint8{1, 2, 3}, ba)
+
+	ba = [3]uint8{}
+	d = defSep.NewDecoder([]byte("/\x01\x02"))
+	d = d.ExpectByteArray(ba[:])
+	c.Error(d.Err)
 }
 
 func BenchmarkMarshal(b *testing.B) {
@@ -810,13 +930,9 @@ func BenchmarkMarshalPathRaw(b *testing.B) {
 	var out []byte
 	buff := make([]byte, 0, 1024)
 	for i := 0; i < b.N; i++ {
-		s := pie.MarshalPath(State{
-			B:       buff,
-			NeedSep: true,
-			s:       byte(defSep),
-		})
-		c.MustNotError(s.Err)
-		out = s.B
+		e := pie.MarshalPath(defSep.NewEncoder(buff))
+		c.MustNotError(e.Err)
+		out = e.B
 	}
 
 	b.SetBytes(int64(len(out)))
@@ -885,14 +1001,13 @@ func BenchmarkUnmarshalPathRaw(b *testing.B) {
 	pb := MustMarshal(pie, nil)
 	b.SetBytes(int64(len(pb)))
 
+	d := defSep.NewDecoder(pb)
+	c.MustNotError(d.Err)
+
 	for i := 0; i < b.N; i++ {
 		p2 := PieWithInterface{}
-		s := p2.UnmarshalPath(State{
-			B:       pb,
-			NeedSep: true,
-			s:       byte(defSep),
-		})
-		c.MustNotError(s.Err)
+		dd := p2.UnmarshalPath(d)
+		c.MustNotError(dd.Err)
 	}
 }
 
