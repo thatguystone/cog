@@ -383,7 +383,7 @@ func (s State) marshalStruct(rt reflect.Type, rv reflect.Value) State {
 }
 
 func (s State) marshalArray(rt reflect.Type, rv reflect.Value) State {
-	fixed := s.hasFixedSize(rt.Elem().Kind())
+	fixed := hasFixedSize(rt.Elem().Kind())
 
 	disabled := s.DisableSep
 	s.DisableSep = fixed
@@ -728,19 +728,19 @@ func (s State) ExpectTag(tag string) State {
 		return s
 	}
 
-	i := bytes.IndexByte(s.B, s.s)
-	if i == -1 {
-		s.Err = fmt.Errorf("path: failed to read tag: missing separator")
+	n := len(tag)
+	if len(s.B) < n {
+		s.Err = fmt.Errorf("path: failed to read tag: tag truncated")
 		return s
 	}
 
-	got := string(s.B[:i])
+	got := string(s.B[:n])
 	if got != tag {
 		s.Err = fmt.Errorf("path: tag mismatch: %s != %s", got, tag)
 		return s
 	}
 
-	s.B = s.B[i:]
+	s.B = s.B[n:]
 
 	return s.ExpectSep()
 }
@@ -755,20 +755,20 @@ func (s State) ExpectTagBytes(tag []byte) State {
 		return s
 	}
 
-	i := bytes.IndexByte(s.B, s.s)
-	if i == -1 {
-		s.Err = fmt.Errorf("path: failed to read tag: missing separator")
+	n := len(tag)
+	if len(s.B) < n {
+		s.Err = fmt.Errorf("path: failed to read tag: tag truncated")
 		return s
 	}
 
-	if !bytes.Equal(s.B[:i], tag) {
+	if !bytes.Equal(s.B[:n], tag) {
 		s.Err = fmt.Errorf("path: tag mismatch: %s != %s",
-			string(s.B[:i]),
+			string(s.B[:n]),
 			string(tag))
 		return s
 	}
 
-	s.B = s.B[i:]
+	s.B = s.B[n:]
 
 	return s.ExpectSep()
 }
@@ -850,7 +850,7 @@ func (s State) unmarshalStruct(rt reflect.Type, v reflect.Value) State {
 
 func (s State) unmarshalArray(rt reflect.Type, rv reflect.Value) State {
 	et := rt.Elem()
-	fixed := s.hasFixedSize(et.Kind())
+	fixed := hasFixedSize(et.Kind())
 
 	disabled := s.DisableSep
 	s.DisableSep = fixed
@@ -885,6 +885,6 @@ func (s State) getSettableInterface(t reflect.Type, v reflect.Value) (i interfac
 	return
 }
 
-func (s State) hasFixedSize(kind reflect.Kind) bool {
+func hasFixedSize(kind reflect.Kind) bool {
 	return kind >= reflect.Bool && kind <= reflect.Complex128
 }

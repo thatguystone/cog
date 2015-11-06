@@ -230,7 +230,7 @@ func TestNonNilPtrs(t *testing.T) {
 	}
 }
 
-func TestNonNils(t *testing.T) {
+func TestAutoValueCreation(t *testing.T) {
 	c := check.New(t)
 
 	p := EverythingPtr{
