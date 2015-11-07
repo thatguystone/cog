@@ -413,9 +413,6 @@ func (d Decoder) unmarshalReflect(v interface{}) Decoder {
 	case reflect.Array:
 		return d.unmarshalArray(rt, rv)
 
-	case reflect.Ptr:
-		return d.Unmarshal(d.getSettableInterface(rt, rv))
-
 	case reflect.Bool:
 		return d.Unmarshal((*bool)(unsafe.Pointer(rv.UnsafeAddr())))
 
@@ -446,6 +443,10 @@ func (d Decoder) unmarshalReflect(v interface{}) Decoder {
 	case reflect.Complex128:
 		return d.Unmarshal((*complex128)(unsafe.Pointer(rv.UnsafeAddr())))
 
+	case reflect.Ptr:
+		d.Err = fmt.Errorf("path: sorry, pointers are not allowed")
+		return d
+
 	default:
 		d.Err = fmt.Errorf("path: unsupported unmarshal kind: %s", kind)
 		return d
@@ -456,16 +457,15 @@ func (d Decoder) unmarshalStruct(rt reflect.Type, v reflect.Value) Decoder {
 	n := v.NumField()
 	for i := 0; i < n; i++ {
 		f := v.Field(i)
-		ft := f.Type()
 
-		if ft == staticType {
+		if f.Type() == staticType {
 			d = d.ExpectTag(rt.Field(i).Tag.Get("path"))
 		} else {
 			if !f.CanSet() { // unexported
 				continue
 			}
 
-			d = d.Unmarshal(d.getSettableInterface(ft, f))
+			d = d.Unmarshal(f.Addr().Interface())
 		}
 
 		if d.Err != nil {
@@ -477,31 +477,13 @@ func (d Decoder) unmarshalStruct(rt reflect.Type, v reflect.Value) Decoder {
 }
 
 func (d Decoder) unmarshalArray(rt reflect.Type, rv reflect.Value) Decoder {
-	et := rt.Elem()
-
 	n := rv.Len()
 	for i := 0; i < n; i++ {
-		d = d.Unmarshal(d.getSettableInterface(et, rv.Index(i)))
+		d = d.Unmarshal(rv.Index(i).Addr().Interface())
 		if d.Err != nil {
 			break
 		}
 	}
 
 	return d
-}
-
-func (d Decoder) getSettableInterface(t reflect.Type, v reflect.Value) (i interface{}) {
-	if t.Kind() == reflect.Ptr {
-		if v.IsNil() {
-			nv := reflect.New(t.Elem())
-			v.Set(nv)
-			i = nv.Interface()
-		} else {
-			i = v.Interface()
-		}
-	} else {
-		i = v.Addr().Interface()
-	}
-
-	return
 }

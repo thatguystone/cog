@@ -53,78 +53,38 @@ func (e Encoder) Marshal(v interface{}) Encoder {
 
 	case bool:
 		return e.EmitBool(v)
-	case *bool:
-		return e.EmitBool(*v)
 
 	case int8:
 		return e.EmitInt8(v)
-	case *int8:
-		return e.EmitInt8(*v)
-
 	case int16:
 		return e.EmitInt16(v)
-	case *int16:
-		return e.EmitInt16(*v)
-
 	case int32:
 		return e.EmitInt32(v)
-	case *int32:
-		return e.EmitInt32(*v)
-
 	case int64:
 		return e.EmitInt64(v)
-	case *int64:
-		return e.EmitInt64(*v)
 
 	case uint8:
 		return e.EmitUint8(v)
-	case *uint8:
-		return e.EmitUint8(*v)
-
 	case uint16:
 		return e.EmitUint16(v)
-	case *uint16:
-		return e.EmitUint16(*v)
-
 	case uint32:
 		return e.EmitUint32(v)
-	case *uint32:
-		return e.EmitUint32(*v)
-
 	case uint64:
 		return e.EmitUint64(v)
-	case *uint64:
-		return e.EmitUint64(*v)
 
 	case float32:
 		return e.EmitFloat32(v)
-	case *float32:
-		return e.EmitFloat32(*v)
-
 	case float64:
 		return e.EmitFloat64(v)
-	case *float64:
-		return e.EmitFloat64(*v)
-
 	case complex64:
 		return e.EmitComplex64(v)
-	case *complex64:
-		return e.EmitComplex64(*v)
-
 	case complex128:
 		return e.EmitComplex128(v)
-	case *complex128:
-		return e.EmitComplex128(*v)
 
 	case string:
 		return e.EmitString(v)
-	case *string:
-		return e.EmitString(*v)
-
 	case []byte:
 		return e.EmitBytes(v)
-	case *[]byte:
-		return e.EmitBytes(*v)
 
 	default:
 		return e.marshalReflect(v)
@@ -275,9 +235,8 @@ func (e Encoder) marshalReflect(v interface{}) Encoder {
 
 	kind := rt.Kind()
 	if kind == reflect.Ptr {
-		// Can't fall through here: a ** type can't have any methods, but it its
-		// corresponding * might have a MarshalPath(), so need to check again.
-		return e.marshalPtr(rv)
+		e.Err = fmt.Errorf("path: sorry, pointers are not allowed")
+		return e
 	}
 
 	switch kind {
@@ -323,17 +282,6 @@ func (e Encoder) marshalReflect(v interface{}) Encoder {
 	}
 }
 
-func (e Encoder) marshalPtr(rv reflect.Value) Encoder {
-	if rv.IsNil() {
-		e.Err = fmt.Errorf("path: cannot Marshal from a nil pointer")
-	} else {
-		rv = reflect.Indirect(rv)
-		e = e.Marshal(rv.Interface())
-	}
-
-	return e
-}
-
 func (e Encoder) marshalStruct(rt reflect.Type, rv reflect.Value) Encoder {
 	n := rv.NumField()
 	for i := 0; i < n; i++ {
@@ -348,11 +296,7 @@ func (e Encoder) marshalStruct(rt reflect.Type, rv reflect.Value) Encoder {
 				continue
 			}
 
-			if f.Kind() == reflect.Ptr {
-				e = e.marshalPtr(f)
-			} else {
-				e = e.Marshal(f.Interface())
-			}
+			e = e.Marshal(f.Interface())
 		}
 
 		if e.Err != nil {

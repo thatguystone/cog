@@ -175,7 +175,10 @@ func trampoline(c *check.C, in interface{}, out interface{}, path []byte) {
 
 	_, err = Unmarshal(p, out)
 	c.MustNotError(err)
-	c.Equal(in, out)
+
+	// Follow the ptr so that the Equal check works
+	indirectOut := reflect.Indirect(reflect.ValueOf(out)).Interface()
+	c.Equal(in, indirectOut)
 }
 
 func TestEmpty(t *testing.T) {
@@ -184,7 +187,7 @@ func TestEmpty(t *testing.T) {
 	e := Empty{}
 	e2 := Empty{}
 
-	trampoline(c, &e, &e2, []byte("/"))
+	trampoline(c, e, &e2, []byte("/"))
 }
 
 func TestNils(t *testing.T) {
@@ -202,34 +205,6 @@ func TestNils(t *testing.T) {
 
 	_, err = Unmarshal([]byte("/test/"), nil)
 	c.Error(err)
-}
-
-func TestNilPtrs(t *testing.T) {
-	c := check.New(t)
-
-	tests := []interface{}{
-		(*bool)(nil),
-		(*int8)(nil),
-		(*int16)(nil),
-		(*int32)(nil),
-		(*int64)(nil),
-		(*uint8)(nil),
-		(*uint16)(nil),
-		(*uint32)(nil),
-		(*uint64)(nil),
-		(*float32)(nil),
-		(*float64)(nil),
-		(*complex64)(nil),
-		(*complex128)(nil),
-		(*string)(nil),
-		(*[]byte)(nil),
-	}
-
-	for _, t := range tests {
-		c.Panic(func() {
-			Marshal(t, nil)
-		})
-	}
 }
 
 func TestNonNilPtrs(t *testing.T) {
@@ -253,48 +228,9 @@ func TestNonNilPtrs(t *testing.T) {
 	}
 
 	for _, t := range tests {
-		c.NotPanic(func() {
-			_, err := Marshal(t, nil)
-			c.NotError(err)
-		})
+		_, err := Marshal(t, nil)
+		c.Error(err)
 	}
-}
-
-func TestAutoValueCreation(t *testing.T) {
-	c := check.New(t)
-
-	p := EverythingPtr{
-		A: new(int8),
-		B: new(int16),
-		C: new(int32),
-		D: new(int64),
-		E: new(uint8),
-		F: new(uint16),
-		G: new(uint32),
-		H: new(uint64),
-		I: new(float32),
-		J: new(float64),
-		K: new(complex64),
-		L: new(complex128),
-		M: new(bool),
-	}
-
-	*p.A = 2
-	*p.B = 1
-	*p.C = 6
-	*p.D = 8
-	*p.E = 8
-	*p.K = 10 + 19i
-	*p.M = true
-
-	p2 := EverythingPtr{
-		A: new(int8),
-		B: new(int16),
-		C: new(int32),
-		D: new(int64),
-	}
-
-	trampoline(c, &p, &p2, nil)
 }
 
 func TestMarshalerInterface(t *testing.T) {
@@ -312,7 +248,7 @@ func TestMarshalerInterface(t *testing.T) {
 	}
 	p2 := PieWithInterface{}
 
-	trampoline(c, &p, &p2, nil)
+	trampoline(c, p, &p2, nil)
 }
 
 func TestNonStruct(t *testing.T) {
@@ -321,7 +257,7 @@ func TestNonStruct(t *testing.T) {
 	i := int32(1)
 	i2 := int32(0)
 
-	trampoline(c, &i, &i2, []byte("/\x00\x00\x00\x01/"))
+	trampoline(c, i, &i2, []byte("/\x00\x00\x00\x01/"))
 }
 
 func TestBytes(t *testing.T) {
@@ -331,7 +267,7 @@ func TestBytes(t *testing.T) {
 	var i2 []byte
 	out := []byte("/test/")
 
-	trampoline(c, &i, &i2, out)
+	trampoline(c, i, &i2, out)
 
 	p, err := Marshal(i, nil)
 	c.MustNotError(err)
@@ -401,7 +337,7 @@ func TestEverything(t *testing.T) {
 
 	e2 := Everything{}
 
-	trampoline(c, &e, &e2, nil)
+	trampoline(c, e, &e2, nil)
 }
 
 func TestSort(t *testing.T) {
@@ -476,7 +412,7 @@ func TestFuzz(t *testing.T) {
 
 			e2 := Everything{}
 
-			trampoline(c, &e, &e2, nil)
+			trampoline(c, e, &e2, nil)
 		}()
 	}
 
@@ -499,7 +435,7 @@ func TestNesting(t *testing.T) {
 
 	n2 := Nesting{}
 
-	trampoline(c, &n, &n2, []byte("/\x01/\x02/\x03/\x04/"))
+	trampoline(c, n, &n2, []byte("/\x01/\x02/\x03/\x04/"))
 }
 
 func TestMinMax(t *testing.T) {
@@ -520,7 +456,7 @@ func TestMinMax(t *testing.T) {
 
 			mm2 := MinMax{}
 
-			trampoline(c, &mm, &mm2, nil)
+			trampoline(c, mm, &mm2, nil)
 		}(i8, u8)
 
 		i8++
@@ -537,7 +473,7 @@ func TestFixedArray(t *testing.T) {
 	out := [3]int32{}
 
 	trampoline(
-		c, &in, &out,
+		c, in, &out,
 		[]byte("/\x00\x00\x00\x01/\x00\x00\x00\x02/\x00\x00\x00\x03/"))
 }
 
@@ -548,8 +484,21 @@ func TestVariableArray(t *testing.T) {
 	out := [3]string{}
 
 	trampoline(
-		c, &in, &out,
+		c, in, &out,
 		[]byte("/test/something/fun/"))
+}
+
+func TestArrayPtrs(t *testing.T) {
+	c := check.New(t)
+
+	in := [2]*uint32{new(uint32), new(uint32)}
+	out := [2]*uint32{}
+
+	_, err := Marshal(in, nil)
+	c.Error(err)
+
+	_, err = Unmarshal([]byte("/\x00\x00\x00\x01/\x00\x00\x00\x02/"), &out)
+	c.Error(err)
 }
 
 func TestSeparator(t *testing.T) {
@@ -733,19 +682,18 @@ func TestMarshalIndirectTypes(t *testing.T) {
 
 	type ptr *int32
 	var p ptr = new(int32)
-	*p = 1
-	b := MustMarshal(p, nil)
-	c.Equal(path, b)
+	_, err := Marshal(p, nil)
+	c.Error(err)
 
 	pa := [...]ptr{new(int32), new(int32)}
 	*pa[0] = 1
 	*pa[1] = 2
-	b = MustMarshal(pa, nil)
-	c.Equal(arrayPath, b)
+	_, err = Marshal(pa, nil)
+	c.Error(err)
 
 	type direct int32
 	var d direct = 1
-	b = MustMarshal(d, nil)
+	b := MustMarshal(d, nil)
 	c.Equal(path, b)
 
 	pd := [...]direct{1, 2}
@@ -761,13 +709,12 @@ func TestUnmarshalIndirectTypes(t *testing.T) {
 
 	type ptr *int32
 	var p ptr = new(int32)
-	MustUnmarshal(path, &p)
-	c.Equal(1, *p)
+	_, err := Unmarshal(path, &p)
+	c.Error(err)
 
 	pa := [...]ptr{new(int32), new(int32)}
-	MustUnmarshal(arrayPath, &pa)
-	c.Equal(*pa[0], 1)
-	c.Equal(*pa[1], 2)
+	_, err = Unmarshal(arrayPath, &pa)
+	c.Error(err)
 
 	type direct int32
 	var d direct
@@ -805,30 +752,6 @@ func TestIndirectTypesCoverage(t *testing.T) {
 
 		_, err = Unmarshal(pb, reflect.New(reflect.TypeOf(test)).Interface())
 		c.MustNotError(err, "direct failed at %d", i)
-	}
-
-	tests = []interface{}{
-		bp(new(bool)),
-		i8p(new(int8)),
-		i16p(new(int16)),
-		i32p(new(int32)),
-		i64p(new(int64)),
-		u8p(new(uint8)),
-		u16p(new(uint16)),
-		u32p(new(uint32)),
-		u64p(new(uint64)),
-		f32p(new(float32)),
-		f64p(new(float64)),
-		c64p(new(complex64)),
-		c128p(new(complex128)),
-	}
-
-	for i, test := range tests {
-		pb, err := Marshal(test, nil)
-		c.NotError(err, "ptr failed at %d", i)
-
-		_, err = Unmarshal(pb, reflect.New(reflect.TypeOf(test)).Interface())
-		c.MustNotError(err, "ptr failed at %d", i)
 	}
 }
 
