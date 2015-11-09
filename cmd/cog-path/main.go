@@ -28,7 +28,7 @@ func main() {
 	}
 
 	for _, file := range files {
-		err := path.GenerateFromFile(file)
+		err := path.GenerateFrom(file)
 		if err != nil {
 			fmt.Printf("Failed to generate for %s: %v\n", file, err)
 		}

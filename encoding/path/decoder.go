@@ -17,10 +17,14 @@ type Unmarshaler interface {
 	UnmarshalPath(d Decoder) Decoder
 }
 
+// A Decoder is used for Unmarshaling paths. Never create this directly; use
+// NewDecoder instead.
 type Decoder struct {
 	State
 }
 
+// NewDecoder creates a new Decoder and checks that the first byte of the path
+// is the appropriate separator.
 func (s Separator) NewDecoder(b []byte) (dec Decoder) {
 	if len(b) == 0 || b[0] != byte(s) {
 		dec.Err = fmt.Errorf("path: first char of path is not %c", s)

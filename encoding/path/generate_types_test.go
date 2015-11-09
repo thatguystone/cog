@@ -1,90 +1,70 @@
 package path
 
 import (
-	"bytes"
-	"sync"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"testing"
 
 	"github.com/thatguystone/cog/check"
-	"github.com/thatguystone/cog/cio"
-	"github.com/thatguystone/cog/ctime"
 )
 
-type arrays struct {
-	A [8]byte
-	B [8]int8
-	C [8]uint8
-	D [8]uint32
-	E [8][2]uint32
+func TestMain(m *testing.M) {
+	check.Main(m)
 }
 
-func TestGenerateFromTypes(t *testing.T) {
+func TestGenerateFromTypesBasic(t *testing.T) {
 	c := check.New(t)
 
-	b := bytes.Buffer{}
-	err := generateFromTypesInto(&b, "test",
-		Pie{},
-		new(arrays),
-		Everything{},
-		new(EverythingPtr))
+	if testing.Short() {
+		c.Skip("skipping test in short mode.")
+	}
+
+	file := "file.go"
+	c.FS.SWriteFile(file, fixtureBasic)
+
+	err := GenerateFrom(c.FS.Path(file))
 	c.MustNotError(err)
 
-	s := b.String()
-	c.Contains(s, "func (v Pie) MarshalPath(e path.Encoder) path.Encoder {")
-	c.Contains(s, `e.B = append(e.B, "pie"...)`+"\n	e = e.EmitSep()")
-	c.Contains(s, "func (v arrays) MarshalPath(e path.Encoder) path.Encoder {")
+	s := c.FS.SReadFile(genFileName(file))
 
-	c.Contains(s, "func (v *arrays) UnmarshalPath(d path.Decoder) path.Decoder {")
+	c.Contains(s, `append(s.B, "static"...)`)
+	c.Contains(s, "v.H.Marshal")
+	c.Contains(s, "v.I.BoolInterfaced.Marshal")
+	c.Contains(s, "s.EmitUint32(v.I.O)")
+	c.Contains(s, "func (v *stuff) UnmarshalPath(s path.Decoder) path.Decoder {")
 
 	// Exported fields shouldn't be around
 	c.NotContains(s, "v.g")
 }
 
+func TestGenerateEndToEnd(t *testing.T) {
+	c := check.New(t)
+
+	if testing.Short() {
+		c.Skip("skipping test in short mode.")
+	}
+
+	c.FS.SWriteFile("fixture.go", fixtureEndToEnd)
+	c.FS.SWriteFile("integrate.go", fixtureIntegrate)
+	c.FS.SWriteFile("integrate_test.go", fixtureEndToEndTest)
+
+	err := GenerateFrom(c.FS.Path("integrate.go"))
+	c.MustNotError(err)
+
+	wd, err := os.Getwd()
+	c.MustNotError(err)
+
+	rel, err := filepath.Rel(wd, c.FS.Path(""))
+	c.MustNotError(err)
+
+	output, err := exec.Command("go", "test", "./"+rel).CombinedOutput()
+	c.MustNotError(err, string(output))
+}
+
 func TestGenerateFromTypesErrors(t *testing.T) {
 	c := check.New(t)
 
-	b := bytes.Buffer{}
-	err := generateFromTypesInto(&b, "test", []string{})
-	c.Error(err)
-
-	err = generateFromTypesInto(&b, "test",
-		new(ctime.HumanDuration),
-		Pie{})
-	c.Error(err)
-}
-
-func TestGenerateFromTypesWriteErrors(t *testing.T) {
-	c := check.New(t)
-
-	buff := &bytes.Buffer{}
-	err := generateFromTypesInto(buff, "test",
-		Pie{},
-		new(arrays),
-		Everything{},
-		new(EverythingPtr))
-	c.MustNotError(err)
-
-	wg := sync.WaitGroup{}
-	wg.Add(buff.Len())
-	for i := 0; i < buff.Len(); i++ {
-		go func(max int) {
-			defer wg.Done()
-
-			out := &bytes.Buffer{}
-			b := cio.LimitedWriter{
-				W: out,
-				N: int64(max),
-			}
-
-			err := generateFromTypesInto(&b, "test",
-				Pie{},
-				new(arrays),
-				Everything{},
-				new(EverythingPtr))
-			c.Equal(max, out.Len())
-			c.Error(err, "failed at max=%d", max, out.String())
-		}(i)
-	}
-
-	wg.Wait()
+	err := GenerateFrom("blah blah blah")
+	c.MustError(err)
 }

@@ -17,10 +17,13 @@ type Marshaler interface {
 	MarshalPath(e Encoder) Encoder
 }
 
+// An Encoder is used for Marshaling paths. Never create this directly; use
+// NewEncoder instead.
 type Encoder struct {
 	State
 }
 
+// NewEncoder creates a new Encoder, adding the separator as the first byte.
 func (s Separator) NewEncoder(b []byte) (enc Encoder) {
 	enc.State = State{
 		B: b[0:0],

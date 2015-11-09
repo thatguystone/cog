@@ -97,20 +97,6 @@ type f64 float64
 type c64 complex64
 type c128 complex128
 
-type bp *bool
-type i8p *int8
-type i16p *int16
-type i32p *int32
-type i64p *int64
-type u8p *uint8
-type u16p *uint16
-type u32p *uint32
-type u64p *uint64
-type f32p *float32
-type f64p *float64
-type c64p *complex64
-type c128p *complex128
-
 func (p PieWithInterface) MarshalPath(e Encoder) Encoder {
 	e.B = append(e.B, "pie"...)
 	e = e.EmitSep()
