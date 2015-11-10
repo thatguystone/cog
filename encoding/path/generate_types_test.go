@@ -1,11 +1,13 @@
 package path
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
 
+	"github.com/thatguystone/cog/cfs"
 	"github.com/thatguystone/cog/check"
 )
 
@@ -20,10 +22,15 @@ func TestGenerateFromTypesBasic(t *testing.T) {
 		c.Skip("skipping test in short mode.")
 	}
 
-	file := "file.go"
-	c.FS.SWriteFile(file, fixtureBasic)
+	path, err := cfs.ImportPath(c.FS.Path("subpkg/subpkg.go"), false)
+	c.MustNotError(err)
 
-	err := GenerateFrom(c.FS.Path(file))
+	file := "file.go"
+	c.FS.SWriteFile(file, fmt.Sprintf(fixtureBasic, path))
+
+	c.FS.SWriteFile("subpkg/subpkg.go", fixtureSubpkg)
+
+	err = GenerateFrom(c.FS.Path(file))
 	c.MustNotError(err)
 
 	s := c.FS.SReadFile(genFileName(file))
@@ -33,6 +40,8 @@ func TestGenerateFromTypesBasic(t *testing.T) {
 	c.Contains(s, "v.I.BoolInterfaced.Marshal")
 	c.Contains(s, "s.EmitUint32(v.I.O)")
 	c.Contains(s, "func (v *stuff) UnmarshalPath(s path.Decoder) path.Decoder {")
+	c.Contains(s, "v.L.A")
+	c.Contains(s, "v.M.MarshalPath")
 
 	// Exported fields shouldn't be around
 	c.NotContains(s, "v.g")
@@ -45,11 +54,16 @@ func TestGenerateEndToEnd(t *testing.T) {
 		c.Skip("skipping test in short mode.")
 	}
 
-	c.FS.SWriteFile("fixture.go", fixtureEndToEnd)
-	c.FS.SWriteFile("integrate.go", fixtureIntegrate)
-	c.FS.SWriteFile("integrate_test.go", fixtureEndToEndTest)
+	path, err := cfs.ImportPath(c.FS.Path("subpkg/subpkg.go"), false)
+	c.MustNotError(err)
 
-	err := GenerateFrom(c.FS.Path("integrate.go"))
+	c.FS.SWriteFile("fixture.go", fixtureEndToEnd)
+	c.FS.SWriteFile("integrate.go",
+		fmt.Sprintf(fixtureIntegrate, path))
+	c.FS.SWriteFile("integrate_test.go", fixtureEndToEndTest)
+	c.FS.SWriteFile("subpkg/subpkg.go", fixtureSubpkg)
+
+	err = GenerateFrom(c.FS.Path("integrate.go"))
 	c.MustNotError(err)
 
 	wd, err := os.Getwd()

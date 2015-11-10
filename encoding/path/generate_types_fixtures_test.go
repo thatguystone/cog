@@ -2,7 +2,10 @@ package path
 
 const fixtureBasic = `package test
 
-import "github.com/thatguystone/cog/encoding/path"
+import (
+	"github.com/thatguystone/cog/encoding/path"
+	"%s"
+)
 
 type stuff struct {
 	A, Z [8]byte
@@ -23,6 +26,8 @@ type stuff struct {
 	}
 	J uint16
 	K embeded
+	L subpkg.SubPkg
+	M subpkg.SubInterfaced
 
 	g uint32
 }
@@ -72,6 +77,8 @@ type DeflectEmpty struct{}
 
 const fixtureIntegrate = `package integrationtest
 
+import "%s"
+
 type Basic struct {
 	A int32
 	B uint32
@@ -112,6 +119,8 @@ type Basic struct {
 		Simple
 		B Simple
 	}
+
+	Sub subpkg.SubPkg
 }
 
 type Embed struct {
@@ -165,6 +174,8 @@ func TestBasic(t *testing.T) {
 	b.K[3][0][0].O[2][1].P = 986
 	b.SimpAnon.Simple = Simple(913245)
 	b.SimpAnon.B = Simple(3245)
+	b.Sub.A = 827
+	b.Sub.B = true
 
 	sep := path.Separator('/')
 	enc := b.MarshalPath(sep.NewEncoder(nil))
@@ -201,4 +212,18 @@ func TestMashup(t *testing.T) {
 
 	c.Equal(m, mout)
 }
+`
+
+const fixtureSubpkg = `package subpkg
+
+import "github.com/thatguystone/cog/encoding/path"
+
+type SubPkg struct {
+	A uint16
+	B bool
+}
+
+type SubInterfaced struct {}
+func (SubInterfaced) MarshalPath(s path.Encoder) path.Encoder { return s }
+func (*SubInterfaced) UnmarshalPath(s path.Decoder) path.Decoder { return s }
 `
