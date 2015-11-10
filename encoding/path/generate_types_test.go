@@ -59,14 +59,18 @@ func TestGenerateEndToEnd(t *testing.T) {
 		c.Skip("skipping test in short mode.")
 	}
 
-	path, err := cfs.ImportPath(c.FS.Path("subpkg/subpkg.go"), false)
+	subPath, err := cfs.ImportPath(c.FS.Path("subpkg/subpkg.go"), false)
+	c.MustNotError(err)
+
+	otherPath, err := cfs.ImportPath(c.FS.Path("subother/other.go"), false)
 	c.MustNotError(err)
 
 	c.FS.SWriteFile("fixture.go", fixtureEndToEnd)
 	c.FS.SWriteFile("integrate.go",
-		fmt.Sprintf(fixtureIntegrate, path))
+		fmt.Sprintf(fixtureIntegrate, subPath))
 	c.FS.SWriteFile("integrate_test.go", fixtureEndToEndTest)
-	c.FS.SWriteFile("subpkg/subpkg.go", fixtureSubpkg)
+	c.FS.SWriteFile("subother/other.go", fixtureSubOther)
+	c.FS.SWriteFile("subpkg/subpkg.go", fmt.Sprintf(fixtureSubpkg, otherPath))
 
 	err = GenerateFrom(c.FS.Path("integrate.go"))
 	c.MustNotError(err)
