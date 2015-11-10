@@ -93,8 +93,10 @@ func TempFileIn(dir, prefix, ext string) (f *os.File, err error) {
 }
 
 // ImportPath takes the given absolute path and returns the package that
-// contains the file, in "github.com/thatguystone/cog" form.
-func ImportPath(absPath string) (string, error) {
+// contains the file, in "github.com/thatguystone/cog" form. If !isDir, then the
+// final path element is assumed to be a file and is stripped from the package
+// name.
+func ImportPath(absPath string, isDir bool) (string, error) {
 	paths := strings.Split(os.Getenv("GOPATH"), string(os.PathListSeparator))
 	for _, path := range paths {
 		if strings.HasPrefix(absPath, path) {
@@ -102,7 +104,11 @@ func ImportPath(absPath string) (string, error) {
 			imp = strings.Trim(imp, string(filepath.Separator))
 			imp = strings.TrimPrefix(imp, "src/")
 
-			return filepath.Dir(imp), nil
+			if !isDir {
+				imp = filepath.Dir(imp)
+			}
+
+			return imp, nil
 		}
 	}
 

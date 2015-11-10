@@ -85,13 +85,13 @@ func TestTempFile(t *testing.T) {
 func TestImportPath(t *testing.T) {
 	t.Parallel()
 
-	_, err := ImportPath("does not exist")
+	_, err := ImportPath("does not exist", false)
 	if err == nil {
 		t.Errorf("Found a file that doesn't exist...")
 	}
 
 	_, filename, _, _ := runtime.Caller(0)
-	path, err := ImportPath(filename)
+	path, err := ImportPath(filename, false)
 	if err != nil {
 		t.Errorf("File should have been found: %s", filename)
 	} else if path != "github.com/thatguystone/cog/cfs" {
