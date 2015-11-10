@@ -29,6 +29,8 @@ type stuff struct {
 	L subpkg.SubPkg
 	M subpkg.SubInterfaced
 
+	SelectorExpr subpkg.SubRedef
+
 	g uint32
 }
 
@@ -216,14 +218,24 @@ func TestMashup(t *testing.T) {
 
 const fixtureSubpkg = `package subpkg
 
-import "github.com/thatguystone/cog/encoding/path"
+import (
+	"github.com/thatguystone/cog/encoding/path"
+	"%s"
+)
 
 type SubPkg struct {
 	A uint16
 	B bool
 }
 
+type SubRedef subother.Other
+
 type SubInterfaced struct {}
 func (SubInterfaced) MarshalPath(s path.Encoder) path.Encoder { return s }
 func (*SubInterfaced) UnmarshalPath(s path.Decoder) path.Decoder { return s }
+`
+
+const fixtureSubOther = `package subother
+
+type Other [4]string
 `

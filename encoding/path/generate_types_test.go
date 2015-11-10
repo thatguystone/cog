@@ -22,13 +22,17 @@ func TestGenerateFromTypesBasic(t *testing.T) {
 		c.Skip("skipping test in short mode.")
 	}
 
-	path, err := cfs.ImportPath(c.FS.Path("subpkg/subpkg.go"), false)
+	subPath, err := cfs.ImportPath(c.FS.Path("subpkg/subpkg.go"), false)
+	c.MustNotError(err)
+
+	otherPath, err := cfs.ImportPath(c.FS.Path("subother/other.go"), false)
 	c.MustNotError(err)
 
 	file := "file.go"
-	c.FS.SWriteFile(file, fmt.Sprintf(fixtureBasic, path))
+	c.FS.SWriteFile(file, fmt.Sprintf(fixtureBasic, subPath))
 
-	c.FS.SWriteFile("subpkg/subpkg.go", fixtureSubpkg)
+	c.FS.SWriteFile("subother/other.go", fixtureSubOther)
+	c.FS.SWriteFile("subpkg/subpkg.go", fmt.Sprintf(fixtureSubpkg, otherPath))
 
 	err = GenerateFrom(c.FS.Path(file))
 	c.MustNotError(err)
@@ -42,6 +46,7 @@ func TestGenerateFromTypesBasic(t *testing.T) {
 	c.Contains(s, "func (v *stuff) UnmarshalPath(s path.Decoder) path.Decoder {")
 	c.Contains(s, "v.L.A")
 	c.Contains(s, "v.M.MarshalPath")
+	c.Contains(s, "s = s.ExpectString(&v.SelectorExpr[i])")
 
 	// Exported fields shouldn't be around
 	c.NotContains(s, "v.g")

@@ -446,7 +446,7 @@ func (p *genProgram) importTypesFromAst(
 			}
 
 			switch typeSpec.Type.(type) {
-			case *ast.StructType, *ast.ArrayType, *ast.Ident:
+			case *ast.StructType, *ast.ArrayType, *ast.Ident, *ast.SelectorExpr:
 				name := fmt.Sprintf("%s.%s",
 					pkg.Pkg.Path(),
 					typeSpec.Name.Name)
