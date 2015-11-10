@@ -1,2 +1,2 @@
 cmd/cog-path/cog-path
-encoding/path/integrationtest/integrate_cog_path.go
+test_data/
