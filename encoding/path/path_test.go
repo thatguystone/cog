@@ -744,15 +744,15 @@ func TestIndirectTypesCoverage(t *testing.T) {
 func TestExpectTagCoverage(t *testing.T) {
 	c := check.New(t)
 
-	d := defSep.NewDecoder([]byte("/hai/"))
+	d := DefSep.NewDecoder([]byte("/hai/"))
 	d = d.ExpectTag("test")
 	c.Error(d.Err)
 
-	d = defSep.NewDecoder([]byte("/hai/"))
+	d = DefSep.NewDecoder([]byte("/hai/"))
 	d = d.ExpectTagBytes([]byte("test"))
 	c.Error(d.Err)
 
-	d = defSep.NewDecoder([]byte("/hai"))
+	d = DefSep.NewDecoder([]byte("/hai"))
 	d = d.ExpectTagBytes([]byte("test"))
 	c.Error(d.Err)
 }
@@ -760,18 +760,18 @@ func TestExpectTagCoverage(t *testing.T) {
 func TestExpectBytesCoverage(t *testing.T) {
 	c := check.New(t)
 
-	d := defSep.NewDecoder([]byte("/hai"))
+	d := DefSep.NewDecoder([]byte("/hai"))
 	d = d.ExpectBytes(nil)
 	c.Error(d.Err)
 
 	ba := [3]uint8{}
-	d = defSep.NewDecoder([]byte("/\x01\x02\x03/"))
+	d = DefSep.NewDecoder([]byte("/\x01\x02\x03/"))
 	d = d.ExpectByteArray(ba[:])
 	c.MustNotError(d.Err)
 	c.Equal([3]uint8{1, 2, 3}, ba)
 
 	ba = [3]uint8{}
-	d = defSep.NewDecoder([]byte("/\x01\x02"))
+	d = DefSep.NewDecoder([]byte("/\x01\x02"))
 	d = d.ExpectByteArray(ba[:])
 	c.Error(d.Err)
 }
@@ -839,7 +839,7 @@ func BenchmarkMarshalPathRaw(b *testing.B) {
 	var out []byte
 	buff := make([]byte, 0, 1024)
 	for i := 0; i < b.N; i++ {
-		e := pie.MarshalPath(defSep.NewEncoder(buff))
+		e := pie.MarshalPath(DefSep.NewEncoder(buff))
 		c.MustNotError(e.Err)
 		out = e.B
 	}
@@ -910,7 +910,7 @@ func BenchmarkUnmarshalPathRaw(b *testing.B) {
 	pb := MustMarshal(pie, nil)
 	b.SetBytes(int64(len(pb)))
 
-	d := defSep.NewDecoder(pb)
+	d := DefSep.NewDecoder(pb)
 	c.MustNotError(d.Err)
 
 	for i := 0; i < b.N; i++ {
