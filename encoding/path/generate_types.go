@@ -499,7 +499,7 @@ func (g genMarshal) arrayVar(name string, t types.Type) string {
 
 func (g genMarshal) byteArray(name string) {
 	fmt.Fprintf(g,
-		"	s.B = append(s.B, %s...)\n"+
+		"	s.B = append(s.B, %s[:]...)\n"+
 			"	s = s.EmitSep()\n",
 		name)
 }
