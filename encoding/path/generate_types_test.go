@@ -42,11 +42,12 @@ func TestGenerateFromTypesBasic(t *testing.T) {
 	c.Contains(s, `append(s.B, "static"...)`)
 	c.Contains(s, "v.H.Marshal")
 	c.Contains(s, "v.I.BoolInterfaced.Marshal")
-	c.Contains(s, "s.EmitUint32(v.I.O)")
+	c.Contains(s, "s.EmitUint32(uint32(v.I.O))")
 	c.Contains(s, "func (v *stuff) UnmarshalPath(s path.Decoder) path.Decoder {")
 	c.Contains(s, "v.L.A")
 	c.Contains(s, "v.M.MarshalPath")
-	c.Contains(s, "s = s.ExpectString(&v.SelectorExpr[i])")
+	c.Contains(s, "s = s.ExpectString((*string)(&v.SelectorExpr[i]))")
+	c.Contains(s, "func (v basicRedef) MarshalPath")
 
 	// Exported fields shouldn't be around
 	c.NotContains(s, "v.g")

@@ -3,6 +3,8 @@ package path
 const fixtureBasic = `package test
 
 import (
+	"time"
+
 	"github.com/thatguystone/cog/encoding/path"
 	"%s"
 )
@@ -30,12 +32,15 @@ type stuff struct {
 	M subpkg.SubInterfaced
 
 	SelectorExpr subpkg.SubRedef
+	Duration time.Duration
 
 	g uint32
 }
 
 type arrayDef [4]uint32
 type basicDef int64
+type basicRedef basicDef
+type timeDef time.Time
 
 type interfaced struct{}
 
@@ -79,7 +84,11 @@ type DeflectEmpty struct{}
 
 const fixtureIntegrate = `package integrationtest
 
-import "%s"
+import (
+	"time"
+
+	"%s"
+)
 
 type Basic struct {
 	A int32
@@ -123,6 +132,9 @@ type Basic struct {
 	}
 
 	Sub subpkg.SubPkg
+
+	Duration      time.Duration
+	LocalDuration Duration
 }
 
 type Embed struct {
@@ -139,12 +151,15 @@ type Mashup struct {
 }
 
 type Simple int32
+type SimpleRedef Simple
+type Duration time.Duration
 `
 
 const fixtureEndToEndTest = `package integrationtest
 
 import (
 	"testing"
+	"time"
 
 	"github.com/thatguystone/cog/check"
 	"github.com/thatguystone/cog/encoding/path"
@@ -178,6 +193,7 @@ func TestBasic(t *testing.T) {
 	b.SimpAnon.B = Simple(3245)
 	b.Sub.A = 827
 	b.Sub.B = true
+	b.Duration = time.Minute * 3
 
 	sep := path.Separator('/')
 	enc := b.MarshalPath(sep.NewEncoder(nil))

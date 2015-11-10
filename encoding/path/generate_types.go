@@ -47,7 +47,6 @@ type genType struct {
 	file       string
 	localName  string
 	fullName   string
-	basicRoot  bool
 	generating bool // If this type is being generated on this run
 }
 
@@ -73,7 +72,7 @@ type genVisitor interface {
 	byteArray(name string)
 
 	// A basic value to handle
-	basic(name, kind string, root bool)
+	basic(name, kind string)
 }
 
 type genMarshal struct {
@@ -87,7 +86,10 @@ type genUnmarshal struct {
 	tagI int
 }
 
-const fileSuffix = "_cog_path"
+const (
+	defaultName = "v"
+	fileSuffix  = "_cog_path"
+)
 
 var marshalerType, unmarshalerType *types.Interface
 
@@ -238,7 +240,7 @@ func (p *genProgram) generate(file string, ts []*genType) error {
 
 		for _, t := range ts {
 			p.genVisitor = genMarshal{cont}
-			err = p.visitAll("v", t)
+			err = p.visitAll(defaultName, t)
 
 			if err == nil {
 				p.genVisitor = &genUnmarshal{
@@ -247,7 +249,7 @@ func (p *genProgram) generate(file string, ts []*genType) error {
 					name:   strings.Title(t.localName),
 				}
 
-				err = p.visitAll("v", t)
+				err = p.visitAll(defaultName, t)
 			}
 
 			if err != nil {
@@ -273,11 +275,7 @@ func (p *genProgram) generate(file string, ts []*genType) error {
 
 func (p *genProgram) visitAll(name string, t *genType) (err error) {
 	p.funcOpen(t.localName)
-	if t.basicRoot {
-		err = p.visitBasic(name, t.Type.(*types.Basic), true)
-	} else {
-		err = p.visit(name, t.Type)
-	}
+	err = p.visit(name, t.Type)
 	p.funcClose()
 
 	return
@@ -292,7 +290,7 @@ func (p *genProgram) visit(name string, t types.Type) error {
 		return p.visitArray(name, t)
 
 	case *types.Basic:
-		return p.visitBasic(name, t, false)
+		return p.visitBasic(name, t)
 
 	case *types.Named:
 		return p.visitNamed(name, t)
@@ -365,7 +363,7 @@ func (p *genProgram) visitArray(name string, t *types.Array) (err error) {
 	return
 }
 
-func (p *genProgram) visitBasic(name string, t *types.Basic, root bool) (err error) {
+func (p *genProgram) visitBasic(name string, t *types.Basic) (err error) {
 	kind := ""
 	switch t.Kind() {
 	case types.Bool:
@@ -401,7 +399,7 @@ func (p *genProgram) visitBasic(name string, t *types.Basic, root bool) (err err
 	}
 
 	if err == nil {
-		p.basic(name, kind, root)
+		p.basic(name, kind)
 	}
 
 	return
@@ -450,15 +448,12 @@ func (p *genProgram) importTypesFromAst(
 				name := fmt.Sprintf("%s.%s",
 					pkg.Pkg.Path(),
 					typeSpec.Name.Name)
-				t := pkg.Types[typeSpec.Type].Type
-				_, basicRoot := t.(*types.Basic)
 
 				p.types[name] = &genType{
-					Type:      t,
+					Type:      pkg.Types[typeSpec.Type].Type,
 					file:      file,
 					localName: typeSpec.Name.Name,
 					fullName:  name,
-					basicRoot: basicRoot,
 				}
 			}
 		}
@@ -504,20 +499,11 @@ func (g genMarshal) byteArray(name string) {
 		name)
 }
 
-func (g genMarshal) basic(name, kind string, root bool) {
-	pre := ""
-	post := ""
-
-	if root {
-		pre = kind + "("
-		post = ")"
-	}
-
-	fmt.Fprintf(g, "	s = s.Emit%s(%s%s%s)\n",
+func (g genMarshal) basic(name, kind string) {
+	fmt.Fprintf(g, "	s = s.Emit%s(%s(%s))\n",
 		strings.Title(kind),
-		pre,
-		name,
-		post)
+		kind,
+		name)
 }
 
 func (g *genUnmarshal) funcOpen(name string) {
@@ -566,19 +552,17 @@ func (g *genUnmarshal) byteArray(name string) {
 	g.guard("s = s.ExpectByteArray(%s[:])", name)
 }
 
-func (g *genUnmarshal) basic(name, kind string, root bool) {
-	pre := "&"
-	post := ""
-	if root {
-		pre = "(*" + kind + ")("
-		post = ")"
+func (g *genUnmarshal) basic(name, kind string) {
+	addrOf := "&"
+	if name == defaultName {
+		addrOf = ""
 	}
 
-	g.guard("s = s.Expect%s(%s%s%s)",
+	g.guard("s = s.Expect%s((*%s)(%s%s))",
 		strings.Title(kind),
-		pre,
-		name,
-		post)
+		kind,
+		addrOf,
+		name)
 }
 
 func (g *genUnmarshal) guard(stmt string, args ...interface{}) {
