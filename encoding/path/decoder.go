@@ -60,6 +60,13 @@ func (s Separator) MustUnmarshal(b []byte, p interface{}) (unused []byte) {
 	return unused
 }
 
+// Must ensures that there were no Unmarshaling errors, returning the unused
+// portion of the path.
+func (d Decoder) Must() []byte {
+	cog.Must(d.Err, "unmarshal failed")
+	return d.B
+}
+
 // Unmarshal unmarshals from the current state into the given value
 func (d Decoder) Unmarshal(v interface{}) Decoder {
 	switch v := v.(type) {

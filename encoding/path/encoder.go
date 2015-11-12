@@ -48,6 +48,12 @@ func (s Separator) MustMarshal(v interface{}, cache []byte) []byte {
 	return b
 }
 
+// Must ensures that there were no Marshaling errors
+func (e Encoder) Must() []byte {
+	cog.Must(e.Err, "marshal failed")
+	return e.B
+}
+
 // Marshal marshals a new value in the current state
 func (e Encoder) Marshal(v interface{}) Encoder {
 	switch v := v.(type) {

@@ -237,6 +237,25 @@ func TestMarshalerInterface(t *testing.T) {
 	trampoline(c, p, &p2, nil)
 }
 
+func TestStateMusts(t *testing.T) {
+	check.New(t)
+
+	p := PieWithInterface{
+		Pie{
+			A: "apple",
+			B: 1,
+			C: "apple",
+			D: 1,
+			E: "apple",
+			F: 1,
+		},
+	}
+	p2 := PieWithInterface{}
+
+	b := p.MarshalPath(DefSep.NewEncoder(nil)).Must()
+	p2.UnmarshalPath(DefSep.NewDecoder(b)).Must()
+}
+
 func TestNonStruct(t *testing.T) {
 	c := check.New(t)
 
