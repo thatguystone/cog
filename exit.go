@@ -6,10 +6,16 @@ import "sync"
 // for{select{}}. Be sure to `Exit.Add(n)` before starting goroutines, and
 // `defer Exit.Done()` in the goroutine.
 type Exit struct {
-	sync.WaitGroup
-	C    <-chan struct{}
+	*GExit
 	c    chan struct{}
 	once sync.Once
+}
+
+// GExit (short for "goroutine exit") is what should be passed to things that
+// need to know when to exit but that should not be able to trigger an exit.
+type GExit struct {
+	sync.WaitGroup
+	C <-chan struct{}
 }
 
 // Exiter is anything that can cleanup after itself at any arbitrary point in
@@ -22,10 +28,11 @@ type Exiter interface {
 // exit.
 func NewExit() *Exit {
 	e := &Exit{
-		c: make(chan struct{}),
+		GExit: &GExit{},
+		c:     make(chan struct{}),
 	}
 
-	e.C = e.c
+	e.GExit.C = e.c
 
 	return e
 }
