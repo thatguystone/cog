@@ -1,6 +1,7 @@
 package cog
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -16,5 +17,17 @@ func TestMust(t *testing.T) {
 
 	c.NotPanic(func() {
 		Must(nil, "nope")
+	})
+}
+
+func TestBytesMust(t *testing.T) {
+	c := check.New(t)
+
+	c.Panic(func() {
+		BytesMust(json.Marshal(struct{ Ch chan struct{} }{}))
+	})
+
+	c.NotPanic(func() {
+		BytesMust(json.Marshal(struct{ S string }{}))
 	})
 }

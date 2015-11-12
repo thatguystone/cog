@@ -8,3 +8,10 @@ func Must(err error, msg string, args ...interface{}) {
 		panic(fmt.Errorf("%s: %s", fmt.Sprintf(msg, args...), err))
 	}
 }
+
+// BytesMust ensures that a function that returns a ([]byte, error) does not
+// error.
+func BytesMust(b []byte, err error) []byte {
+	Must(err, "BytesMust failed")
+	return b
+}
