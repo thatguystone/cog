@@ -15,7 +15,9 @@ type Exit struct {
 // need to know when to exit but that should not be able to trigger an exit.
 type GExit struct {
 	sync.WaitGroup
-	C <-chan struct{}
+	C     <-chan struct{}
+	mtx   sync.Mutex
+	exits []Exiter
 }
 
 // Exiter is anything that can cleanup after itself at any arbitrary point in
@@ -41,6 +43,24 @@ func NewExit() *Exit {
 func (e *Exit) Exit() {
 	e.once.Do(func() {
 		close(e.c)
+
+		e.mtx.Lock()
+		exits := e.exits
+		e.exits = nil
+		e.mtx.Unlock()
+
+		for i := len(exits); i > 0; i-- {
+			exits[i-1].Exit()
+		}
+
 		e.Wait()
 	})
+}
+
+// AddExiter adds an Exiter to the exit list that is called when Exit() is
+// called. Exiters are called in the reverse order that they were added.
+func (e *GExit) AddExiter(ex Exiter) {
+	e.mtx.Lock()
+	e.exits = append(e.exits, ex)
+	e.mtx.Unlock()
 }

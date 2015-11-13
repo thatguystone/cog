@@ -7,6 +7,15 @@ import (
 	"github.com/thatguystone/cog/check"
 )
 
+type testExiter struct {
+	i     int
+	exits *[]int
+}
+
+func (t testExiter) Exit() {
+	*t.exits = append(*t.exits, t.i)
+}
+
 func TestExitBasic(t *testing.T) {
 	check.New(t)
 
@@ -26,6 +35,30 @@ func TestExitBasic(t *testing.T) {
 
 	ex.Exit()
 	ex.Wait()
+}
+
+func TestExitExiters(t *testing.T) {
+	const total = 10
+
+	c := check.New(t)
+
+	ex := NewExit()
+
+	exits := []int{}
+	for i := 0; i < total; i++ {
+		ex.AddExiter(testExiter{
+			i:     i + 1,
+			exits: &exits,
+		})
+	}
+
+	ex.Exit()
+	ex.Wait()
+
+	// Exiters should be called in reverse-order
+	for i, ei := range exits {
+		c.Equal(total-i, ei)
+	}
 }
 
 func ExampleExit() {
