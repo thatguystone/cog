@@ -15,6 +15,7 @@ Cog consists of the following modules:
 | cio           | [![GoDoc][cio-status]][cio]                     | extra io utils
 | clog          | [![GoDoc][clog-status]][clog]                   | a logging framework that looks a bit like python's logging
 | cnet          | [![GoDoc][cnet-status]][cnet]                   | misc net utils and a socket implementation using channels
+| cort          | [![GoDoc][cort-status]][cort]                   | extra sorting utilities
 | ctime         | [![GoDoc][ctime-status]][ctime]                 | time utils
 | cync          | [![GoDoc][cync-status]][cync]                   | some extra sync utils
 | encoding/capn | [![GoDoc][encoding-capn-status]][encoding-capn] | capnproto Marshaling and Unmarshaling
@@ -36,6 +37,8 @@ Cog consists of the following modules:
 [clog-status]: https://godoc.org/github.com/thatguystone/cog/clog?status.svg
 [cnet]: https://godoc.org/github.com/thatguystone/cog/cnet
 [cnet-status]: https://godoc.org/github.com/thatguystone/cog/cnet?status.svg
+[cort]: https://godoc.org/github.com/thatguystone/cog/cort
+[cort-status]: https://godoc.org/github.com/thatguystone/cog/cort?status.svg
 [ctime]: https://godoc.org/github.com/thatguystone/cog/ctime
 [ctime-status]: https://godoc.org/github.com/thatguystone/cog/ctime?status.svg
 [cync]: https://godoc.org/github.com/thatguystone/cog/cync
@@ -50,3 +53,7 @@ Cog consists of the following modules:
 [stack-status]: https://godoc.org/github.com/thatguystone/cog/stack?status.svg
 
 Each module contains full documentation over on godoc, including tons of examples.
+
+As you might have noticed, the modules have weirdly spelled names; this is so
+that you can, for example, import both "sync" and "cync" into the same file,
+since "cync" only supplements "sync".
