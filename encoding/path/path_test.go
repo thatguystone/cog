@@ -8,6 +8,7 @@ import (
 	"sort"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/thatguystone/cog/check"
 )
@@ -96,6 +97,10 @@ type f32 float32
 type f64 float64
 type c64 complex64
 type c128 complex128
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 func (p PieWithInterface) MarshalPath(e Encoder) Encoder {
 	e.B = append(e.B, "pie"...)
