@@ -22,6 +22,7 @@ Cog consists of the following modules:
 | encoding/path | [![GoDoc][encoding-path-status]][encoding-path] | path Marshaling and Unmarshaling
 | node          | [![GoDoc][node-status]][node]                   | get information about the local node
 | stack         | [![GoDoc][stack-status]][stack]                 | runtime call stack utils
+| stringc       | [![GoDoc][stringc-status]][stringc]             | extra strings utils
 
 [root]: https://godoc.org/github.com/thatguystone/cog
 [root-status]: https://godoc.org/github.com/thatguystone/cog?status.svg
@@ -51,6 +52,8 @@ Cog consists of the following modules:
 [node-status]: https://godoc.org/github.com/thatguystone/cog/node?status.svg
 [stack]: https://godoc.org/github.com/thatguystone/cog/stack
 [stack-status]: https://godoc.org/github.com/thatguystone/cog/stack?status.svg
+[stringc]: https://godoc.org/github.com/thatguystone/cog/stringc
+[stringc-status]: https://godoc.org/github.com/thatguystone/cog/stringc?status.svg
 
 Each module contains full documentation over on godoc, including tons of examples.
 
