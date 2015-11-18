@@ -32,7 +32,7 @@ func TestIndent(t *testing.T) {
 	}
 
 	for i, t := range tests {
-		c.Equal(t.out, Indent(t.p, t.in), "failed at %d", i)
+		c.Equal(t.out, Indent(t.in, t.p), "failed at %d", i)
 	}
 }
 
