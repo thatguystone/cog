@@ -84,7 +84,7 @@ func TestOutputErrors(t *testing.T) {
 	mod := cfg.Modules[""]
 	mod.Level = Info
 
-	var l *CLog
+	var l *Log
 	for l == nil {
 		l, _ = New(cfg)
 	}

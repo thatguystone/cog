@@ -13,8 +13,8 @@ import (
 	"github.com/thatguystone/cog"
 )
 
-// CLog provides access to the logging facilities
-type CLog struct {
+// Log provides access to the logging facilities
+type Log struct {
 	rwmtx   sync.RWMutex
 	outputs map[string]*output
 	modules *patricia.Trie // Items of type *module
@@ -37,8 +37,8 @@ type output struct {
 }
 
 // New creates a new logger
-func New(cfg Config) (l *CLog, err error) {
-	l = &CLog{
+func New(cfg Config) (l *Log, err error) {
+	l = &Log{
 		active: map[string]*logger{},
 	}
 	err = l.Reconfigure(cfg)
@@ -50,9 +50,9 @@ func New(cfg Config) (l *CLog, err error) {
 	return
 }
 
-// NewFromFile creates a new CLog, configured from the given file. The file type
+// NewFromFile creates a new Log, configured from the given file. The file type
 // is determined by the extension.
-func NewFromFile(path string) (l *CLog, err error) {
+func NewFromFile(path string) (l *Log, err error) {
 	f, err := os.Open(path)
 
 	if err == nil {
@@ -71,9 +71,9 @@ func NewFromFile(path string) (l *CLog, err error) {
 	return
 }
 
-// NewFromJSONReader creates a new CLog configured from JSON in the given
+// NewFromJSONReader creates a new Log configured from JSON in the given
 // reader.
-func NewFromJSONReader(r io.Reader) (l *CLog, err error) {
+func NewFromJSONReader(r io.Reader) (l *Log, err error) {
 	d := json.NewDecoder(r)
 
 	cfg := Config{}
@@ -89,8 +89,8 @@ func NewFromJSONReader(r io.Reader) (l *CLog, err error) {
 // Reconfigure reconfigures the entire logging system from the ground up. All
 // active loggers are affected immediately, and all changes are applied
 // atomically. If reconfiguration fails, the previous configuration remains.
-func (l *CLog) Reconfigure(cfg Config) error {
-	tmp := CLog{
+func (l *Log) Reconfigure(cfg Config) error {
+	tmp := Log{
 		outputs: map[string]*output{},
 		modules: patricia.NewTrie(),
 	}
@@ -238,9 +238,9 @@ func (l *CLog) Reconfigure(cfg Config) error {
 	return err
 }
 
-// ReconfigureFromJSONReader reconfigures the CLog from the JSON in the given
+// ReconfigureFromJSONReader reconfigures the Log from the JSON in the given
 // reader.
-func (l *CLog) ReconfigureFromJSONReader(r io.Reader) error {
+func (l *Log) ReconfigureFromJSONReader(r io.Reader) error {
 	d := json.NewDecoder(r)
 
 	cfg := Config{}
@@ -253,9 +253,9 @@ func (l *CLog) ReconfigureFromJSONReader(r io.Reader) error {
 	return err
 }
 
-// ReconfigureFromFile reconfigures the CLog from the given file. The file type
+// ReconfigureFromFile reconfigures the Log from the given file. The file type
 // is determined by the extension.
-func (l *CLog) ReconfigureFromFile(path string) error {
+func (l *Log) ReconfigureFromFile(path string) error {
 	f, err := os.Open(path)
 
 	if err == nil {
@@ -277,7 +277,7 @@ func (l *CLog) ReconfigureFromFile(path string) error {
 // Reopen causes all outputters to reopen their files, if they have any. When
 // using an external log rotator (eg. logrotated), this is what you're looking
 // for to use in postrotate.
-func (l *CLog) Reopen() error {
+func (l *Log) Reopen() error {
 	l.rwmtx.RLock()
 	defer l.rwmtx.RUnlock()
 
@@ -291,7 +291,7 @@ func (l *CLog) Reopen() error {
 }
 
 // Get a logger for the given module
-func (l *CLog) Get(name string) *Logger {
+func (l *Log) Get(name string) *Logger {
 	l.mtx.Lock()
 	defer l.mtx.Unlock()
 

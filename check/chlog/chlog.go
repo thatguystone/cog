@@ -10,7 +10,7 @@ import (
 
 // New creates a new TestLog that outputs all log messages to the given TB. This
 // logs at level Debug by default.
-func New(tb testing.TB) (*check.C, *clog.CLog) {
+func New(tb testing.TB) (*check.C, *clog.Log) {
 	c := check.New(tb)
 
 	lcfg := clog.Config{

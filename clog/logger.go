@@ -20,7 +20,7 @@ type Logger struct {
 }
 
 type logger struct {
-	l    *CLog
+	l    *Log
 	pfx  patricia.Prefix
 	key  string
 	refs uint
