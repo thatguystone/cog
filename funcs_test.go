@@ -20,6 +20,18 @@ func TestMust(t *testing.T) {
 	})
 }
 
+func TestAssert(t *testing.T) {
+	c := check.New(t)
+
+	c.Panic(func() {
+		Assert(false, "nope")
+	})
+
+	c.NotPanic(func() {
+		Assert(true, "nope")
+	})
+}
+
 func TestBytesMust(t *testing.T) {
 	c := check.New(t)
 

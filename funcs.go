@@ -9,6 +9,13 @@ func Must(err error, msg string, args ...interface{}) {
 	}
 }
 
+// Assert ensures ensures that the given bool is true, or panics.
+func Assert(ok bool, msg string, args ...interface{}) {
+	if !ok {
+		panic(fmt.Errorf("assertion failed: %s", fmt.Sprintf(msg, args...)))
+	}
+}
+
 // BytesMust ensures that a function that returns a ([]byte, error) does not
 // error.
 func BytesMust(b []byte, err error) []byte {
