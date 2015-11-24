@@ -141,48 +141,64 @@ func (c *C) equal(e, g interface{}) bool {
 	return false
 }
 
-func (c *C) contains(v, i interface{}) (found, ok bool) {
+func (c *C) contains(iter, v interface{}) (found, ok bool) {
 	ok = true
 
+	iterV := reflect.ValueOf(iter)
 	vv := reflect.ValueOf(v)
-	iv := reflect.ValueOf(i)
 	defer func() {
 		if e := recover(); e != nil {
 			ok = false
 		}
 	}()
 
-	if reflect.TypeOf(v).Kind() == reflect.String {
-		found = strings.Contains(vv.String(), iv.String())
-		return
-	}
-
-	if reflect.TypeOf(i).Kind() == reflect.Slice {
-		at := 0
-
-		for j := 0; j < vv.Len(); j++ {
-			if at == iv.Len() {
-				break
-			}
-
-			if c.equal(vv.Index(j).Interface(), iv.Index(at).Interface()) {
-				at++
-			} else {
-				at = 0
+	if iterV.Kind() == reflect.Map {
+		keys := iterV.MapKeys()
+		for _, k := range keys {
+			if c.equal(k.Interface(), v) {
+				found = true
+				return
 			}
 		}
 
-		found = at == iv.Len()
 		return
 	}
 
-	for j := 0; j < vv.Len(); j++ {
-		if c.equal(vv.Index(j).Interface(), i) {
-			found = true
-			return
+	if iterV.Kind() == reflect.Slice || iterV.Kind() == reflect.Array {
+		if vv.Kind() == reflect.Slice || vv.Kind() == reflect.Array {
+			at := 0
+
+			for i := 0; i < iterV.Len(); i++ {
+				if at == vv.Len() {
+					break
+				}
+
+				if c.equal(iterV.Index(i).Interface(), vv.Index(at).Interface()) {
+					at++
+				} else {
+					at = 0
+				}
+			}
+
+			found = at == vv.Len()
+		} else {
+			for i := 0; i < iterV.Len(); i++ {
+				if c.equal(iterV.Index(i).Interface(), v) {
+					found = true
+					break
+				}
+			}
 		}
+
+		return
 	}
 
+	if vv.Kind() == reflect.String {
+		found = strings.Contains(iterV.String(), vv.String())
+		return
+	}
+
+	ok = false
 	return
 }
 
@@ -243,8 +259,8 @@ func (c *C) MustFalse(cond bool, msg ...interface{}) {
 func (c *C) Equal(e, g interface{}, msg ...interface{}) bool {
 	if !c.equal(e, g) {
 		c.fail("%s\n"+
-			"Expected: %+v\n"+
-			"       == %+v",
+			"Expected: %#v\n"+
+			"       == %#v",
 			format(msg...),
 			e,
 			g)
@@ -269,8 +285,8 @@ func (c *C) MustEqual(e, g interface{}, msg ...interface{}) {
 func (c *C) NotEqual(e, g interface{}, msg ...interface{}) bool {
 	if c.equal(e, g) {
 		c.fail("%s\n"+
-			"Expected %+v\n"+
-			"      != %+v",
+			"Expected %#v\n"+
+			"      != %#v",
 			format(msg...),
 			e,
 			g)
@@ -294,7 +310,7 @@ func (c *C) Len(v interface{}, l int, msg ...interface{}) (eq bool) {
 		if e := recover(); e != nil {
 			eq = false
 			c.fail("%s\n"+
-				"%+v is not iterable, cannot check length",
+				"%#v is not iterable, cannot check length",
 				format(msg...),
 				v)
 		}
@@ -319,7 +335,7 @@ func (c *C) LenNot(v interface{}, l int, msg ...interface{}) (eq bool) {
 		if e := recover(); e != nil {
 			eq = false
 			c.fail("%s\n"+
-				"%+v is not iterable, cannot check length",
+				"%#v is not iterable, cannot check length",
 				format(msg...),
 				v)
 		}
@@ -337,13 +353,21 @@ func (c *C) MustLenNot(v interface{}, l int, msg ...interface{}) {
 	}
 }
 
-// Contains checks that v contains i. Returns true if it does, false otherwise.
-func (c *C) Contains(v, i interface{}, msg ...interface{}) bool {
-	found, ok := c.contains(v, i)
+// Contains checks that iter contains v. Returns true if it does, false otherwise.
+//
+// The following checks are done:
+//    0) If a map, checks if the map contains key v.
+//    1) If iter is a slice/array and v is a slice/array, checks to see if v
+//       is a subset of iter.
+//    2) If iter is a slice/array and v is not, checks if any element in iter
+//       equals v.
+//    3) If iter is a string, falls back to strings.Contains.
+func (c *C) Contains(iter, v interface{}, msg ...interface{}) bool {
+	found, ok := c.contains(iter, v)
 
 	if !ok {
 		c.fail("%s\n"+
-			"%+v is not iterable; contain check failed",
+			"%#v is not iterable; contain check failed",
 			format(msg...),
 			v)
 		return false
@@ -351,10 +375,10 @@ func (c *C) Contains(v, i interface{}, msg ...interface{}) bool {
 
 	if !found {
 		c.fail("%s\n"+
-			"%+v does not contain %+v",
+			"%#v does not contain %#v",
 			format(msg...),
-			v,
-			i)
+			iter,
+			v)
 		return false
 	}
 
@@ -362,20 +386,20 @@ func (c *C) Contains(v, i interface{}, msg ...interface{}) bool {
 }
 
 // MustContain is like Contains, except it panics on failure.
-func (c *C) MustContain(v, i interface{}, msg ...interface{}) {
-	if !c.Contains(v, i, msg...) {
+func (c *C) MustContain(iter, v interface{}, msg ...interface{}) {
+	if !c.Contains(iter, v, msg...) {
 		c.FailNow()
 	}
 }
 
 // NotContains checks that v does not contain c. Returns true if it does,
 // false otherwise.
-func (c *C) NotContains(v, i interface{}, msg ...interface{}) bool {
-	found, ok := c.contains(v, i)
+func (c *C) NotContains(iter, v interface{}, msg ...interface{}) bool {
+	found, ok := c.contains(iter, v)
 
 	if !ok {
 		c.fail("%s\n"+
-			"%+v is not iterable; contain check failed",
+			"%#v is not iterable; contain check failed",
 			format(msg...),
 			v)
 		return false
@@ -383,10 +407,10 @@ func (c *C) NotContains(v, i interface{}, msg ...interface{}) bool {
 
 	if found {
 		c.fail("%s\n"+
-			"%+v contains %+v",
+			"%#v contains %#v",
 			format(msg...),
-			v,
-			i)
+			iter,
+			v)
 		return false
 	}
 
@@ -394,8 +418,8 @@ func (c *C) NotContains(v, i interface{}, msg ...interface{}) bool {
 }
 
 // MustNotContain is like NotContains, except it panics on failure.
-func (c *C) MustNotContain(v, i interface{}, msg ...interface{}) {
-	if !c.NotContains(v, i, msg...) {
+func (c *C) MustNotContain(iter, v interface{}, msg ...interface{}) {
+	if !c.NotContains(iter, v, msg...) {
 		c.FailNow()
 	}
 }
@@ -521,7 +545,7 @@ func (c *C) NotPanic(fn func(), msg ...interface{}) (ok bool) {
 	defer func() {
 		if r := recover(); r != nil {
 			c.fail("%s\n"+
-				"Expected fn not to panic; got panic with: %+v",
+				"Expected fn not to panic; got panic with: %#v",
 				format(msg...),
 				r)
 		} else {

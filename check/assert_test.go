@@ -157,7 +157,19 @@ func TestContains(t *testing.T) {
 		},
 		table{
 			c:  map[string]int{"test": 1, "test2": 2},
-			ok: false,
+			ok: true,
+		},
+		table{
+			c:     map[string]int{"test": 1, "test2": 2},
+			v:     "test",
+			ok:    true,
+			found: true,
+		},
+		table{
+			c:     map[string]int{"test": 1, "test2": 2},
+			v:     "test123",
+			ok:    true,
+			found: false,
 		},
 		table{
 			c:     "some string",
@@ -176,6 +188,12 @@ func TestContains(t *testing.T) {
 			v:     []byte("some string"),
 			ok:    true,
 			found: true,
+		},
+		table{
+			c:     []byte("some string"),
+			v:     []byte("some stringy stuff"),
+			ok:    true,
+			found: false,
 		},
 		table{
 			c:     []byte("some string"),
@@ -225,7 +243,7 @@ func TestContains(t *testing.T) {
 				in = "not in"
 			}
 
-			c.Errorf("expected %#v %s %#v", test.c, in, test.v)
+			c.Errorf("expected %#v %s %#v", test.v, in, test.c)
 		}
 	}
 
