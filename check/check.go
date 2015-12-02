@@ -19,6 +19,8 @@ type C struct {
 	FS FS
 }
 
+const unknownFunc = "???:1"
+
 var (
 	// Used to ensure that t.Parallel() is only called once
 	mtx          sync.Mutex
@@ -30,7 +32,7 @@ func New(tb testing.TB) *C {
 	if t, ok := tb.(*testing.T); ok {
 		name := GetTestName()
 
-		alreadyParallel := func() bool {
+		alreadyParallel := name == unknownFunc || func() bool {
 			mtx.Lock()
 			defer mtx.Unlock()
 
@@ -70,7 +72,7 @@ func (c *C) T() *testing.T {
 
 // GetTestName gets the name of the current test.
 func GetTestName() string {
-	name := "???:1"
+	name := unknownFunc
 
 	ok := true
 	for i := 0; ok; i++ {
