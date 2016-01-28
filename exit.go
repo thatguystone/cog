@@ -17,7 +17,7 @@ type GExit struct {
 	sync.WaitGroup
 	C     <-chan struct{}
 	mtx   sync.Mutex
-	exits []Exiter
+	exits []func()
 }
 
 // Exiter is anything that can cleanup after itself at any arbitrary point in
@@ -50,7 +50,7 @@ func (e *Exit) Exit() {
 		e.mtx.Unlock()
 
 		for i := len(exits); i > 0; i-- {
-			exits[i-1].Exit()
+			exits[i-1]()
 		}
 
 		e.Wait()
@@ -60,7 +60,13 @@ func (e *Exit) Exit() {
 // AddExiter adds an Exiter to the exit list that is called when Exit() is
 // called. Exiters are called in the reverse order that they were added.
 func (e *GExit) AddExiter(ex Exiter) {
+	e.AddCb(ex.Exit)
+}
+
+// AddCb adds a function to be called on exit. Callbacks are called in the
+// reverse order that they were added.
+func (e *GExit) AddCb(cb func()) {
 	e.mtx.Lock()
-	e.exits = append(e.exits, ex)
+	e.exits = append(e.exits, cb)
 	e.mtx.Unlock()
 }
