@@ -208,6 +208,30 @@ func TestChStreamReadWriteClosed(t *testing.T) {
 	c.Error(err, "write should fail when closed")
 }
 
+func TestChStreamReadClosed(t *testing.T) {
+	c, nc, addr, _, accepts, cleanup := testChStreamListener(t)
+	defer cleanup()
+
+	cs, cr := netChConnPair(c, nc, addr, accepts)
+
+	b := []byte("after close")
+	_, err := cs.Write(b)
+	c.MustNotError(err)
+	cs.Close()
+
+	buff := make([]byte, 1)
+	for _, b := range b {
+		n, err := cr.Read(buff)
+		c.MustEqual(n, 1)
+		c.MustNotError(err)
+		c.MustEqual(buff[0], b)
+	}
+
+	n, err := cr.Read(buff)
+	c.MustEqual(n, 0)
+	c.Equal(err, io.EOF)
+}
+
 func TestChStreamWriteClosed(t *testing.T) {
 	c, nc, addr, _, accepts, cleanup := testChStreamListener(t)
 	defer cleanup()

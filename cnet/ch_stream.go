@@ -189,17 +189,36 @@ func (l *extChListener) Close() error {
 	return nil
 }
 
+func (c *chConn) readClosed(b []byte) (n int, err error) {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+
+	if c.in.Len() == 0 {
+		err = io.EOF
+		return
+	}
+
+	return c.in.Read(b)
+}
+
 func (c *chConn) Read(b []byte) (n int, err error) {
+	inLen := func() (n int) {
+		c.mtx.Lock()
+		n = c.in.Len()
+		c.mtx.Unlock()
+		return
+	}
+
 	select {
 	case <-c.closeCh:
-		return 0, io.EOF
+		return c.readClosed(b)
 	default:
 		var timeout <-chan time.Time
 		if !c.readDeadline.IsZero() {
 			timeout = time.After(c.readDeadline.Sub(time.Now()))
 		}
 
-		for c.in.Len() == 0 {
+		for inLen() == 0 {
 			select {
 			case <-c.inCh:
 
@@ -208,8 +227,7 @@ func (c *chConn) Read(b []byte) (n int, err error) {
 				return
 
 			case <-c.closeCh:
-				err = io.EOF
-				return
+				return c.readClosed(b)
 			}
 		}
 
