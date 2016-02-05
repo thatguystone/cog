@@ -3,6 +3,7 @@ package clog
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"runtime"
 	"strings"
@@ -17,6 +18,11 @@ import (
 // while there is at least 1 reference to the logger logger.
 type Logger struct {
 	*logger
+}
+
+type goLogger struct {
+	l   *Logger
+	lvl Level
 }
 
 type logger struct {
@@ -44,6 +50,25 @@ func finalizeLogger(pub *Logger) {
 	if pub.refs == 0 {
 		delete(pub.l.active, pub.key)
 	}
+}
+
+// I feel dirty...
+func (gl goLogger) Write(b []byte) (n int, err error) {
+	n = len(b)
+	gl.l.log(gl.lvl, stack.CallerAbove(1, "log"), string(b))
+	return
+}
+
+// AsGoLogger gets a new *log.Logger that outputs to this logger at the given
+// level. The `sub` parameter is used for creating a new sub-logger, as with
+// Get().
+func (lg *logger) AsGoLogger(sub string, lvl Level) *log.Logger {
+	gl := goLogger{
+		l:   lg.Get(sub),
+		lvl: lvl,
+	}
+
+	return log.New(gl, "", 0)
 }
 
 // EnabledFor checks if any Outputter in the chain might accept this message.

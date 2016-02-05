@@ -73,3 +73,20 @@ func TestLoggerGet(t *testing.T) {
 			c.FS.SReadFile("test"),
 			`level=info module=base.sub msg=second`))
 }
+
+func TestLoggerAsGoLogger(t *testing.T) {
+	c := check.New(t)
+	cfg := basicTestConfig(c)
+
+	l, err := New(cfg)
+	c.MustNotError(err)
+
+	lg := l.Get("test").AsGoLogger("sub", Info)
+	lg.Println("MERP")
+	lg.Println("HERP")
+
+	test := c.FS.SReadFile("test")
+	c.Log(test)
+	c.Equal(2, strings.Count(test, "src=logger_test.go"))
+	c.Equal(2, strings.Count(test, "level=info"))
+}

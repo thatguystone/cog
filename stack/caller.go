@@ -23,7 +23,8 @@ func ClearTestCaller() string {
 	return "\r" + strings.Repeat(" ", l) + "\r"
 }
 
-// Caller formats the caller at `depth` like "filename:lineno"
+// Caller formats the caller at `depth` like "filename:lineno". Returns
+// "???:1" on error.
 func Caller(depth int) (c string) {
 	c = "???:1"
 
@@ -33,4 +34,28 @@ func Caller(depth int) (c string) {
 	}
 
 	return c
+}
+
+// CallerAbove finds the depth first calling function, above depth, without
+// the given prefix (package name, etc). If it can't find such a caller, it
+// returns the depth of the stack or the depth of first error.
+func CallerAbove(depth int, prefix string) (d int) {
+	d = depth + 1
+
+	for {
+		d++
+		pc, _, _, ok := runtime.Caller(d)
+		if !ok {
+			break
+		}
+
+		name := runtime.FuncForPC(pc).Name()
+		if !strings.HasPrefix(name, prefix) {
+			break
+		}
+	}
+
+	d--
+
+	return
 }

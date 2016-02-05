@@ -32,3 +32,19 @@ func TestCaller(t *testing.T) {
 
 	testCaller(t)
 }
+
+func TestCallerAbove(t *testing.T) {
+	t.Parallel()
+
+	d := CallerAbove(0, "testing")
+	fl := Caller(d)
+	if "???:1" == fl {
+		t.Errorf("%d should resolve to something", d)
+	}
+
+	d = CallerAbove(0, "")
+	fl = Caller(d)
+	if "???:1" != fl {
+		t.Errorf("%s should resolve to nothing", fl)
+	}
+}
