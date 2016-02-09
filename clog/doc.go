@@ -56,13 +56,13 @@
 //                 Filters: []FilterConfig{
 //                     FilterConfig{
 //                         Which: "exampleFilter",
-//                         Args: ConfigOutputArgs{
+//                         Args: ConfigArgs{
 //                             "exampleConfig": "someValue",
 //                         },
 //                     },
 //                 },
-//                 Args: ConfigOutputArgs{
-//                     "path": "/var/log/app.jlog",
+//                 Args: ConfigArgs{
+//                     "path": "/var/log/app.error.json.log",
 //                 },
 //             },
 //
@@ -70,8 +70,8 @@
 //             "debug": {
 //                 Which: "file",
 //                 Level: Debug,
-//                 Args: ConfigOutputArgs{
-//                     "path":   "/var/log/app.jlog",
+//                 Args: ConfigArgs{
+//                     "path":   "/var/log/app.log.json",
 //                     "format": "json",
 //                 },
 //             },
@@ -80,8 +80,8 @@
 //             "heroku": {
 //                 Which: "file",
 //                 Level: Warn,
-//                 Args: ConfigOutputArgs{
-//                     "path":   "/var/log/app.lfmt",
+//                 Args: ConfigArgs{
+//                     "path":   "/var/log/app.logfmt",
 //                     "format": "logfmt",
 //                 },
 //             },
@@ -98,12 +98,12 @@
 //             // message through, to the debug log. These messages do not propagate to
 //             // the root.
 //             "http": {
-//                 Outputs:       []string{"debug"},
-//                 Level:         Info,
+//                 Outputs: []string{"debug"},
+//                 Level:   Info,
 //                 Filters: []FilterConfig{
 //                     FilterConfig{
 //                         Which: "exampleFilter",
-//                         Args: ConfigOutputArgs{
+//                         Args: ConfigArgs{
 //                             "exampleConfig": "someValue",
 //                         },
 //                     },
@@ -130,74 +130,24 @@
 //         },
 //     }
 //
-// File Output
+// Outputs
 //
-// Arguments:
-//     "Format": which format to use. Valid formats are:
-//         - logfmt: output in Heroku's logfmt
-//         - json: output json data
-//         - human: output human-readable data
-//     "Path": path of the log file to write to
+// The following values may be used for "Which" when configuring outputs. Each
+// one has the corresponding class, with documentation below for arguments (in
+// the Args field).
 //
-// If you're using the "human" log formatter, you may also include its arguments
-// in the file's arguments.
+// All values are case-insensitive.
 //
-// Which:
-//     - To select file, use the value "file"
-//     - As a shortcut to select the json formatter, the value "JSONFile" also exists
+//     "Blackhole" BlackholeOutput
+//     "File"      FileOutput
+//     "JSONFile"  FileOutput (with the json formatter)
+//     "Term"      TermOutput
+//     "Terminal"  TermOutput
+//     "TestLog"   TestLogOutput
 //
-// Terminal Output
+// Filters
 //
-// You may also write to the terminal. By default, this uses the human
-// formatter.
+// The following filters are available (their names are case-insensitive):
 //
-// Arguments:
-//     "Stdout": if output should go to stdout instead of stderr
-//
-// Which:
-//     term
-//     terminal
-//
-// Testlog Output
-//
-// This output is for capturing the output of your application to the test log,
-// so that if a test fails, you have the entire application log handy, otherwise
-// it's all hidden.
-//
-// This is a special output in that it must be configured programmatically. You
-// configure it directly in Config itself, as follows:
-//
-//     Config{
-//         Outputs: map[string]*ConfigOutput{
-//             "testlog": {
-//                 Which: "TestLog",
-//                 Level: clog.Debug,
-//                 Args: ConfigOutputArgs{
-//                     "log": t, // Anything with a Log(...interface{}) method
-//                 },
-//             },
-//         },
-//         Modules: map[string]*ConfigModule{
-//             "": {
-//                 Outputs: []string{"testlog"},
-//                 Level:   clog.Debug,
-//             },
-//         },
-//     }
-//
-// In the above example, you pass a testing.TB as the argument; really, it will
-// accept anything with a `Log(...interface{})` method. All log output will be
-// directed to this function as a single string.
-//
-// Or, equivalently:
-//
-//     chlog.New(t)
-//
-// Which:
-//     TestLog
-//
-// Human-readable Format
-//
-// Arguments:
-//     "ShortTime": if true, timestamps in entries are printed as time since start
+//     "Level"  LevelFilter
 package clog

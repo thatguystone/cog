@@ -1,9 +1,21 @@
 package clog
 
 // LevelFilter is the filter used by the required "Level" argument for both
-// Modules and Outputs.
+// Modules and Outputs and is typically not used directly.
+//
+// Example:
+//
+//    Filters: []FilterConfig{
+//        FilterConfig{
+//            Which: "Level",
+//            Args: ConfigArgs{
+//                "level": clog.Info,
+//            },
+//        },
+//    }
 type LevelFilter struct {
-	args struct {
+	Args struct {
+		// Don't log anything below this level
 		Level Level
 	}
 }
@@ -15,7 +27,7 @@ func init() {
 		func(a ConfigArgs) (Filter, error) {
 			f := LevelFilter{}
 
-			err := a.ApplyTo(&f.args)
+			err := a.ApplyTo(&f.Args)
 			if err != nil {
 				return nil, err
 			}
@@ -26,7 +38,7 @@ func init() {
 
 // Accept implements Filter.Accept()
 func (lf LevelFilter) Accept(e Entry) bool {
-	return e.Level >= lf.args.Level
+	return e.Level >= lf.Args.Level
 }
 
 // Exit implements Filter.Exit()

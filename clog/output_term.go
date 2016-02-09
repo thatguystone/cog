@@ -5,12 +5,13 @@ import (
 	"os"
 )
 
-// TermOutput writes messages to the terminal on stdout
+// TermOutput writes messages to the terminal on stdout. By default, this uses
+// the human formatter.
 type TermOutput struct {
 	Formatter
 	out *os.File
 
-	args struct {
+	Args struct {
 		// If this should log to stdout instead of stderr
 		Stdout bool
 	}
@@ -30,9 +31,9 @@ func newTermOutput(a ConfigArgs) (o Outputter, err error) {
 			Formatter: hf,
 		}
 
-		err = a.ApplyTo(&to.args)
+		err = a.ApplyTo(&to.Args)
 		if err == nil {
-			if to.args.Stdout {
+			if to.Args.Stdout {
 				to.out = os.Stdout
 			} else {
 				to.out = os.Stderr

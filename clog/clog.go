@@ -290,7 +290,8 @@ func (l *Log) ReconfigureFromFile(path string) error {
 // Exit can be used by servers that exit gracefully. It causes all Outputters
 // to Exit and cleanup after themselves, and it blocks until done.
 //
-// This is typically the last thing you want to call before exiting.
+// This is typically the last thing you want to call before exiting. Also,
+// calling Exit() is completely optional.
 //
 // This Log can be reused by calling Reconfigure().
 func (l *Log) Exit() {
@@ -330,9 +331,7 @@ func (l *Log) Exit() {
 		}
 	}()
 
-	start := time.Now()
 	wg.Wait()
-	fmt.Println(time.Now().Sub(start))
 	close(done)
 }
 

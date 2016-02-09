@@ -8,6 +8,39 @@ import (
 )
 
 // TestLogOutput writes to testing.Logf()
+//
+// This output is for capturing the output of your application to the test log,
+// so that if a test fails, you have the entire application log handy, otherwise
+// it's all hidden.
+//
+// This is a special output in that it must be configured programmatically. You
+// configure it directly in Config itself, as follows:
+//
+//     Config{
+//         Outputs: map[string]*ConfigOutput{
+//             "testlog": {
+//                 Which: "TestLog",
+//                 Level: clog.Debug,
+//                 Args: ConfigArgs{
+//                     "log": t, // Anything with a Log(...interface{}) method
+//                 },
+//             },
+//         },
+//         Modules: map[string]*ConfigModule{
+//             "": {
+//                 Outputs: []string{"testlog"},
+//                 Level:   clog.Debug,
+//             },
+//         },
+//     }
+//
+// In the above example, you pass a testing.TB as the argument; really, it will
+// accept anything with a `Log(...interface{})` method. All log output will be
+// directed to this function as a single string.
+//
+// Or, equivalently:
+//
+//     chlog.New(t)
 type TestLogOutput struct {
 	Formatter
 	l testLog
