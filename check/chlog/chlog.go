@@ -18,7 +18,7 @@ func New(tb testing.TB) (*check.C, *clog.Log) {
 			"testlog": {
 				Which: "testlog",
 				Level: clog.Debug,
-				Args: clog.ConfigOutputArgs{
+				Args: clog.ConfigArgs{
 					"log": c,
 				},
 			},
