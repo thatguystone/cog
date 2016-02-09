@@ -14,7 +14,7 @@ func New(tb testing.TB) (*check.C, *clog.Log) {
 	c := check.New(tb)
 
 	lcfg := clog.Config{
-		Outputs: map[string]*clog.ConfigOutput{
+		Outputs: map[string]*clog.OutputConfig{
 			"testlog": {
 				Which: "testlog",
 				Level: clog.Debug,
@@ -23,7 +23,7 @@ func New(tb testing.TB) (*check.C, *clog.Log) {
 				},
 			},
 		},
-		Modules: map[string]*clog.ConfigModule{
+		Modules: map[string]*clog.ModuleConfig{
 			"": {
 				Outputs: []string{"testlog"},
 				Level:   clog.Debug,
