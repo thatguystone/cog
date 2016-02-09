@@ -6,8 +6,10 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/tchap/go-patricia/patricia"
 	"github.com/thatguystone/cog"
@@ -15,34 +17,39 @@ import (
 
 // Log provides access to the logging facilities
 type Log struct {
-	rwmtx   sync.RWMutex
-	outputs map[string]*output
-	modules *patricia.Trie // Items of type *module
+	rwmtx sync.RWMutex
+	logState
 
 	mtx    sync.Mutex
 	active map[string]*logger
+}
+
+type logState struct {
+	wg      *sync.WaitGroup
+	outputs map[string]*output
+	modules *patricia.Trie // Items of type *module
 }
 
 type module struct {
 	pfx           patricia.Prefix
 	parent        *module
 	outs          []*output
-	filts         *filters
+	filts         filterSlice
 	dontPropagate bool
 }
 
 type output struct {
 	Outputter
-	filts *filters
+	filts filterSlice
 }
 
-// New creates a new logger
+// New creates a new Log
 func New(cfg Config) (l *Log, err error) {
 	l = &Log{
 		active: map[string]*logger{},
 	}
-	err = l.Reconfigure(cfg)
 
+	err = l.Reconfigure(cfg)
 	if err != nil {
 		l = nil
 	}
@@ -90,7 +97,9 @@ func NewFromJSONReader(r io.Reader) (l *Log, err error) {
 // active loggers are affected immediately, and all changes are applied
 // atomically. If reconfiguration fails, the previous configuration remains.
 func (l *Log) Reconfigure(cfg Config) error {
-	tmp := Log{
+	wg := &sync.WaitGroup{}
+	tmp := logState{
+		wg:      wg,
 		outputs: map[string]*output{},
 		modules: patricia.NewTrie(),
 	}
@@ -107,7 +116,7 @@ func (l *Log) Reconfigure(cfg Config) error {
 		cfg.Outputs[defaultConfigFileOutputName] = &ConfigOutput{
 			Which: "jsonfile",
 			Level: Info,
-			Args: ConfigOutputArgs{
+			Args: ConfigArgs{
 				"path": cfg.File,
 			},
 		}
@@ -137,16 +146,7 @@ func (l *Log) Reconfigure(cfg Config) error {
 
 	es := cog.Errors{}
 	for name, ocfg := range cfg.Outputs {
-		newOut, ok := regdOutputs[strings.ToLower(ocfg.Which)]
-		if !ok {
-			es.Add(fmt.Errorf(`in output "%s": output which="%s" does not exist`,
-				name,
-				ocfg.Which))
-			continue
-		}
-
-		o, err := newOut(ocfg.Args)
-
+		o, err := newOutput(ocfg)
 		if err != nil {
 			es.Addf(err, `while creating output "%s"`, name)
 			continue
@@ -158,10 +158,24 @@ func (l *Log) Reconfigure(cfg Config) error {
 			continue
 		}
 
-		tmp.outputs[name] = &output{
+		out := &output{
 			Outputter: o,
 			filts:     filts,
 		}
+
+		tmp.outputs[name] = out
+
+		wg.Add(1)
+		runtime.SetFinalizer(out, func(out *output) {
+			go func() {
+				out.Exit()
+				for _, f := range out.filts {
+					f.Exit()
+				}
+
+				wg.Done()
+			}()
+		})
 	}
 
 	if es.Empty() {
@@ -231,8 +245,7 @@ func (l *Log) Reconfigure(cfg Config) error {
 			lg.updateModule(tmp.modules)
 		}
 
-		l.outputs = tmp.outputs
-		l.modules = tmp.modules
+		l.logState = tmp
 	}
 
 	return err
@@ -274,17 +287,66 @@ func (l *Log) ReconfigureFromFile(path string) error {
 	return err
 }
 
-// Reopen causes all outputters to reopen their files, if they have any. When
+// Exit can be used by servers that exit gracefully. It causes all Outputters
+// to Exit and cleanup after themselves, and it blocks until done.
+//
+// This is typically the last thing you want to call before exiting.
+//
+// This Log can be reused by calling Reconfigure().
+func (l *Log) Exit() {
+	l.rwmtx.RLock()
+	wg := l.wg
+	l.rwmtx.RUnlock()
+
+	// Don't break logging. Just blackhole everything and be done. Can't send
+	// everything to defaults since stdout might be closed, or if it's not,
+	// too much logging could cause everything to block, which just defeats
+	// the purpose.
+	l.Reconfigure(Config{
+		Outputs: map[string]*ConfigOutput{
+			"blackhole": &ConfigOutput{
+				Which: "blackhole",
+				Level: Fatal,
+			},
+		},
+		Modules: map[string]*ConfigModule{
+			"": &ConfigModule{
+				Outputs: []string{"blackhole"},
+				Level:   Fatal,
+			},
+		},
+	})
+
+	// So this is kinda sketchy: finalizers for each output need to be called so that we can be sure they're done. Finalizers are only called during GCs... Yeah, loop on GC :(
+	done := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <-time.After(time.Millisecond * 50):
+				runtime.GC()
+			case <-done:
+				return
+			}
+		}
+	}()
+
+	start := time.Now()
+	wg.Wait()
+	fmt.Println(time.Now().Sub(start))
+	close(done)
+}
+
+// Rotate causes all outputters to rotate their files, if they have any. When
 // using an external log rotator (eg. logrotated), this is what you're looking
 // for to use in postrotate.
-func (l *Log) Reopen() error {
+func (l *Log) Rotate() error {
 	l.rwmtx.RLock()
 	defer l.rwmtx.RUnlock()
 
 	es := cog.Errors{}
 
 	for name, o := range l.outputs {
-		es.Addf(o.Reopen(), `failed to reopen output "%s"`, name)
+		es.Addf(o.Rotate(), `failed to Rotate output "%s"`, name)
 	}
 
 	return es.Error()

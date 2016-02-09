@@ -19,7 +19,7 @@ type testLog interface {
 
 func init() {
 	RegisterOutputter("TestLog",
-		func(a ConfigOutputArgs) (Outputter, error) {
+		func(a ConfigArgs) (Outputter, error) {
 			var log testLog
 
 			l, ok := a["log"]
@@ -44,10 +44,13 @@ func (o *TestLogOutput) Write(b []byte) error {
 	return nil
 }
 
-// Reopen implements Outputter.Reopen
-func (*TestLogOutput) Reopen() error {
+// Rotate implements Outputter.Rotate
+func (*TestLogOutput) Rotate() error {
 	return nil
 }
+
+// Exit implements Outputter.Exit
+func (*TestLogOutput) Exit() {}
 
 func (*TestLogOutput) String() string {
 	return "TestLogOutput"

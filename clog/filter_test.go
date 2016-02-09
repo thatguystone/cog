@@ -12,18 +12,27 @@ type rejectMsgFilter struct{}
 type rejectDataFilter struct{}
 
 func init() {
-	RegisterFilter("rejectMsg", rejectMsgFilter{})
-	RegisterFilter("rejectData", rejectDataFilter{})
+	RegisterFilter("rejectMsg", func(ConfigArgs) (Filter, error) {
+		return rejectMsgFilter{}, nil
+	})
+
+	RegisterFilter("rejectData", func(ConfigArgs) (Filter, error) {
+		return rejectDataFilter{}, nil
+	})
 }
 
 func (rejectMsgFilter) Accept(e Entry) bool {
 	return !strings.Contains(e.Msg, "reject")
 }
 
+func (rejectMsgFilter) Exit() {}
+
 func (rejectDataFilter) Accept(e Entry) bool {
 	_, ok := e.Data["reject"]
 	return !ok
 }
+
+func (rejectDataFilter) Exit() {}
 
 func TestFilterErrors(t *testing.T) {
 	c := check.New(t)
@@ -32,7 +41,9 @@ func TestFilterErrors(t *testing.T) {
 		RegisterFilter("rejectMsg", nil)
 	})
 
-	_, err := newFilters(Debug, []string{"blarg"})
+	_, err := newFilters(Debug, []ConfigFilter{
+		ConfigFilter{Which: "blarg"},
+	})
 	c.Error(err)
 }
 
@@ -52,11 +63,11 @@ func TestFilterReject(t *testing.T) {
 
 	out := cfg.Outputs["test"]
 	out.Level = Info
-	out.Filters = []string{"rejectData"}
+	out.Filters = []ConfigFilter{ConfigFilter{Which: "rejectData"}}
 
 	mod := cfg.Modules[""]
 	mod.Level = Info
-	mod.Filters = []string{"rejectMsg"}
+	mod.Filters = []ConfigFilter{ConfigFilter{Which: "rejectMsg"}}
 
 	l, err := New(cfg)
 	c.MustNotError(err)

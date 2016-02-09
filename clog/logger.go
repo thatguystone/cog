@@ -71,33 +71,6 @@ func (lg *logger) AsGoLogger(sub string, lvl Level) *log.Logger {
 	return log.New(gl, "", 0)
 }
 
-// EnabledFor checks if any Outputter in the chain might accept this message.
-// Because some messages are filtered, it's impossible to tell with 100%
-// accuracy if the message will be accepted until the full message is known.
-func (lg *logger) EnabledFor(lvl Level) bool {
-	lg.l.rwmtx.RLock()
-	mod := lg.mod
-	lg.l.rwmtx.RUnlock()
-
-	for mod != nil {
-		if mod.filts.levelEnabled(lvl) {
-			for _, o := range mod.outs {
-				if o.filts.levelEnabled(lvl) {
-					return true
-				}
-			}
-		}
-
-		if mod.dontPropagate {
-			break
-		}
-
-		mod = mod.parent
-	}
-
-	return false
-}
-
 func (lg *logger) LogEntry(e Entry) {
 	e.Depth++
 	e.Time = time.Now()
@@ -157,6 +130,7 @@ func (lg *logger) LogEntry(e Entry) {
 	}
 }
 
+// Assums a write lock on lg.l.rwmtx is held
 func (lg *logger) updateModule(tr *patricia.Trie) {
 	mod := tr.Get(lg.pfx)
 	if mod != nil {

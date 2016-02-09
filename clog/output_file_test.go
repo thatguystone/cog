@@ -12,7 +12,7 @@ func TestOutputFileNew(t *testing.T) {
 	fmttrs := []string{"logfmt", "human", "json"}
 	for _, fmttr := range fmttrs {
 		_, err := newFileOutputter(
-			ConfigOutputArgs{
+			ConfigArgs{
 				"format": fmttr,
 				"path":   c.FS.Path(fmttr),
 			},
@@ -21,7 +21,7 @@ func TestOutputFileNew(t *testing.T) {
 	}
 
 	_, err := newFileOutputter(
-		ConfigOutputArgs{
+		ConfigArgs{
 			"format": "gerp gorp",
 			"path":   c.FS.Path("gerp gorp"),
 		},

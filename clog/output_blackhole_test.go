@@ -6,10 +6,11 @@ import (
 	"github.com/thatguystone/cog/check"
 )
 
-func TestOutputTermCoverage(t *testing.T) {
+func TestOutputBlackholeCoverage(t *testing.T) {
 	c := check.New(t)
+	o := BlackholeOutput{}
 
-	o, err := newTermOutput(ConfigArgs{})
+	_, err := o.FormatEntry(Entry{})
 	c.MustNotError(err)
 
 	o.Write([]byte(""))

@@ -13,8 +13,16 @@ func (insultFilter) Accept(e clog.Entry) bool {
 	return !strings.Contains(strings.ToLower(e.Msg), "i hate you")
 }
 
+func (insultFilter) Exit() {
+	// This filter has nothing to cleanup, so nothing to do here
+}
+
 func init() {
-	clog.RegisterFilter("insult", insultFilter{})
+	clog.RegisterFilter("insult",
+		func(args clog.ConfigArgs) (clog.Filter, error) {
+			// If args were used here, args.ApplyTo might come in handy
+			return insultFilter{}, nil
+		})
 }
 
 func Example_terminal() {
@@ -23,7 +31,7 @@ func Example_terminal() {
 			"term": {
 				Which: "term",
 				Level: clog.Info,
-				Args: clog.ConfigOutputArgs{
+				Args: clog.ConfigArgs{
 					"ShortTime": true,
 					"Stdout":    true,
 				},
@@ -35,8 +43,12 @@ func Example_terminal() {
 				Outputs: []string{"term"},
 			},
 			"rude.module": {
-				Outputs:       []string{"term"},
-				Filters:       []string{"insult"},
+				Outputs: []string{"term"},
+				Filters: []clog.ConfigFilter{
+					clog.ConfigFilter{
+						Which: "insult",
+					},
+				},
 				DontPropagate: true,
 			},
 		},
@@ -57,7 +69,7 @@ func Example_terminal() {
 	rude.Error("I'm better than you")
 
 	// Output:
-	// [000000] I-polite.module : example_term_test.go:51 : You're very pretty
-	// [000000] I-polite.module : example_term_test.go:52 : I like you
-	// [000000] E-rude.module : example_term_test.go:57 : I'm better than you
+	// [000000] I-polite.module : example_term_test.go:63 : You're very pretty
+	// [000000] I-polite.module : example_term_test.go:64 : I like you
+	// [000000] E-rude.module : example_term_test.go:69 : I'm better than you
 }

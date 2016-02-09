@@ -14,10 +14,14 @@ type errorOutput struct {
 	f Outputter
 }
 
+type exitOutput struct {
+	exited bool
+}
+
 var errOut errorOutput
 
 func init() {
-	RegisterOutputter("errOut", func(a ConfigOutputArgs) (Outputter, error) {
+	RegisterOutputter("errOut", func(a ConfigArgs) (Outputter, error) {
 		if errOut.Fail() {
 			return nil, errors.New("nope, not gonna happen")
 		}
@@ -28,6 +32,10 @@ func init() {
 		}
 
 		return &errorOutput{f: f}, nil
+	})
+
+	RegisterOutputter("exitOut", func(a ConfigArgs) (Outputter, error) {
+		return &exitOutput{}, nil
 	})
 }
 
@@ -47,17 +55,25 @@ func (o *errorOutput) Write(b []byte) error {
 	return o.f.Write(b)
 }
 
-func (o *errorOutput) Reopen() error {
+func (o *errorOutput) Rotate() error {
 	if o.Fail() {
-		return errors.New("i don't want to reopen that")
+		return errors.New("i don't want to rotate that")
 	}
 
-	return o.f.Reopen()
+	return o.f.Rotate()
 }
+
+func (o *errorOutput) Exit() {}
 
 func (o *errorOutput) String() string {
 	return "ErrorOutput"
 }
+
+func (o *exitOutput) FormatEntry(e Entry) ([]byte, error) { return nil, nil }
+func (o *exitOutput) Write(b []byte) error                { return nil }
+func (o *exitOutput) Rotate() error                       { return nil }
+func (o *exitOutput) Exit()                               { o.exited = true }
+func (o *exitOutput) String() string                      { return "exitOutput" }
 
 func TestOutputDump(t *testing.T) {
 	c := check.New(t)

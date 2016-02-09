@@ -36,15 +36,16 @@ type ConfigOutput struct {
 	// Which Outputter to use. This value is case-insensitive.
 	Which string
 
-	// Log level to use for this output. Use Debug to accept all.
+	// Log level to use for this output. Use Debug to accept all. This is
+	// actually an implicit (and required) Filter.
 	Level Level
 
 	// Which filters to apply to this output.
-	Filters []string
+	Filters []ConfigFilter
 
 	// Arguments to provide to the underlying Outputter (the one specified by
 	// Which above).
-	Args ConfigOutputArgs
+	Args ConfigArgs
 }
 
 // ConfigModule specifies how a module to to be treated
@@ -53,27 +54,38 @@ type ConfigModule struct {
 	// Outputs map in Config.
 	Outputs []string
 
-	// Log level to use for this output. Use Debug to accept all.
+	// Log level to use for this output. Use Debug to accept all. This is
+	// actually an implicit (and required) Filter.
 	Level Level
 
 	// Which filters to apply to this module
-	Filters []string
+	Filters []ConfigFilter
 
 	// By default, messages are propagated until the root logger. If you want
 	// messages to stop here, set this to True.
 	DontPropagate bool
 }
 
-// ConfigOutputArgs is passed directly to an output when it is being created.
-// See the individual outputs for what these arguments may be.
-type ConfigOutputArgs map[string]interface{}
+// ConfigFilter is for setting up a filter
+type ConfigFilter struct {
+	// Which the filter to use. This value is case-insensitive.
+	Which string
 
-// ApplyTo is typically only used by Outputs when they are building themselves.
-// This Unmarshals the options into the given interface for simpler
-// configuration.
-func (a ConfigOutputArgs) ApplyTo(i interface{}) (err error) {
+	// Filter arguments
+	Args ConfigArgs
+}
+
+// ConfigArgs is passed directly to an Outputter or Filter when being created.
+// See the individual Outputters and Filters for what these arguments may be.
+type ConfigArgs map[string]interface{}
+
+// ApplyTo is typically only used by Outputters and Filters when they are
+// building themselves. This Unmarshals the options into the given interface
+// for simpler configuration.
+func (a ConfigArgs) ApplyTo(i interface{}) (err error) {
 	if len(a) > 0 {
-		b, err := json.Marshal(a)
+		var b []byte
+		b, err = json.Marshal(a)
 		if err == nil {
 			err = json.Unmarshal(b, i)
 		}

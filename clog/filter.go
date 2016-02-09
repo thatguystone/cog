@@ -4,30 +4,35 @@ import (
 	"fmt"
 	"io"
 	"strings"
+
+	"github.com/thatguystone/cog"
 )
 
 // A Filter determines which log entries are allowed through
 type Filter interface {
 	// Checks whether or not this Entry should be accepted
 	Accept(Entry) bool
+
+	// Just in case you need to cleanup when no longer needed
+	Exit()
 }
 
-type filters struct {
-	lvl Level
-	s   []Filter
-}
+// NewFilter creates new, configured Filters.
+type NewFilter func(args ConfigArgs) (Filter, error)
 
-var regdFilters = map[string]Filter{}
+type filterSlice []Filter
+
+var regdFilters = map[string]NewFilter{}
 
 // RegisterFilter adds a Filter to the list of filters
-func RegisterFilter(name string, f Filter) {
+func RegisterFilter(name string, nf NewFilter) {
 	lname := strings.ToLower(name)
 
 	if _, ok := regdFilters[lname]; ok {
 		panic(fmt.Errorf("filter `%s` already registered", name))
 	}
 
-	regdFilters[lname] = f
+	regdFilters[lname] = nf
 }
 
 // DumpKnownFilters writes all known filters and their names to the given
@@ -38,33 +43,42 @@ func DumpKnownFilters(w io.Writer) {
 	}
 }
 
-func newFilters(lvl Level, ss []string) (*filters, error) {
-	fs := &filters{
-		lvl: lvl,
-	}
+func newFilters(lvl Level, cfgs []ConfigFilter) (filts filterSlice, err error) {
+	defer func() {
+		if err != nil {
+			for _, f := range filts {
+				f.Exit()
+			}
+		}
+	}()
 
-	for _, s := range ss {
-		f, ok := regdFilters[strings.ToLower(s)]
+	f, err := regdFilters[strings.ToLower(lvlFilterName)](ConfigArgs{
+		"level": lvl,
+	})
+	cog.Must(err, "failed to configure built-in %s filter", lvlFilterName)
+	filts = append(filts, f)
+
+	for _, cfg := range cfgs {
+		nf, ok := regdFilters[strings.ToLower(cfg.Which)]
 		if !ok {
-			return nil, fmt.Errorf(`filter "%s" does not exist`, s)
+			err = fmt.Errorf(`filter "%s" does not exist`, cfg.Which)
+			return
 		}
 
-		fs.s = append(fs.s, f)
+		f, err = nf(cfg.Args)
+		if err != nil {
+			err = fmt.Errorf(`error creating filter "%s": %v`, cfg.Which, err)
+			return
+		}
+
+		filts = append(filts, f)
 	}
 
-	return fs, nil
+	return
 }
 
-func (fs *filters) levelEnabled(lvl Level) bool {
-	return lvl >= fs.lvl
-}
-
-func (fs *filters) accept(e Entry) bool {
-	if !fs.levelEnabled(e.Level) {
-		return false
-	}
-
-	for _, f := range fs.s {
+func (fs filterSlice) accept(e Entry) bool {
+	for _, f := range fs {
 		if !f.Accept(e) {
 			return false
 		}

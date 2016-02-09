@@ -41,7 +41,7 @@ func TestTestLogCoverage(t *testing.T) {
 	check.New(t)
 
 	o := TestLogOutput{}
-	o.Reopen()
+	o.Rotate()
 	_ = o.String()
 }
 
@@ -53,7 +53,7 @@ func ExampleTestLogOutput() {
 		Outputs: map[string]*ConfigOutput{
 			"testlog": {
 				Which: "testlog",
-				Args: ConfigOutputArgs{
+				Args: ConfigArgs{
 					// This output logs directly to t.Log()
 					"log": t,
 				},

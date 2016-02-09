@@ -21,7 +21,7 @@ func init() {
 	RegisterOutputter("terminal", newTermOutput)
 }
 
-func newTermOutput(a ConfigOutputArgs) (o Outputter, err error) {
+func newTermOutput(a ConfigArgs) (o Outputter, err error) {
 	hf := HumanFormat{}
 
 	err = a.ApplyTo(&hf.Args)
@@ -51,10 +51,13 @@ func (s *TermOutput) Write(b []byte) error {
 	return err
 }
 
-// Reopen implements Outputter.Reopen
-func (s *TermOutput) Reopen() error {
+// Rotate implements Outputter.Rotate
+func (s *TermOutput) Rotate() error {
 	return nil
 }
+
+// Exit implements Outputter.Exit
+func (s *TermOutput) Exit() {}
 
 func (s *TermOutput) String() string {
 	return fmt.Sprintf("TermOutput{}")

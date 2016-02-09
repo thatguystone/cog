@@ -53,7 +53,14 @@
 //             "errors": {
 //                 Which:   "jsonfile",
 //                 Level:   Error,
-//                 Filters: []string{"exampleFilter"},
+//                 Filters: []FilterConfig{
+//                     FilterConfig{
+//                         Which: "exampleFilter",
+//                         Args: ConfigOutputArgs{
+//                             "exampleConfig": "someValue",
+//                         },
+//                     },
+//                 },
 //                 Args: ConfigOutputArgs{
 //                     "path": "/var/log/app.jlog",
 //                 },
@@ -93,7 +100,14 @@
 //             "http": {
 //                 Outputs:       []string{"debug"},
 //                 Level:         Info,
-//                 Filters:       []string{"exampleFilter"},
+//                 Filters: []FilterConfig{
+//                     FilterConfig{
+//                         Which: "exampleFilter",
+//                         Args: ConfigOutputArgs{
+//                             "exampleConfig": "someValue",
+//                         },
+//                     },
+//                 },
 //                 DontPropagate: true,
 //             },
 //

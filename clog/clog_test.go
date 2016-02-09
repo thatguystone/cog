@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/thatguystone/cog/check"
 )
@@ -19,7 +20,7 @@ func basicTestConfig(c *check.C) Config {
 			"test": {
 				Which: "file",
 				Level: Debug,
-				Args: ConfigOutputArgs{
+				Args: ConfigArgs{
 					"path": c.FS.Path("test"),
 				},
 			},
@@ -88,9 +89,6 @@ func TestBasic(t *testing.T) {
 	lg2 := l.Get("test.sub")
 	c.Equal(lg, lg2)
 
-	c.False(lg.EnabledFor(Debug))
-	c.True(lg.EnabledFor(Info))
-
 	lg.Debug("Debug")
 	lg.Info("Info")
 	lg.Warn("Warn")
@@ -101,6 +99,9 @@ func TestBasic(t *testing.T) {
 	})
 
 	plain := c.FS.SReadFile("plain")
+	c.Equal(0,
+		strings.Count(plain,
+			`level=debug`))
 	c.Equal(3,
 		strings.Count(plain,
 			`level=info module=test.sub msg=Info`))
@@ -225,9 +226,11 @@ func TestReconfigureErrors(t *testing.T) {
 	}
 
 	cfg.Outputs["badFilters"] = &ConfigOutput{
-		Which:   "file",
-		Filters: []string{"iDontExist"},
-		Args: ConfigOutputArgs{
+		Which: "file",
+		Filters: []ConfigFilter{
+			ConfigFilter{Which: "iDontExist"},
+		},
+		Args: ConfigArgs{
 			"path": c.FS.Path("badFilters"),
 		},
 	}
@@ -242,7 +245,9 @@ func TestReconfigureErrors(t *testing.T) {
 	cfg.Modules["noOuts"] = &ConfigModule{}
 	cfg.Modules["badFilters"] = &ConfigModule{
 		Outputs: []string{"file"},
-		Filters: []string{"iDontExist"},
+		Filters: []ConfigFilter{
+			ConfigFilter{Which: "iDontExist"},
+		},
 	}
 	cfg.Modules["badOut"] = &ConfigModule{
 		Outputs: []string{"rawr"},
@@ -264,13 +269,47 @@ func TestReopen(t *testing.T) {
 
 	os.Rename(c.FS.Path("test"), c.FS.Path("test.1"))
 
-	err = l.Reopen()
+	err = l.Rotate()
 	c.MustNotError(err)
 
 	lg.Info("after")
 
 	c.Contains(c.FS.SReadFile("test.1"), "before")
 	c.Contains(c.FS.SReadFile("test"), "after")
+}
+
+func TestExit(t *testing.T) {
+	c := check.New(t)
+
+	cfg := basicTestConfig(c)
+
+	cfg.File = c.FS.Path("default_file")
+	out := cfg.Outputs["test"]
+	out.Which = "exitOut"
+
+	cfg.Modules["test"] = &ConfigModule{
+		Outputs: []string{"test", defaultConfigFileOutputName},
+	}
+
+	l, err := New(cfg)
+	c.MustNotError(err)
+
+	eo := l.outputs["test"].Outputter.(*exitOutput)
+	l.Exit()
+	c.True(eo.exited)
+
+	err = l.Reconfigure(cfg)
+	c.MustNotError(err)
+
+	lg := l.Get("test")
+	go func() {
+		time.Sleep(time.Millisecond * 100)
+		lg.Info("Delayed message")
+	}()
+
+	eo = l.outputs["test"].Outputter.(*exitOutput)
+	l.Exit()
+	c.True(eo.exited)
 }
 
 func TestDontPropagate(t *testing.T) {
@@ -287,10 +326,13 @@ func TestDontPropagate(t *testing.T) {
 	c.MustNotError(err)
 
 	lg := l.Get("test")
-	c.False(lg.EnabledFor(Debug))
-
+	lg.Debug("debug")
 	lg.Info("dont propagate")
 
+	c.Equal(0,
+		strings.Count(
+			c.FS.SReadFile("test"),
+			`debug`))
 	c.Equal(1,
 		strings.Count(
 			c.FS.SReadFile("test"),
