@@ -27,25 +27,30 @@ func init() {
 
 func Example_terminal() {
 	cfg := clog.Config{
-		Outputs: map[string]*clog.ConfigOutput{
+		Outputs: map[string]*clog.OutputConfig{
 			"term": {
 				Which: "term",
 				Level: clog.Info,
+				Formatter: clog.FormatterConfig{
+					Name: "Human",
+					Args: clog.ConfigArgs{
+						"ShortTime": true,
+					},
+				},
 				Args: clog.ConfigArgs{
-					"ShortTime": true,
-					"Stdout":    true,
+					"Stdout": true,
 				},
 			},
 		},
 
-		Modules: map[string]*clog.ConfigModule{
+		Modules: map[string]*clog.ModuleConfig{
 			"": {
 				Outputs: []string{"term"},
 			},
 			"rude.module": {
 				Outputs: []string{"term"},
-				Filters: []clog.ConfigFilter{
-					clog.ConfigFilter{
+				Filters: []clog.FilterConfig{
+					clog.FilterConfig{
 						Which: "insult",
 					},
 				},
@@ -69,7 +74,7 @@ func Example_terminal() {
 	rude.Error("I'm better than you")
 
 	// Output:
-	// [000000] I-polite.module : example_term_test.go:63 : You're very pretty
-	// [000000] I-polite.module : example_term_test.go:64 : I like you
-	// [000000] E-rude.module : example_term_test.go:69 : I'm better than you
+	// [000000] I-polite.module : example_term_test.go:68 : You're very pretty
+	// [000000] I-polite.module : example_term_test.go:69 : I like you
+	// [000000] E-rude.module : example_term_test.go:74 : I'm better than you
 }

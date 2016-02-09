@@ -41,8 +41,8 @@ func TestFilterErrors(t *testing.T) {
 		RegisterFilter("rejectMsg", nil)
 	})
 
-	_, err := newFilters(Debug, []ConfigFilter{
-		ConfigFilter{Which: "blarg"},
+	_, err := newFilters(Debug, []FilterConfig{
+		FilterConfig{Which: "blarg"},
 	})
 	c.Error(err)
 }
@@ -63,11 +63,11 @@ func TestFilterReject(t *testing.T) {
 
 	out := cfg.Outputs["test"]
 	out.Level = Info
-	out.Filters = []ConfigFilter{ConfigFilter{Which: "rejectData"}}
+	out.Filters = []FilterConfig{FilterConfig{Which: "rejectData"}}
 
 	mod := cfg.Modules[""]
 	mod.Level = Info
-	mod.Filters = []ConfigFilter{ConfigFilter{Which: "rejectMsg"}}
+	mod.Filters = []FilterConfig{FilterConfig{Which: "rejectMsg"}}
 
 	l, err := New(cfg)
 	c.MustNotError(err)

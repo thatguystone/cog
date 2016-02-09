@@ -18,29 +18,26 @@ type TermOutput struct {
 }
 
 func init() {
-	RegisterOutputter("term", newTermOutput)
-	RegisterOutputter("terminal", newTermOutput)
+	fcfg := FormatterConfig{Name: "Human"}
+
+	RegisterOutputter("term", fcfg, newTermOutput)
+	RegisterOutputter("terminal", fcfg, newTermOutput)
 }
 
-func newTermOutput(a ConfigArgs) (o Outputter, err error) {
-	hf := HumanFormat{}
+func newTermOutput(a ConfigArgs, f Formatter) (o Outputter, err error) {
+	to := &TermOutput{
+		Formatter: f,
+	}
 
-	err = a.ApplyTo(&hf.Args)
+	err = a.ApplyTo(&to.Args)
 	if err == nil {
-		to := &TermOutput{
-			Formatter: hf,
+		if to.Args.Stdout {
+			to.out = os.Stdout
+		} else {
+			to.out = os.Stderr
 		}
 
-		err = a.ApplyTo(&to.Args)
-		if err == nil {
-			if to.Args.Stdout {
-				to.out = os.Stdout
-			} else {
-				to.out = os.Stderr
-			}
-
-			o = to
-		}
+		o = to
 	}
 
 	return

@@ -17,7 +17,7 @@ import (
 // configure it directly in Config itself, as follows:
 //
 //     Config{
-//         Outputs: map[string]*ConfigOutput{
+//         Outputs: map[string]*OutputConfig{
 //             "testlog": {
 //                 Which: "TestLog",
 //                 Level: clog.Debug,
@@ -26,7 +26,7 @@ import (
 //                 },
 //             },
 //         },
-//         Modules: map[string]*ConfigModule{
+//         Modules: map[string]*ModuleConfig{
 //             "": {
 //                 Outputs: []string{"testlog"},
 //                 Level:   clog.Debug,
@@ -51,8 +51,10 @@ type testLog interface {
 }
 
 func init() {
-	RegisterOutputter("TestLog",
-		func(a ConfigArgs) (Outputter, error) {
+	RegisterOutputter(
+		"TestLog",
+		FormatterConfig{Name: "Human"},
+		func(a ConfigArgs, f Formatter) (Outputter, error) {
 			var log testLog
 
 			l, ok := a["log"]
@@ -66,7 +68,7 @@ func init() {
 			}
 
 			return &TestLogOutput{
-				Formatter: HumanFormat{},
+				Formatter: f,
 				l:         log,
 			}, nil
 		})

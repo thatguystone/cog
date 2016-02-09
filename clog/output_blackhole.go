@@ -6,9 +6,11 @@ import "fmt"
 type BlackholeOutput struct{}
 
 func init() {
-	RegisterOutputter("blackhole", func(ConfigArgs) (Outputter, error) {
-		return BlackholeOutput{}, nil
-	})
+	RegisterOutputter("blackhole",
+		FormatterConfig{Name: "Human"},
+		func(ConfigArgs, Formatter) (Outputter, error) {
+			return BlackholeOutput{}, nil
+		})
 }
 
 // FormatEntry does nothing

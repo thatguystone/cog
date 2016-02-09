@@ -3,7 +3,6 @@ package clog
 import (
 	"fmt"
 	"os"
-	"strings"
 	"sync"
 )
 
@@ -16,23 +15,27 @@ import (
 //
 //  JSON:
 //     Config{
-//         Outputs: map[string]*ConfigOutput{
-//             "json": {
+//         Outputs: map[string]*OutputConfig{
+//             "human": {
 //                 Which: "JSONFile",
 //                 Level: clog.Debug,
+//                 Args: ConfigArgs{
+//                     "Path": "/var/log/file.json.log",
+//                 },
 //             },
 //         },
-//     }
 //
 //  Human:
 //     Config{
-//         Outputs: map[string]*ConfigOutput{
+//         Outputs: map[string]*OutputConfig{
 //             "human": {
 //                 Which: "File",
 //                 Level: clog.Debug,
+//                 Format: FormatterConfig{
+//                     Name: "human", // Or "logfmt", or any other valid formatter
+//                 },
 //                 Args: ConfigArgs{
-//                     "Format": "human",
-//                     "ShortTime": true, // Argument for HumanFormat
+//                     "Path": "/var/log/file.log",
 //                 },
 //             },
 //         },
@@ -44,62 +47,31 @@ type FileOutput struct {
 	f     *os.File
 
 	Args struct {
-		// Which format to use. May be one of:
-		//     - logfmt: output in Heroku's logfmt
-		//     - json: output json data
-		//     - human: output human-readable data
-		Format string
-
 		// Path to file to write to
 		Path string
 	}
 }
 
 func init() {
-	RegisterOutputter("JSONFile", newJSONFileOutputter)
-	RegisterOutputter("File", func(a ConfigArgs) (Outputter, error) {
-		return newFileOutputter(a, nil)
-	})
+	RegisterOutputter("JSONFile",
+		FormatterConfig{Name: "JSON"},
+		newFileOutputter)
+	RegisterOutputter("File",
+		FormatterConfig{Name: "logfmt"},
+		newFileOutputter)
 }
 
-func newFileOutputter(a ConfigArgs, fmttr Formatter) (Outputter, error) {
+func newFileOutputter(a ConfigArgs, f Formatter) (Outputter, error) {
 	o := &FileOutput{
-		Formatter: fmttr,
+		Formatter: f,
 	}
 
 	err := a.ApplyTo(&o.Args)
-
-	// If there's a forced format (from a specific output type), don't read the
-	// Format option
-	if err == nil && fmttr == nil {
-		switch strings.ToLower(o.Args.Format) {
-		case "", "logfmt":
-			fmttr = LogfmtFormat{}
-
-		case "human":
-			hf := HumanFormat{}
-			err = a.ApplyTo(&hf.Args)
-			fmttr = hf
-
-		case "json":
-			fmttr = JSONFormat{}
-
-		default:
-			err = fmt.Errorf(`unrecognized output format: "%s"`, o.Args.Format)
-		}
-
-		o.Formatter = fmttr
-	}
-
 	if err == nil {
 		err = o.Rotate()
 	}
 
 	return o, err
-}
-
-func newJSONFileOutputter(a ConfigArgs) (Outputter, error) {
-	return newFileOutputter(a, JSONFormat{})
 }
 
 func (o *FileOutput) Write(b []byte) error {

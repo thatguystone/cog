@@ -21,22 +21,33 @@ type exitOutput struct {
 var errOut errorOutput
 
 func init() {
-	RegisterOutputter("errOut", func(a ConfigArgs) (Outputter, error) {
-		if errOut.Fail() {
-			return nil, errors.New("nope, not gonna happen")
-		}
+	fcfg := FormatterConfig{
+		Name: "Human",
+		Args: ConfigArgs{
+			"ShortTime": true,
+		},
+	}
 
-		f, err := newFileOutputter(a, nil)
-		if err != nil {
-			return nil, err
-		}
+	RegisterOutputter("errOut",
+		fcfg,
+		func(a ConfigArgs, fmttr Formatter) (Outputter, error) {
+			if errOut.Fail() {
+				return nil, errors.New("nope, not gonna happen")
+			}
 
-		return &errorOutput{f: f}, nil
-	})
+			f, err := newFileOutputter(a, fmttr)
+			if err != nil {
+				return nil, err
+			}
 
-	RegisterOutputter("exitOut", func(a ConfigArgs) (Outputter, error) {
-		return &exitOutput{}, nil
-	})
+			return &errorOutput{f: f}, nil
+		})
+
+	RegisterOutputter("exitOut",
+		fcfg,
+		func(a ConfigArgs, f Formatter) (Outputter, error) {
+			return &exitOutput{}, nil
+		})
 }
 
 func (o *errorOutput) FormatEntry(e Entry) ([]byte, error) {
@@ -88,8 +99,16 @@ func TestOutputErrors(t *testing.T) {
 	c := check.New(t)
 
 	c.Panic(func() {
-		RegisterOutputter("errOut", nil)
+		RegisterOutputter("errOut", FormatterConfig{}, nil)
 	})
+
+	_, err := newOutput(&OutputConfig{
+		Which: "file",
+		Formatter: FormatterConfig{
+			Name: "nope",
+		},
+	})
+	c.Error(err)
 
 	cfg := basicTestConfig(c)
 

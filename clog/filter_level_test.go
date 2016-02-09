@@ -13,8 +13,8 @@ func TestFilterLevelBasic(t *testing.T) {
 
 	out := cfg.Outputs["test"]
 	out.Level = Info
-	out.Filters = []ConfigFilter{
-		ConfigFilter{
+	out.Filters = []FilterConfig{
+		FilterConfig{
 			Which: lvlFilterName,
 			Args:  ConfigArgs{"Level": Info},
 		},
@@ -37,8 +37,8 @@ func TestFilterLevelBasic(t *testing.T) {
 func TestFilterLevelErrors(t *testing.T) {
 	c := check.New(t)
 
-	_, err := newFilters(Info, []ConfigFilter{
-		ConfigFilter{
+	_, err := newFilters(Info, []FilterConfig{
+		FilterConfig{
 			Which: lvlFilterName,
 			Args:  ConfigArgs{"Level": "ponies"},
 		},

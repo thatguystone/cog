@@ -50,7 +50,7 @@ func ExampleTestLogOutput() {
 	t := &testing.T{}
 
 	cfg := Config{
-		Outputs: map[string]*ConfigOutput{
+		Outputs: map[string]*OutputConfig{
 			"testlog": {
 				Which: "testlog",
 				Args: ConfigArgs{

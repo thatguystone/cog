@@ -21,18 +21,18 @@ type Config struct {
 
 	// Identifies all of the places where log entries are written. They keys in
 	// this map name the output.
-	Outputs map[string]*ConfigOutput
+	Outputs map[string]*OutputConfig
 
 	// Identifies all modules that you want to configure. They keys in this map
 	// identify the module to work on.
 	//
 	// If no modules are given, everything at level Info and above goes to the
 	// terminal by default.
-	Modules map[string]*ConfigModule
+	Modules map[string]*ModuleConfig
 }
 
-// ConfigOutput specifies how an output is to be built
-type ConfigOutput struct {
+// OutputConfig specifies how an output is to be built
+type OutputConfig struct {
 	// Which Outputter to use. This value is case-insensitive.
 	Which string
 
@@ -40,16 +40,20 @@ type ConfigOutput struct {
 	// actually an implicit (and required) Filter.
 	Level Level
 
+	// Which formatter to use for this output. Some outputs might come with
+	// their own formatters and ignore this.
+	Formatter FormatterConfig
+
 	// Which filters to apply to this output.
-	Filters []ConfigFilter
+	Filters []FilterConfig
 
 	// Arguments to provide to the underlying Outputter (the one specified by
 	// Which above).
 	Args ConfigArgs
 }
 
-// ConfigModule specifies how a module to to be treated
-type ConfigModule struct {
+// ModuleConfig specifies how a module to to be treated
+type ModuleConfig struct {
 	// The list of outputs to write to. These values come from the keys in the
 	// Outputs map in Config.
 	Outputs []string
@@ -59,19 +63,25 @@ type ConfigModule struct {
 	Level Level
 
 	// Which filters to apply to this module
-	Filters []ConfigFilter
+	Filters []FilterConfig
 
 	// By default, messages are propagated until the root logger. If you want
 	// messages to stop here, set this to True.
 	DontPropagate bool
 }
 
-// ConfigFilter is for setting up a filter
-type ConfigFilter struct {
+// FilterConfig is for setting up a Filter
+type FilterConfig struct {
 	// Which the filter to use. This value is case-insensitive.
 	Which string
 
 	// Filter arguments
+	Args ConfigArgs
+}
+
+// FormatterConfig is for setting up a Formatter
+type FormatterConfig struct {
+	Name string
 	Args ConfigArgs
 }
 

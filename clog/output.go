@@ -8,8 +8,7 @@ import (
 
 // Outputter provides a standard interface for writing log messages
 type Outputter interface {
-	// An output should typically provide its own message formatting, since many
-	// formats are output-specific.
+	// Each Outputter has a single Formatter associated with it
 	Formatter
 
 	// Write the formatted message to the backend.
@@ -17,8 +16,8 @@ type Outputter interface {
 	// This does not implement io.Writer: it's not really a writer, it's an
 	// Outputter.
 	//
-	// If this write fails, a new log entry is be generated that it sent
-	// straight to the root logger with level=Error, describing the problem.
+	// If this write fails, a new log entry is generated that is sent straight
+	// to the root logger with level=Error, describing the problem.
 	Write([]byte) error
 
 	// When using an external log rotator, this is called to reopen all file
@@ -38,20 +37,35 @@ type Outputter interface {
 	String() string
 }
 
-// NewOutputter creates new, configured Outputters.
-type NewOutputter func(args ConfigArgs) (Outputter, error)
+type outputter struct {
+	no   NewOutputter
+	fcfg FormatterConfig
+}
 
-var regdOutputs = map[string]NewOutputter{}
+// NewOutputter creates new, configured Outputters. If this Outputter can't
+// handle the given Formatter, return an error.
+type NewOutputter func(args ConfigArgs, f Formatter) (Outputter, error)
 
-// RegisterOutputter adds a NewOutputter to the list of Outputters
-func RegisterOutputter(name string, no NewOutputter) {
+var regdOutputs = map[string]outputter{}
+
+// RegisterOutputter adds a NewOutputter to the list of Outputters. Each
+// formatter should specify which Formatter to use by default when none is
+// specified.
+func RegisterOutputter(
+	name string,
+	defFmttr FormatterConfig,
+	no NewOutputter) {
+
 	lname := strings.ToLower(name)
 
 	if _, ok := regdOutputs[lname]; ok {
 		panic(fmt.Errorf("outputter `%s` already registered", name))
 	}
 
-	regdOutputs[lname] = no
+	regdOutputs[lname] = outputter{
+		no:   no,
+		fcfg: defFmttr,
+	}
 }
 
 // DumpKnownOutputs writes all known outputs and their names to the given
@@ -62,11 +76,21 @@ func DumpKnownOutputs(w io.Writer) {
 	}
 }
 
-func newOutput(cfg *ConfigOutput) (Outputter, error) {
-	no, ok := regdOutputs[strings.ToLower(cfg.Which)]
+func newOutput(cfg *OutputConfig) (Outputter, error) {
+	o, ok := regdOutputs[strings.ToLower(cfg.Which)]
 	if !ok {
 		return nil, fmt.Errorf(`output name="%s" does not exist`, cfg.Which)
 	}
 
-	return no(cfg.Args)
+	fcfg := cfg.Formatter
+	if fcfg.Name == "" {
+		fcfg = o.fcfg
+	}
+
+	f, err := newFormatter(fcfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return o.no(cfg.Args, f)
 }

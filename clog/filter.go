@@ -43,7 +43,7 @@ func DumpKnownFilters(w io.Writer) {
 	}
 }
 
-func newFilters(lvl Level, cfgs []ConfigFilter) (filts filterSlice, err error) {
+func newFilters(lvl Level, cfgs []FilterConfig) (filts filterSlice, err error) {
 	defer func() {
 		if err != nil {
 			for _, f := range filts {

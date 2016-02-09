@@ -15,6 +15,19 @@ type HumanFormat struct {
 
 var startTime = time.Now()
 
+func init() {
+	RegisterFormatter("Human",
+		func(args ConfigArgs) (Formatter, error) {
+			f := HumanFormat{}
+			err := args.ApplyTo(&f.Args)
+			if err != nil {
+				return nil, err
+			}
+
+			return f, nil
+		})
+}
+
 // FormatEntry implements Formatter
 func (f HumanFormat) FormatEntry(e Entry) ([]byte, error) {
 	b := bytes.Buffer{}

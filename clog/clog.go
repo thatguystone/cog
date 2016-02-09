@@ -105,15 +105,15 @@ func (l *Log) Reconfigure(cfg Config) error {
 	}
 
 	if cfg.Outputs == nil {
-		cfg.Outputs = map[string]*ConfigOutput{}
+		cfg.Outputs = map[string]*OutputConfig{}
 	}
 
 	if cfg.Modules == nil {
-		cfg.Modules = map[string]*ConfigModule{}
+		cfg.Modules = map[string]*ModuleConfig{}
 	}
 
 	if cfg.File != "" {
-		cfg.Outputs[defaultConfigFileOutputName] = &ConfigOutput{
+		cfg.Outputs[defaultConfigFileOutputName] = &OutputConfig{
 			Which: "jsonfile",
 			Level: Info,
 			Args: ConfigArgs{
@@ -123,7 +123,7 @@ func (l *Log) Reconfigure(cfg Config) error {
 
 		m, ok := cfg.Modules[""]
 		if !ok {
-			m = &ConfigModule{
+			m = &ModuleConfig{
 				Level: Info,
 			}
 			cfg.Modules[""] = m
@@ -133,12 +133,12 @@ func (l *Log) Reconfigure(cfg Config) error {
 	}
 
 	if len(cfg.Modules) == 0 {
-		cfg.Outputs[defaultTermOutputName] = &ConfigOutput{
+		cfg.Outputs[defaultTermOutputName] = &OutputConfig{
 			Which: "term",
 			Level: Info,
 		}
 
-		cfg.Modules[""] = &ConfigModule{
+		cfg.Modules[""] = &ModuleConfig{
 			Outputs: []string{defaultTermOutputName},
 			Level:   Info,
 		}
@@ -304,14 +304,14 @@ func (l *Log) Exit() {
 	// too much logging could cause everything to block, which just defeats
 	// the purpose.
 	l.Reconfigure(Config{
-		Outputs: map[string]*ConfigOutput{
-			"blackhole": &ConfigOutput{
+		Outputs: map[string]*OutputConfig{
+			"blackhole": &OutputConfig{
 				Which: "blackhole",
 				Level: Fatal,
 			},
 		},
-		Modules: map[string]*ConfigModule{
-			"": &ConfigModule{
+		Modules: map[string]*ModuleConfig{
+			"": &ModuleConfig{
 				Outputs: []string{"blackhole"},
 				Level:   Fatal,
 			},

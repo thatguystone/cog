@@ -9,7 +9,7 @@ import (
 func TestOutputTermCoverage(t *testing.T) {
 	c := check.New(t)
 
-	o, err := newTermOutput(ConfigArgs{})
+	o, err := newTermOutput(ConfigArgs{}, HumanFormat{})
 	c.MustNotError(err)
 
 	o.Write([]byte(""))

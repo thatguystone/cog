@@ -7,6 +7,18 @@ import (
 	"github.com/thatguystone/cog/check"
 )
 
+func TestHumanFormatNew(t *testing.T) {
+	c := check.New(t)
+
+	_, err := newFormatter(FormatterConfig{
+		Name: "Human",
+		Args: ConfigArgs{
+			"ShortTime": "funny",
+		},
+	})
+	c.MustError(err)
+}
+
 func TestHumanFormatCoverage(t *testing.T) {
 	check.New(t)
 

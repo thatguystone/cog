@@ -9,6 +9,13 @@ import (
 // LogfmtFormat formats messages in heroku's LogFmt
 type LogfmtFormat struct{}
 
+func init() {
+	RegisterFormatter("logfmt",
+		func(args ConfigArgs) (Formatter, error) {
+			return LogfmtFormat{}, nil
+		})
+}
+
 // FormatEntry implements Formatter
 func (LogfmtFormat) FormatEntry(e Entry) ([]byte, error) {
 	b := bytes.Buffer{}

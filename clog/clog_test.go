@@ -16,7 +16,7 @@ func TestMain(m *testing.M) {
 
 func basicTestConfig(c *check.C) Config {
 	return Config{
-		Outputs: map[string]*ConfigOutput{
+		Outputs: map[string]*OutputConfig{
 			"test": {
 				Which: "file",
 				Level: Debug,
@@ -25,7 +25,7 @@ func basicTestConfig(c *check.C) Config {
 				},
 			},
 		},
-		Modules: map[string]*ConfigModule{
+		Modules: map[string]*ModuleConfig{
 			"": {
 				Outputs: []string{"test"},
 				Level:   Debug,
@@ -217,18 +217,18 @@ func TestReconfigureErrors(t *testing.T) {
 	c.MustNotError(err)
 
 	cfg = basicTestConfig(c)
-	cfg.Outputs["doesntExist"] = &ConfigOutput{
+	cfg.Outputs["doesntExist"] = &OutputConfig{
 		Which: "doesntExist",
 	}
 
-	cfg.Outputs["errOut"] = &ConfigOutput{
+	cfg.Outputs["errOut"] = &OutputConfig{
 		Which: "errOut",
 	}
 
-	cfg.Outputs["badFilters"] = &ConfigOutput{
+	cfg.Outputs["badFilters"] = &OutputConfig{
 		Which: "file",
-		Filters: []ConfigFilter{
-			ConfigFilter{Which: "iDontExist"},
+		Filters: []FilterConfig{
+			FilterConfig{Which: "iDontExist"},
 		},
 		Args: ConfigArgs{
 			"path": c.FS.Path("badFilters"),
@@ -242,14 +242,14 @@ func TestReconfigureErrors(t *testing.T) {
 	cfg.Modules["test"] = cfg.Modules[""]
 	cfg.Modules["test."] = cfg.Modules[""]
 
-	cfg.Modules["noOuts"] = &ConfigModule{}
-	cfg.Modules["badFilters"] = &ConfigModule{
+	cfg.Modules["noOuts"] = &ModuleConfig{}
+	cfg.Modules["badFilters"] = &ModuleConfig{
 		Outputs: []string{"file"},
-		Filters: []ConfigFilter{
-			ConfigFilter{Which: "iDontExist"},
+		Filters: []FilterConfig{
+			FilterConfig{Which: "iDontExist"},
 		},
 	}
-	cfg.Modules["badOut"] = &ConfigModule{
+	cfg.Modules["badOut"] = &ModuleConfig{
 		Outputs: []string{"rawr"},
 	}
 
@@ -287,7 +287,7 @@ func TestExit(t *testing.T) {
 	out := cfg.Outputs["test"]
 	out.Which = "exitOut"
 
-	cfg.Modules["test"] = &ConfigModule{
+	cfg.Modules["test"] = &ModuleConfig{
 		Outputs: []string{"test", defaultConfigFileOutputName},
 	}
 
@@ -316,7 +316,7 @@ func TestDontPropagate(t *testing.T) {
 	c := check.New(t)
 
 	cfg := basicTestConfig(c)
-	cfg.Modules["test"] = &ConfigModule{
+	cfg.Modules["test"] = &ModuleConfig{
 		Outputs:       []string{"test"},
 		Level:         Info,
 		DontPropagate: true,

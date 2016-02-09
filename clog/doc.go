@@ -36,11 +36,11 @@
 // their arguments, is documented below.
 //
 // The outputs list their "Which" for selecting the output; this is the value
-// that you pass to ConfigOutput.Which.
+// that you pass to OutputConfig.Which.
 //
 // Since examples are worth more than descriptions, let's take a look at a
 // pretty complex configuration, with comments explaining how it all works
-// together.
+// together (this is much simpler to write in JSON, but you get the point).
 //
 //     Config{
 //         // If set, this creates a new root module (the module named "" (the empty
@@ -48,7 +48,7 @@
 //         // JSON format.
 //         File: "/var/log/app.log",
 //
-//         Outputs: map[string]*ConfigOutput{
+//         Outputs: map[string]*OutputConfig{
 //             // Only errors with level >= Error will be logged here
 //             "errors": {
 //                 Which:   "jsonfile",
@@ -70,9 +70,11 @@
 //             "debug": {
 //                 Which: "file",
 //                 Level: Debug,
+//                 Format: FormatterConfig{
+//                     Name: "human", // Or "logfmt", or any other valid formatter
+//                 },
 //                 Args: ConfigArgs{
 //                     "path":   "/var/log/app.log.json",
-//                     "format": "json",
 //                 },
 //             },
 //
@@ -80,14 +82,19 @@
 //             "heroku": {
 //                 Which: "file",
 //                 Level: Warn,
+//                 Format: FormatterConfig{
+//                     Name: "human",
+//                     Args: FormatterArgs{
+//                         "ShortTime": true,
+//                     },
+//                 },
 //                 Args: ConfigArgs{
 //                     "path":   "/var/log/app.logfmt",
-//                     "format": "logfmt",
 //                 },
 //             },
 //         },
 //
-//         Modules: map[string]*ConfigModule{
+//         Modules: map[string]*ModuleConfig{
 //             // All messages eventually reach here, unless DontPropagate==true in a
 //             // module
 //             "": {
@@ -138,16 +145,25 @@
 //
 // All values are case-insensitive.
 //
-//     "Blackhole" BlackholeOutput
-//     "File"      FileOutput
-//     "JSONFile"  FileOutput (with the json formatter)
-//     "Term"      TermOutput
-//     "Terminal"  TermOutput
-//     "TestLog"   TestLogOutput
+//     "Blackhole"  BlackholeOutput
+//     "File"       FileOutput
+//     "JSONFile"   FileOutput (with the json formatter)
+//     "Term"       TermOutput
+//     "Terminal"   TermOutput
+//     "TestLog"    TestLogOutput
 //
 // Filters
 //
 // The following filters are available (their names are case-insensitive):
 //
 //     "Level"  LevelFilter
+//
+// Formatters
+//
+// The following formatters exist; their arguments are specified in the listed
+// classes. Like everything else, these names are case-insensitive.
+//
+//     "Human"   HumanFormat
+//     "JSON"    JSONFormat
+//     "logfmt"  LogfmtFormat
 package clog
