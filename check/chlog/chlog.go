@@ -6,6 +6,7 @@ import (
 
 	"github.com/thatguystone/cog/check"
 	"github.com/thatguystone/cog/clog"
+	"github.com/thatguystone/cog/config"
 )
 
 // New creates a new TestLog that outputs all log messages to the given TB. This
@@ -18,7 +19,7 @@ func New(tb testing.TB) (*check.C, *clog.Log) {
 			"testlog": {
 				Which: "testlog",
 				Level: clog.Debug,
-				Args: clog.ConfigArgs{
+				Args: config.Args{
 					"log": c,
 				},
 			},

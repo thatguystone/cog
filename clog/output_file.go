@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"sync"
+
+	"github.com/thatguystone/cog/config"
 )
 
 // FileOutput writes directly to a file.
@@ -19,7 +21,7 @@ import (
 //             "human": {
 //                 Which: "JSONFile",
 //                 Level: clog.Debug,
-//                 Args: ConfigArgs{
+//                 Args: config.Args{
 //                     "Path": "/var/log/file.json.log",
 //                 },
 //             },
@@ -34,7 +36,7 @@ import (
 //                 Format: FormatterConfig{
 //                     Name: "human", // Or "logfmt", or any other valid formatter
 //                 },
-//                 Args: ConfigArgs{
+//                 Args: config.Args{
 //                     "Path": "/var/log/file.log",
 //                 },
 //             },
@@ -61,7 +63,7 @@ func init() {
 		newFileOutputter)
 }
 
-func newFileOutputter(a ConfigArgs, f Formatter) (Outputter, error) {
+func newFileOutputter(a config.Args, f Formatter) (Outputter, error) {
 	o := &FileOutput{
 		Formatter: f,
 	}

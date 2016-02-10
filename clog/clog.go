@@ -13,6 +13,7 @@ import (
 
 	"github.com/tchap/go-patricia/patricia"
 	"github.com/thatguystone/cog"
+	"github.com/thatguystone/cog/config"
 )
 
 // Log provides access to the logging facilities
@@ -116,7 +117,7 @@ func (l *Log) Reconfigure(cfg Config) error {
 		cfg.Outputs[defaultConfigFileOutputName] = &OutputConfig{
 			Which: "jsonfile",
 			Level: Info,
-			Args: ConfigArgs{
+			Args: config.Args{
 				"path": cfg.File,
 			},
 		}

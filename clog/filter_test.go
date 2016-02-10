@@ -6,17 +6,18 @@ import (
 	"testing"
 
 	"github.com/thatguystone/cog/check"
+	"github.com/thatguystone/cog/config"
 )
 
 type rejectMsgFilter struct{}
 type rejectDataFilter struct{}
 
 func init() {
-	RegisterFilter("rejectMsg", func(ConfigArgs) (Filter, error) {
+	RegisterFilter("rejectMsg", func(config.Args) (Filter, error) {
 		return rejectMsgFilter{}, nil
 	})
 
-	RegisterFilter("rejectData", func(ConfigArgs) (Filter, error) {
+	RegisterFilter("rejectData", func(config.Args) (Filter, error) {
 		return rejectDataFilter{}, nil
 	})
 }

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/thatguystone/cog/check"
+	"github.com/thatguystone/cog/config"
 )
 
 func TestMain(m *testing.M) {
@@ -20,7 +21,7 @@ func basicTestConfig(c *check.C) Config {
 			"test": {
 				Which: "file",
 				Level: Debug,
-				Args: ConfigArgs{
+				Args: config.Args{
 					"path": c.FS.Path("test"),
 				},
 			},
@@ -230,7 +231,7 @@ func TestReconfigureErrors(t *testing.T) {
 		Filters: []FilterConfig{
 			FilterConfig{Which: "iDontExist"},
 		},
-		Args: ConfigArgs{
+		Args: config.Args{
 			"path": c.FS.Path("badFilters"),
 		},
 	}

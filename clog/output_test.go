@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/thatguystone/cog/check"
+	"github.com/thatguystone/cog/config"
 )
 
 type errorOutput struct {
@@ -23,14 +24,14 @@ var errOut errorOutput
 func init() {
 	fcfg := FormatterConfig{
 		Name: "Human",
-		Args: ConfigArgs{
+		Args: config.Args{
 			"ShortTime": true,
 		},
 	}
 
 	RegisterOutputter("errOut",
 		fcfg,
-		func(a ConfigArgs, fmttr Formatter) (Outputter, error) {
+		func(a config.Args, fmttr Formatter) (Outputter, error) {
 			if errOut.Fail() {
 				return nil, errors.New("nope, not gonna happen")
 			}
@@ -45,7 +46,7 @@ func init() {
 
 	RegisterOutputter("exitOut",
 		fcfg,
-		func(a ConfigArgs, f Formatter) (Outputter, error) {
+		func(a config.Args, f Formatter) (Outputter, error) {
 			return &exitOutput{}, nil
 		})
 }

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/thatguystone/cog/check"
+	"github.com/thatguystone/cog/config"
 )
 
 func TestTestLogBasic(t *testing.T) {
@@ -53,7 +54,7 @@ func ExampleTestLogOutput() {
 		Outputs: map[string]*OutputConfig{
 			"testlog": {
 				Which: "testlog",
-				Args: ConfigArgs{
+				Args: config.Args{
 					// This output logs directly to t.Log()
 					"log": t,
 				},

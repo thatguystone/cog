@@ -1,6 +1,6 @@
 package clog
 
-import "encoding/json"
+import "github.com/thatguystone/cog/config"
 
 const (
 	defaultConfigFileOutputName = "__default_config_file__"
@@ -49,7 +49,7 @@ type OutputConfig struct {
 
 	// Arguments to provide to the underlying Outputter (the one specified by
 	// Which above).
-	Args ConfigArgs
+	Args config.Args
 }
 
 // ModuleConfig specifies how a module to to be treated
@@ -76,30 +76,11 @@ type FilterConfig struct {
 	Which string
 
 	// Filter arguments
-	Args ConfigArgs
+	Args config.Args
 }
 
 // FormatterConfig is for setting up a Formatter
 type FormatterConfig struct {
 	Name string
-	Args ConfigArgs
-}
-
-// ConfigArgs is passed directly to an Outputter or Filter when being created.
-// See the individual Outputters and Filters for what these arguments may be.
-type ConfigArgs map[string]interface{}
-
-// ApplyTo is typically only used by Outputters and Filters when they are
-// building themselves. This Unmarshals the options into the given interface
-// for simpler configuration.
-func (a ConfigArgs) ApplyTo(i interface{}) (err error) {
-	if len(a) > 0 {
-		var b []byte
-		b, err = json.Marshal(a)
-		if err == nil {
-			err = json.Unmarshal(b, i)
-		}
-	}
-
-	return
+	Args config.Args
 }

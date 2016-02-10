@@ -3,6 +3,8 @@ package clog
 import (
 	"fmt"
 	"os"
+
+	"github.com/thatguystone/cog/config"
 )
 
 // TermOutput writes messages to the terminal on stdout. By default, this uses
@@ -24,7 +26,7 @@ func init() {
 	RegisterOutputter("terminal", fcfg, newTermOutput)
 }
 
-func newTermOutput(a ConfigArgs, f Formatter) (o Outputter, err error) {
+func newTermOutput(a config.Args, f Formatter) (o Outputter, err error) {
 	to := &TermOutput{
 		Formatter: f,
 	}

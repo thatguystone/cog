@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 	"strings"
+
+	"github.com/thatguystone/cog/config"
 )
 
 // Outputter provides a standard interface for writing log messages
@@ -44,7 +46,7 @@ type outputter struct {
 
 // NewOutputter creates new, configured Outputters. If this Outputter can't
 // handle the given Formatter, return an error.
-type NewOutputter func(args ConfigArgs, f Formatter) (Outputter, error)
+type NewOutputter func(args config.Args, f Formatter) (Outputter, error)
 
 var regdOutputs = map[string]outputter{}
 

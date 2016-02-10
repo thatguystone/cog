@@ -1,5 +1,7 @@
 package clog
 
+import "github.com/thatguystone/cog/config"
+
 // LevelFilter is the filter used by the required "Level" argument for both
 // Modules and Outputs and is typically not used directly.
 //
@@ -8,7 +10,7 @@ package clog
 //    Filters: []FilterConfig{
 //        FilterConfig{
 //            Which: "Level",
-//            Args: ConfigArgs{
+//            Args: config.Args{
 //                "level": clog.Info,
 //            },
 //        },
@@ -24,7 +26,7 @@ const lvlFilterName = "Level"
 
 func init() {
 	RegisterFilter(lvlFilterName,
-		func(a ConfigArgs) (Filter, error) {
+		func(a config.Args) (Filter, error) {
 			f := LevelFilter{}
 
 			err := a.ApplyTo(&f.Args)

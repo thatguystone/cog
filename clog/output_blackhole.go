@@ -1,6 +1,10 @@
 package clog
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/thatguystone/cog/config"
+)
 
 // BlackholeOutput drops all messages
 type BlackholeOutput struct{}
@@ -8,7 +12,7 @@ type BlackholeOutput struct{}
 func init() {
 	RegisterOutputter("blackhole",
 		FormatterConfig{Name: "Human"},
-		func(ConfigArgs, Formatter) (Outputter, error) {
+		func(config.Args, Formatter) (Outputter, error) {
 			return BlackholeOutput{}, nil
 		})
 }

@@ -56,12 +56,12 @@
 //                 Filters: []FilterConfig{
 //                     FilterConfig{
 //                         Which: "exampleFilter",
-//                         Args: ConfigArgs{
+//                         Args: config.Args{
 //                             "exampleConfig": "someValue",
 //                         },
 //                     },
 //                 },
-//                 Args: ConfigArgs{
+//                 Args: config.Args{
 //                     "path": "/var/log/app.error.json.log",
 //                 },
 //             },
@@ -73,7 +73,7 @@
 //                 Format: FormatterConfig{
 //                     Name: "human", // Or "logfmt", or any other valid formatter
 //                 },
-//                 Args: ConfigArgs{
+//                 Args: config.Args{
 //                     "path":   "/var/log/app.log.json",
 //                 },
 //             },
@@ -88,7 +88,7 @@
 //                         "ShortTime": true,
 //                     },
 //                 },
-//                 Args: ConfigArgs{
+//                 Args: config.Args{
 //                     "path":   "/var/log/app.logfmt",
 //                 },
 //             },
@@ -110,7 +110,7 @@
 //                 Filters: []FilterConfig{
 //                     FilterConfig{
 //                         Which: "exampleFilter",
-//                         Args: ConfigArgs{
+//                         Args: config.Args{
 //                             "exampleConfig": "someValue",
 //                         },
 //                     },

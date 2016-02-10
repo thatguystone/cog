@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/thatguystone/cog/check"
+	"github.com/thatguystone/cog/config"
 )
 
 func TestHumanFormatNew(t *testing.T) {
@@ -12,7 +13,7 @@ func TestHumanFormatNew(t *testing.T) {
 
 	_, err := newFormatter(FormatterConfig{
 		Name: "Human",
-		Args: ConfigArgs{
+		Args: config.Args{
 			"ShortTime": "funny",
 		},
 	})

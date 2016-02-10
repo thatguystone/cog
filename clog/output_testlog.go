@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 
+	"github.com/thatguystone/cog/config"
 	"github.com/thatguystone/cog/stack"
 )
 
@@ -21,7 +22,7 @@ import (
 //             "testlog": {
 //                 Which: "TestLog",
 //                 Level: clog.Debug,
-//                 Args: ConfigArgs{
+//                 Args: config.Args{
 //                     "log": t, // Anything with a Log(...interface{}) method
 //                 },
 //             },
@@ -54,7 +55,7 @@ func init() {
 	RegisterOutputter(
 		"TestLog",
 		FormatterConfig{Name: "Human"},
-		func(a ConfigArgs, f Formatter) (Outputter, error) {
+		func(a config.Args, f Formatter) (Outputter, error) {
 			var log testLog
 
 			l, ok := a["log"]

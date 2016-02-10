@@ -4,6 +4,7 @@ import (
 	"bytes"
 
 	"github.com/go-logfmt/logfmt"
+	"github.com/thatguystone/cog/config"
 )
 
 // LogfmtFormat formats messages in heroku's LogFmt
@@ -11,7 +12,7 @@ type LogfmtFormat struct{}
 
 func init() {
 	RegisterFormatter("logfmt",
-		func(args ConfigArgs) (Formatter, error) {
+		func(args config.Args) (Formatter, error) {
 			return LogfmtFormat{}, nil
 		})
 }

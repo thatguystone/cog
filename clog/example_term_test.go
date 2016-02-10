@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/thatguystone/cog/clog"
+	"github.com/thatguystone/cog/config"
 )
 
 // Rejects any messages that might be insulting
@@ -19,7 +20,7 @@ func (insultFilter) Exit() {
 
 func init() {
 	clog.RegisterFilter("insult",
-		func(args clog.ConfigArgs) (clog.Filter, error) {
+		func(args config.Args) (clog.Filter, error) {
 			// If args were used here, args.ApplyTo might come in handy
 			return insultFilter{}, nil
 		})
@@ -33,11 +34,11 @@ func Example_terminal() {
 				Level: clog.Info,
 				Formatter: clog.FormatterConfig{
 					Name: "Human",
-					Args: clog.ConfigArgs{
+					Args: config.Args{
 						"ShortTime": true,
 					},
 				},
-				Args: clog.ConfigArgs{
+				Args: config.Args{
 					"Stdout": true,
 				},
 			},
@@ -74,7 +75,7 @@ func Example_terminal() {
 	rude.Error("I'm better than you")
 
 	// Output:
-	// [000000] I-polite.module : example_term_test.go:68 : You're very pretty
-	// [000000] I-polite.module : example_term_test.go:69 : I like you
-	// [000000] E-rude.module : example_term_test.go:74 : I'm better than you
+	// [000000] I-polite.module : example_term_test.go:69 : You're very pretty
+	// [000000] I-polite.module : example_term_test.go:70 : I like you
+	// [000000] E-rude.module : example_term_test.go:75 : I'm better than you
 }

@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"time"
+
+	"github.com/thatguystone/cog/config"
 )
 
 // HumanFormat formats log entries so that a human can quickly decipher them
@@ -17,7 +19,7 @@ var startTime = time.Now()
 
 func init() {
 	RegisterFormatter("Human",
-		func(args ConfigArgs) (Formatter, error) {
+		func(args config.Args) (Formatter, error) {
 			f := HumanFormat{}
 			err := args.ApplyTo(&f.Args)
 			if err != nil {

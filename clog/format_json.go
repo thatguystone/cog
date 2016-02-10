@@ -1,13 +1,17 @@
 package clog
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"github.com/thatguystone/cog/config"
+)
 
 // JSONFormat formats messages as JSON
 type JSONFormat struct{}
 
 func init() {
 	RegisterFormatter("JSON",
-		func(args ConfigArgs) (Formatter, error) {
+		func(args config.Args) (Formatter, error) {
 			return JSONFormat{}, nil
 		})
 }

@@ -3,6 +3,8 @@ package clog
 import (
 	"fmt"
 	"strings"
+
+	"github.com/thatguystone/cog/config"
 )
 
 // Formatter formats messages
@@ -12,7 +14,7 @@ type Formatter interface {
 }
 
 // NewFormatter creates a new, configured Formatter.
-type NewFormatter func(args ConfigArgs) (Formatter, error)
+type NewFormatter func(args config.Args) (Formatter, error)
 
 var regdFormatters = map[string]NewFormatter{}
 

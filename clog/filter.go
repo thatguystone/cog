@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/thatguystone/cog"
+	"github.com/thatguystone/cog/config"
 )
 
 // A Filter determines which log entries are allowed through
@@ -18,7 +19,7 @@ type Filter interface {
 }
 
 // NewFilter creates new, configured Filters.
-type NewFilter func(args ConfigArgs) (Filter, error)
+type NewFilter func(args config.Args) (Filter, error)
 
 type filterSlice []Filter
 
@@ -52,7 +53,7 @@ func newFilters(lvl Level, cfgs []FilterConfig) (filts filterSlice, err error) {
 		}
 	}()
 
-	f, err := regdFilters[strings.ToLower(lvlFilterName)](ConfigArgs{
+	f, err := regdFilters[strings.ToLower(lvlFilterName)](config.Args{
 		"level": lvl,
 	})
 	cog.Must(err, "failed to configure built-in %s filter", lvlFilterName)

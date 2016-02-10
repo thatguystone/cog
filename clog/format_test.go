@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/thatguystone/cog/check"
+	"github.com/thatguystone/cog/config"
 )
 
 func TestRegisterFormatterErrors(t *testing.T) {
@@ -11,7 +12,7 @@ func TestRegisterFormatterErrors(t *testing.T) {
 
 	c.Panic(func() {
 		RegisterFormatter("JSON",
-			func(args ConfigArgs) (Formatter, error) {
+			func(args config.Args) (Formatter, error) {
 				return nil, nil
 			})
 	})
