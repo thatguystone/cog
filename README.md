@@ -25,6 +25,7 @@ Cog consists of the following modules:
 | stats         | [![GoDoc][stats-status]][stats]                 | application status and stats
 | stringc       | [![GoDoc][stringc-status]][stringc]             | extra strings utils
 | unsafec       | [![GoDoc][unsafec-status]][unsafec]             | making things more unsafe
+| wrap          | [![GoDoc][wrap-status]][wrap]                   | cog-esque wrapper for various things
 
 [root]: https://godoc.org/github.com/thatguystone/cog
 [root-status]: https://godoc.org/github.com/thatguystone/cog?status.svg
@@ -60,6 +61,8 @@ Cog consists of the following modules:
 [stringc-status]: https://godoc.org/github.com/thatguystone/cog/stringc?status.svg
 [unsafec]: https://godoc.org/github.com/thatguystone/cog/unsafec
 [unsafec-status]: https://godoc.org/github.com/thatguystone/cog/unsafec?status.svg
+[wrap]: https://godoc.org/github.com/thatguystone/cog/wrap
+[wrap-status]: https://godoc.org/github.com/thatguystone/cog/wrap?status.svg
 
 Each module contains full documentation over on godoc, including tons of examples.
 
