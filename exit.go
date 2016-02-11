@@ -39,8 +39,8 @@ func NewExit() *Exit {
 	return e
 }
 
-// Exit closes C and waits for all goroutines to exit.
-func (e *Exit) Exit() {
+// Signal tells everything to exit, but it doesn't wait.
+func (e *Exit) Signal() {
 	e.once.Do(func() {
 		close(e.c)
 
@@ -52,9 +52,13 @@ func (e *Exit) Exit() {
 		for i := len(exits); i > 0; i-- {
 			exits[i-1]()
 		}
-
-		e.Wait()
 	})
+}
+
+// Exit closes C and waits for all goroutines to exit.
+func (e *Exit) Exit() {
+	e.Signal()
+	e.Wait()
 }
 
 // AddExiter adds an Exiter to the exit list that is called when Exit() is
