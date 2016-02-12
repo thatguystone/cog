@@ -33,23 +33,23 @@ type Config struct {
 
 // OutputConfig specifies how an output is to be built
 type OutputConfig struct {
-	// Which Outputter to use. This value is case-insensitive.
-	Which string
+	// Which Producer to use. This value is case-insensitive.
+	//
+	// The full list of Producers can be found at:
+	// https://godoc.org/github.com/thatguystone/cog/cio/eio
+	Prod     string
+	ProdArgs config.Args // Args to pass to the Producer
+
+	// Which Formatter to use for this output.
+	Fmt     string
+	FmtArgs config.Args // Args to pass to the Fmt
 
 	// Log level to use for this output. Use Debug to accept all. This is
 	// actually an implicit (and required) Filter.
 	Level Level
 
-	// Which formatter to use for this output. Some outputs might come with
-	// their own formatters and ignore this.
-	Formatter FormatterConfig
-
 	// Which filters to apply to this output.
 	Filters []FilterConfig
-
-	// Arguments to provide to the underlying Outputter (the one specified by
-	// Which above).
-	Args config.Args
 }
 
 // ModuleConfig specifies how a module to to be treated
@@ -79,8 +79,94 @@ type FilterConfig struct {
 	Args config.Args
 }
 
-// FormatterConfig is for setting up a Formatter
-type FormatterConfig struct {
-	Name string
-	Args config.Args
+var asdasdcfg = Config{
+	// If set, this creates a new root module (the module named "" (the empty
+	// string)), and it records any message level >= Info to the named file in
+	// JSON format.
+	File: "/var/log/app.log",
+
+	Outputs: map[string]*OutputConfig{
+		// Only errors with level >= Error will be logged here
+		"errors": {
+			Prod: "file",
+			ProdArgs: config.Args{
+				"path": "/var/log/app.error.json.log",
+			},
+			Fmt:   "json",
+			Level: Error,
+			Filters: []FilterConfig{
+				FilterConfig{
+					Which: "exampleFilter",
+					Args: config.Args{
+						"exampleConfig": "someValue",
+					},
+				},
+			},
+		},
+
+		// All messages will be accepted here
+		"debug": {
+			Prod: "file",
+			ProdArgs: config.Args{
+				"path": "/var/log/app.log.json",
+			},
+			Fmt:   "human", // Or "logfmt", or any other valid formatter
+			Level: Debug,
+		},
+
+		// Only errors level >= Warn will be accepted here
+		"heroku": {
+			Prod: "file",
+			ProdArgs: config.Args{
+				"path": "/var/log/app.logfmt",
+			},
+			Fmt: "human",
+			FmtArgs: config.Args{
+				"ShortTime": true,
+			},
+			Level: Warn,
+		},
+	},
+
+	Modules: map[string]*ModuleConfig{
+		// All messages eventually reach here, unless DontPropagate==true in a
+		// module
+		"": {
+			Outputs: []string{"errors"},
+		},
+
+		// This logs all messages level >= Info, where the filter allows the
+		// message through, to the debug log. These messages do not propagate to
+		// the root.
+		"http": {
+			Outputs: []string{"debug"},
+			Level:   Info,
+			Filters: []FilterConfig{
+				FilterConfig{
+					Which: "exampleFilter",
+					Args: config.Args{
+						"exampleConfig": "someValue",
+					},
+				},
+			},
+			DontPropagate: true,
+		},
+
+		// This logs all messages level >= Warn, to both the heroku and errors
+		// outputs. These messages do not propagate to the root.
+		"templates": {
+			Outputs:       []string{"heroku", "errors"},
+			Level:         Warn,
+			DontPropagate: true,
+		},
+
+		// This logs all messages from the external library to the debug log.
+		// These messages also propagate to the root, which will log any error
+		// messages. So, effectively, errors from this module will be logged
+		// twice.
+		"external.library": {
+			Outputs: []string{"debug"},
+			Level:   Debug,
+		},
+	},
 }

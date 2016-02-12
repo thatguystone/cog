@@ -32,12 +32,6 @@
 // for these, just know that they're arranged in a tree, such that
 // "http.request" is a child of "http" and messages from it propagate to "http".
 //
-// There are a variety of formats and output types. Each of them, along with
-// their arguments, is documented below.
-//
-// The outputs list their "Which" for selecting the output; this is the value
-// that you pass to OutputConfig.Which.
-//
 // Since examples are worth more than descriptions, let's take a look at a
 // pretty complex configuration, with comments explaining how it all works
 // together (this is much simpler to write in JSON, but you get the point).
@@ -51,8 +45,12 @@
 //         Outputs: map[string]*OutputConfig{
 //             // Only errors with level >= Error will be logged here
 //             "errors": {
-//                 Which:   "jsonfile",
-//                 Level:   Error,
+//                 Prod: "file",
+//                 ProdArgs: config.Args{
+//                     "path": "/var/log/app.error.json.log",
+//                 },
+//                 Fmt:   "json",
+//                 Level: Error,
 //                 Filters: []FilterConfig{
 //                     FilterConfig{
 //                         Which: "exampleFilter",
@@ -61,36 +59,29 @@
 //                         },
 //                     },
 //                 },
-//                 Args: config.Args{
-//                     "path": "/var/log/app.error.json.log",
-//                 },
 //             },
 //
 //             // All messages will be accepted here
 //             "debug": {
-//                 Which: "file",
+//                 Prod: "file",
+//                 ProdArgs: config.Args{
+//                     "path": "/var/log/app.log.json",
+//                 },
+//                 Fmt:   "human", // Or "logfmt", or any other valid formatter
 //                 Level: Debug,
-//                 Format: FormatterConfig{
-//                     Name: "human", // Or "logfmt", or any other valid formatter
-//                 },
-//                 Args: config.Args{
-//                     "path":   "/var/log/app.log.json",
-//                 },
 //             },
 //
 //             // Only errors level >= Warn will be accepted here
 //             "heroku": {
-//                 Which: "file",
+//                 Prod: "file",
+//                 ProdArgs: config.Args{
+//                     "path": "/var/log/app.logfmt",
+//                 },
+//                 Fmt: "logfmt",
+//                 FmtArgs: config.Args{
+//                     "ShortTime": true,
+//                 },
 //                 Level: Warn,
-//                 Format: FormatterConfig{
-//                     Name: "human",
-//                     Args: FormatterArgs{
-//                         "ShortTime": true,
-//                     },
-//                 },
-//                 Args: config.Args{
-//                     "path":   "/var/log/app.logfmt",
-//                 },
 //             },
 //         },
 //
@@ -137,20 +128,10 @@
 //         },
 //     }
 //
-// Outputs
+// Producers
 //
-// The following values may be used for "Which" when configuring outputs. Each
-// one has the corresponding class, with documentation below for arguments (in
-// the Args field).
-//
-// All values are case-insensitive.
-//
-//     "Blackhole"  BlackholeOutput
-//     "File"       FileOutput
-//     "JSONFile"   FileOutput (with the json formatter)
-//     "Term"       TermOutput
-//     "Terminal"   TermOutput
-//     "TestLog"    TestLogOutput
+// A full list of Producers can be found at:
+// https://godoc.org/github.com/thatguystone/cog/cio/eio
 //
 // Filters
 //
@@ -165,5 +146,10 @@
 //
 //     "Human"   HumanFormat
 //     "JSON"    JSONFormat
-//     "logfmt"  LogfmtFormat
+//     "LogFmt"  LogFmtFormat
+//
+// Testing
+//
+// If you want log output to go to a test's log, check out:
+// https://godoc.org/github.com/thatguystone/cog/check/chlog
 package clog

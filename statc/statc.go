@@ -1,36 +1,71 @@
-// Package stats implements runtime process stats and status reporting.
+// Package statc implements runtime process stats and status reporting.
 //
 // It provides the basics (timers, gauges, counters), stats sinks, interfaces
 // for fetching current stats, and so on.
-package stats
+package statc
 
 import (
 	"fmt"
 	"sort"
 	"sync"
+	"time"
 
+	"github.com/thatguystone/cog"
 	"github.com/thatguystone/cog/clog"
 )
 
 // S is a stats aggregator.
 type S struct {
-	cfg Config
-	log *clog.Logger
+	cfg  Config
+	log  *clog.Logger
+	exit *cog.GExit
+
+	outExit *cog.Exit
+	outs    []*output
 
 	mtx      sync.Mutex
 	snappers []snapshotter
+	lastSnap Snapshot
 }
 
 // NewS creates a new stats aggregator
-func NewS(cfg Config, log *clog.Logger) *S {
-	return &S{
-		cfg: cfg,
-		log: log,
+func NewS(cfg Config, log *clog.Logger, exit *cog.GExit) (s *S, err error) {
+	cfg.setDefaults()
+
+	s = &S{
+		cfg:  cfg,
+		log:  log,
+		exit: exit,
+
+		// Nest exits so that, if there's an error setting up any output, all
+		// the outputs can be terminated by killing this
+		outExit: cog.NewExit(),
+		outs:    make([]*output, 0, len(cfg.Outputs)),
 	}
+
+	for _, cfg := range cfg.Outputs {
+		var out *output
+		out, err = newOutput(cfg, log, s.outExit.GExit)
+		if err != nil {
+			s.outExit.Exit()
+			s = nil
+
+			err = fmt.Errorf("failed to create output %s: %v", cfg.Prod, err)
+			return
+		}
+
+		s.outs = append(s.outs, out)
+	}
+
+	s.exit.Add(1)
+	go s.run()
+
+	return
 }
 
 // AddSnapshotter binds a snapshotter to this S.
 func (s *S) AddSnapshotter(name string, snapper Snapshotter) {
+	name = CleanPath(name)
 	l := len(s.snappers)
 	i := sort.Search(l, func(i int) bool {
 		return s.snappers[i].name >= name
@@ -91,7 +126,49 @@ func (s *S) NewStringGauge(name string) *StringGauge {
 	return g
 }
 
+// Snapshot gets the last snapshot. If len(snap) == 0, then no snapshot has
+// been taken yet.
+func (s *S) Snapshot() (snap Snapshot) {
+	s.mtx.Lock()
+	snap = s.lastSnap
+	s.mtx.Unlock()
+	return
+}
+
+func (s *S) run() {
+	defer func() {
+		s.outExit.Exit()
+		s.exit.Done()
+	}()
+
+	t := time.NewTicker(s.cfg.SnapshotInterval.D())
+	defer t.Stop()
+
+	for {
+		select {
+		case <-t.C:
+			s.doSnapshot()
+
+		case <-s.exit.C:
+			return
+		}
+	}
+}
+
+func (s *S) doSnapshot() {
+	snap := s.snapshot()
+	s.mtx.Lock()
+	s.lastSnap = snap
+	s.mtx.Unlock()
+
+	for _, out := range s.outs {
+		out.send(snap)
+	}
+}
+
 func (s *S) snapshot() (snap Snapshot) {
+	snap = make(Snapshot, 0, len(s.lastSnap))
+
 	for _, sn := range s.snappers {
 		snap.Take(sn.name, sn.snapper)
 	}

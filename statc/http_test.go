@@ -1,20 +1,26 @@
-package stats
+package statc
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/thatguystone/cog/check/chlog"
+	"github.com/thatguystone/cog/check"
 )
 
+func newHTTPTest(t *testing.T) (*check.C, *sTest, *HTTPMuxer) {
+	c, st := newTest(t, &Config{})
+	mux := st.NewHTTPMuxer("http")
+	return c, st, mux
+}
+
 func TestHTTPBasic(t *testing.T) {
-	c, clog := chlog.New(t)
-	s := NewS(Config{}, clog.Get("stats"))
-	mux := s.NewHTTPMuxer("http")
+	c, st, mux := newHTTPTest(t)
+	defer st.exit.Exit()
 
 	mux.HandlerFunc("GET", "/sleep/1",
 		func(rw http.ResponseWriter, req *http.Request) {
@@ -60,7 +66,7 @@ func TestHTTPBasic(t *testing.T) {
 
 	wg.Wait()
 
-	snap := s.snapshot()
+	snap := st.snapshot()
 	for _, st := range snap {
 		c.Logf("%s = %v", st.Name, st.Val)
 	}
@@ -72,9 +78,8 @@ func TestHTTPBasic(t *testing.T) {
 }
 
 func TestHTTPPanic(t *testing.T) {
-	c, clog := chlog.New(t)
-	s := NewS(Config{}, clog.Get("stats"))
-	mux := s.NewHTTPMuxer("http")
+	c, st, mux := newHTTPTest(t)
+	defer st.exit.Exit()
 
 	mux.HandlerFunc("GET", "/panic",
 		func(rw http.ResponseWriter, req *http.Request) {
@@ -89,10 +94,77 @@ func TestHTTPPanic(t *testing.T) {
 		h(rw, nil, p)
 	})
 
-	snap := s.snapshot()
+	snap := st.snapshot()
 	for _, st := range snap {
 		c.Logf("%s = %v", st.Name, st.Val)
 	}
 
 	c.Equal(snap.Get("http./panic.GET.panic.count").Val.(int64), 1)
+}
+
+func TestHTTPStatusHandler(t *testing.T) {
+	c, st, mux := newHTTPTest(t)
+	defer st.exit.Exit()
+
+	st.NewTimer("some.timer", 100).Add(time.Second)
+	st.NewCounter("module.counter", false).Add(100)
+	st.NewGauge("my.gauge").Set(9)
+	st.NewStringGauge("str.gauge").Set("some string")
+	st.doSnapshot()
+
+	srv := httptest.NewServer(mux.R)
+	defer srv.Close()
+
+	resp, err := http.Get(srv.URL + "/_status")
+	c.MustNotError(err)
+	defer resp.Body.Close()
+
+	r, err := ioutil.ReadAll(resp.Body)
+	c.MustNotError(err)
+
+	out := `{
+	"module": {
+		"counter": 100
+	},
+	"my": {
+		"gauge": 9
+	},
+	"some": {
+		"timer": {
+			"count": 1,
+			"max": 1000000000,
+			"mean": 1000000000,
+			"min": 1000000000,
+			"p50": 1000000000,
+			"p75": 1000000000,
+			"p90": 1000000000,
+			"p95": 1000000000,
+			"stddev": 0
+		}
+	},
+	"str": {
+		"gauge": "some string"
+	}` + "\n}"
+
+	c.Equal(string(r), out)
+}
+
+func TestHTTPStatusHandlerError(t *testing.T) {
+	c, st, mux := newHTTPTest(t)
+	defer st.exit.Exit()
+
+	srv := httptest.NewServer(mux.R)
+	defer srv.Close()
+
+	st.lastSnap = Snapshot{
+		Stat{
+			Name: "blah",
+			Val:  nil,
+		},
+	}
+
+	resp, err := http.Get(srv.URL + "/_status")
+	c.MustNotError(err)
+	defer resp.Body.Close()
+	c.Equal(resp.StatusCode, http.StatusInternalServerError)
 }

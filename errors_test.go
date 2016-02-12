@@ -36,6 +36,20 @@ func TestErrorsAddf(t *testing.T) {
 	c.Contains(err.Error(), "some cool stuff: one")
 }
 
+func TestErrorsDrain(t *testing.T) {
+	c := check.New(t)
+
+	errs := make(chan error, 16)
+	for i := 0; i < cap(errs); i++ {
+		errs <- fmt.Errorf("err %d", i)
+	}
+	close(errs)
+
+	es := Errors{}
+	es.Drain(errs)
+	c.Len(*es.errs, cap(errs))
+}
+
 func TestErrorsPrefix(t *testing.T) {
 	c := check.New(t)
 

@@ -16,7 +16,10 @@ type Backoff struct {
 }
 
 // Wait adds to the current backoff and sleeps.
-func (bo *Backoff) Wait() {
+//
+// Returns if the timeout elapsed and you should try again. If `false`, Exit
+// was signaled and you should stop immediately.
+func (bo *Backoff) Wait() bool {
 	if bo.curr == 0 {
 		if bo.Start <= 0 {
 			bo.Start = time.Millisecond * 5
@@ -42,11 +45,15 @@ func (bo *Backoff) Wait() {
 	if bo.Exit != nil {
 		select {
 		case <-bo.Exit.C:
+			return false
+
 		case <-time.After(bo.curr):
 		}
 	} else {
 		time.Sleep(bo.curr)
 	}
+
+	return true
 }
 
 // Reset sets the backoff back to 0

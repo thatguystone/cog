@@ -1,4 +1,11 @@
 // Package chlog provides clog-based logging for testing
+//
+// Usage is really simple:
+//
+//    import "github.com/thatguystone/cog/check/chlog"
+//    func TestStuff(t *testing.T) {
+//        log := chlog.New(t)
+//    }
 package chlog
 
 import (
@@ -17,11 +24,12 @@ func New(tb testing.TB) (*check.C, *clog.Log) {
 	lcfg := clog.Config{
 		Outputs: map[string]*clog.OutputConfig{
 			"testlog": {
-				Which: "testlog",
-				Level: clog.Debug,
-				Args: config.Args{
+				Prod: "testlog",
+				ProdArgs: config.Args{
 					"log": c,
 				},
+				Fmt:   "human",
+				Level: clog.Debug,
 			},
 		},
 		Modules: map[string]*clog.ModuleConfig{

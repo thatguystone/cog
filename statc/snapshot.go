@@ -1,6 +1,10 @@
-package stats
+package statc
+
+import "sort"
 
 // A Snapshot is a slice of stats sorted by name.
+//
+// Each Snapshot is sorted.
 type Snapshot []Stat
 
 // A Stat is a single stat value
@@ -58,10 +62,19 @@ func (s *Snapshot) Take(name string, sr Snapshotter) {
 // Add a new value to this snapshot. Must be one of [bool, int64, float64,
 // string].
 func (s *Snapshot) Add(name string, val interface{}) {
-	*s = append(*s, Stat{
+	name = CleanPath(name)
+	l := len(*s)
+	i := sort.Search(l, func(i int) bool {
+		return (*s)[i].Name >= name
+	})
+
+	*s = append(*s, Stat{})
+
+	copy((*s)[i+1:], (*s)[i:])
+	(*s)[i] = Stat{
 		Name: name,
 		Val:  val,
-	})
+	}
 }
 
 func (a adder) add(name string, val interface{}) {

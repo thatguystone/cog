@@ -36,6 +36,7 @@ func (pt *CronTicker) Stop() {
 	if pt.exitCh != nil {
 		close(pt.exitCh)
 		pt.exitCh = nil
+		runtime.SetFinalizer(pt, nil)
 	}
 }
 

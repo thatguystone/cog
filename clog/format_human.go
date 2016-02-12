@@ -11,7 +11,7 @@ import (
 // HumanFormat formats log entries so that a human can quickly decipher them
 type HumanFormat struct {
 	Args struct {
-		ShortTime bool
+		ShortTime bool // Format timestamp as "seconds since start"
 	}
 }
 

@@ -26,6 +26,7 @@ type Log struct {
 }
 
 type logState struct {
+	cfg     Config
 	wg      *sync.WaitGroup
 	outputs map[string]*output
 	modules *patricia.Trie // Items of type *module
@@ -37,11 +38,6 @@ type module struct {
 	outs          []*output
 	filts         filterSlice
 	dontPropagate bool
-}
-
-type output struct {
-	Outputter
-	filts filterSlice
 }
 
 // New creates a new Log
@@ -100,6 +96,7 @@ func NewFromJSONReader(r io.Reader) (l *Log, err error) {
 func (l *Log) Reconfigure(cfg Config) error {
 	wg := &sync.WaitGroup{}
 	tmp := logState{
+		cfg:     cfg,
 		wg:      wg,
 		outputs: map[string]*output{},
 		modules: patricia.NewTrie(),
@@ -115,11 +112,12 @@ func (l *Log) Reconfigure(cfg Config) error {
 
 	if cfg.File != "" {
 		cfg.Outputs[defaultConfigFileOutputName] = &OutputConfig{
-			Which: "jsonfile",
-			Level: Info,
-			Args: config.Args{
+			Prod: "file",
+			ProdArgs: config.Args{
 				"path": cfg.File,
 			},
+			Fmt:   "json",
+			Level: Info,
 		}
 
 		m, ok := cfg.Modules[""]
@@ -135,7 +133,8 @@ func (l *Log) Reconfigure(cfg Config) error {
 
 	if len(cfg.Modules) == 0 {
 		cfg.Outputs[defaultTermOutputName] = &OutputConfig{
-			Which: "term",
+			Prod:  "stdout",
+			Fmt:   "human",
 			Level: Info,
 		}
 
@@ -147,36 +146,13 @@ func (l *Log) Reconfigure(cfg Config) error {
 
 	es := cog.Errors{}
 	for name, ocfg := range cfg.Outputs {
-		o, err := newOutput(ocfg)
+		out, err := newOutput(ocfg, l.Get("clog"), wg)
 		if err != nil {
 			es.Addf(err, `while creating output "%s"`, name)
 			continue
 		}
 
-		filts, err := newFilters(ocfg.Level, ocfg.Filters)
-		if err != nil {
-			es.Addf(err, `for output "%s", invalid filter config`, name)
-			continue
-		}
-
-		out := &output{
-			Outputter: o,
-			filts:     filts,
-		}
-
 		tmp.outputs[name] = out
-
-		wg.Add(1)
-		runtime.SetFinalizer(out, func(out *output) {
-			go func() {
-				out.Exit()
-				for _, f := range out.filts {
-					f.Exit()
-				}
-
-				wg.Done()
-			}()
-		})
 	}
 
 	if es.Empty() {
@@ -288,38 +264,25 @@ func (l *Log) ReconfigureFromFile(path string) error {
 	return err
 }
 
-// Exit can be used by servers that exit gracefully. It causes all Outputters
-// to Exit and cleanup after themselves, and it blocks until done.
+// Flush can be used by servers that exit gracefully. It causes all Outputs to
+// write anything pending. It blocks until done.
 //
-// This is typically the last thing you want to call before exiting. Also,
-// calling Exit() is completely optional.
-//
-// This Log can be reused by calling Reconfigure().
-func (l *Log) Exit() {
+// If it returns an error, nothing was flushed.
+func (l *Log) Flush() error {
 	l.rwmtx.RLock()
-	wg := l.wg
+	ls := l.logState
 	l.rwmtx.RUnlock()
 
-	// Don't break logging. Just blackhole everything and be done. Can't send
-	// everything to defaults since stdout might be closed, or if it's not,
-	// too much logging could cause everything to block, which just defeats
-	// the purpose.
-	l.Reconfigure(Config{
-		Outputs: map[string]*OutputConfig{
-			"blackhole": &OutputConfig{
-				Which: "blackhole",
-				Level: Fatal,
-			},
-		},
-		Modules: map[string]*ModuleConfig{
-			"": &ModuleConfig{
-				Outputs: []string{"blackhole"},
-				Level:   Fatal,
-			},
-		},
-	})
+	// A reconfigure with the current options should work just fine. Make all
+	// old outputs exit, which causes a flush.
+	err := l.Reconfigure(ls.cfg)
+	if err != nil {
+		return err
+	}
 
-	// So this is kinda sketchy: finalizers for each output need to be called so that we can be sure they're done. Finalizers are only called during GCs... Yeah, loop on GC :(
+	// So this is kinda sketchy: finalizers for each output need to be
+	// called so that we can be sure they're done. Finalizers are only
+	// called during GCs... Yeah, loop on GC :(
 	done := make(chan struct{})
 	go func() {
 		for {
@@ -332,8 +295,10 @@ func (l *Log) Exit() {
 		}
 	}()
 
-	wg.Wait()
+	ls.wg.Wait()
 	close(done)
+
+	return nil
 }
 
 // Rotate causes all outputters to rotate their files, if they have any. When
@@ -367,7 +332,9 @@ func (l *Log) Get(name string) *Logger {
 			key: name,
 		}
 
-		lg.updateModule(l.modules)
+		if l.modules != nil {
+			lg.updateModule(l.modules)
+		}
 
 		l.active[name] = lg
 	}

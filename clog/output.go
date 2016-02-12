@@ -2,97 +2,107 @@ package clog
 
 import (
 	"fmt"
-	"io"
-	"strings"
+	"runtime"
+	"sync"
 
-	"github.com/thatguystone/cog/config"
+	"github.com/thatguystone/cog/cio/eio"
 )
 
-// Outputter provides a standard interface for writing log messages
-type Outputter interface {
-	// Each Outputter has a single Formatter associated with it
+type privOutput struct {
+	eio.Producer
 	Formatter
-
-	// Write the formatted message to the backend.
-	//
-	// This does not implement io.Writer: it's not really a writer, it's an
-	// Outputter.
-	//
-	// If this write fails, a new log entry is generated that is sent straight
-	// to the root logger with level=Error, describing the problem.
-	Write([]byte) error
-
-	// When using an external log rotator, this is called to reopen all file
-	// handles.
-	Rotate() error
-
-	// Outputters are used unlocked all over the place. This is called from a
-	// finalizer when the GC says it's clear. Thus, there's no guarantee this
-	// will be called before exit.
-	//
-	// This should block until everything has been flushed.
-	Exit()
-
-	// Get a human-readable representation of this Outputter, for better error
-	// reporting. For example, FileOutput would return something like
-	// "FileOutput{file:/path/to/file.log}".
-	String() string
+	data  Data
+	lg    *Logger
+	wg    *sync.WaitGroup
+	filts filterSlice
 }
 
-type outputter struct {
-	no   NewOutputter
-	fcfg FormatterConfig
+// outputs are tricky business: they can be used without a lock in many
+// goroutines, so they're not safe to close until no one is using them: a
+// finalizer is required.
+type output struct {
+	*privOutput
 }
 
-// NewOutputter creates new, configured Outputters. If this Outputter can't
-// handle the given Formatter, return an error.
-type NewOutputter func(args config.Args, f Formatter) (Outputter, error)
-
-var regdOutputs = map[string]outputter{}
-
-// RegisterOutputter adds a NewOutputter to the list of Outputters. Each
-// formatter should specify which Formatter to use by default when none is
-// specified.
-func RegisterOutputter(
-	name string,
-	defFmttr FormatterConfig,
-	no NewOutputter) {
-
-	lname := strings.ToLower(name)
-
-	if _, ok := regdOutputs[lname]; ok {
-		panic(fmt.Errorf("outputter `%s` already registered", name))
+func newOutput(oc *OutputConfig, lg *Logger, wg *sync.WaitGroup) (o *output, err error) {
+	po := &privOutput{
+		data: Data{
+			"prod":     oc.Prod,
+			"prodArgs": fmt.Sprintf("%+v", oc.ProdArgs),
+			"fmt":      oc.Fmt,
+			"fmtArgs":  fmt.Sprintf("%+v", oc.FmtArgs),
+		},
+		lg: lg,
+		wg: wg,
 	}
 
-	regdOutputs[lname] = outputter{
-		no:   no,
-		fcfg: defFmttr,
-	}
-}
+	wg.Add(1)
+	defer func() {
+		if err != nil {
+			po.exit()
+			o = nil
+		}
+	}()
 
-// DumpKnownOutputs writes all known outputs and their names to the given
-// Writer.
-func DumpKnownOutputs(w io.Writer) {
-	for name, out := range regdOutputs {
-		fmt.Fprintf(w, "%s: %v\n", name, out)
-	}
-}
-
-func newOutput(cfg *OutputConfig) (Outputter, error) {
-	o, ok := regdOutputs[strings.ToLower(cfg.Which)]
-	if !ok {
-		return nil, fmt.Errorf(`output name="%s" does not exist`, cfg.Which)
-	}
-
-	fcfg := cfg.Formatter
-	if fcfg.Name == "" {
-		fcfg = o.fcfg
-	}
-
-	f, err := newFormatter(fcfg)
+	po.Producer, err = eio.NewProducer(oc.Prod, oc.ProdArgs)
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	return o.no(cfg.Args, f)
+	po.Formatter, err = newFormatter(oc.Fmt, oc.FmtArgs)
+	if err != nil {
+		return
+	}
+
+	po.filts, err = newFilters(oc.Level, oc.Filters)
+	if err != nil {
+		return
+	}
+
+	wg.Add(1)
+	go po.monitor()
+
+	o = &output{po}
+	runtime.SetFinalizer(o, finalizeOutput)
+
+	return
+}
+
+func finalizeOutput(o *output) {
+	go o.exit()
+}
+
+// May only be used by *privOutput itself.
+func (po *privOutput) exit() {
+	if po.Producer != nil {
+		errs := po.Producer.Close()
+		if !errs.Empty() {
+			po.logErr(errs.Error())
+		}
+	}
+
+	for _, f := range po.filts {
+		f.Exit()
+	}
+
+	po.wg.Done()
+}
+
+func (po *privOutput) logErr(err error) {
+	if err != nil {
+		po.lg.LogEntry(Entry{
+			Level:        Error,
+			Depth:        1,
+			Msg:          fmt.Sprintf("failed to write log entry: %v", err),
+			Data:         po.data,
+			ignoreErrors: true,
+		})
+	}
+}
+
+func (po *privOutput) monitor() {
+	defer po.wg.Done()
+	for err := range po.Errs() {
+		po.logErr(err)
+	}
 }

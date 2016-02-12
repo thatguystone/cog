@@ -17,6 +17,6 @@ func TestRegisterFormatterErrors(t *testing.T) {
 			})
 	})
 
-	_, err := newFormatter(FormatterConfig{Name: "lulz what"})
+	_, err := newFormatter("lulz what", config.Args{})
 	c.MustError(err)
 }

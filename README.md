@@ -15,6 +15,7 @@ Cog consists of the following modules:
 | cio           | [![GoDoc][cio-status]][cio]                     | extra io utils
 | clog          | [![GoDoc][clog-status]][clog]                   | a logging framework that looks a bit like python's logging
 | cnet          | [![GoDoc][cnet-status]][cnet]                   | misc net utils and a socket implementation using channels
+| config        | [![GoDoc][config-status]][config]               | misc config stuff
 | cort          | [![GoDoc][cort-status]][cort]                   | extra sorting utilities
 | ctime         | [![GoDoc][ctime-status]][ctime]                 | time utils
 | cync          | [![GoDoc][cync-status]][cync]                   | some extra sync utils
@@ -22,7 +23,7 @@ Cog consists of the following modules:
 | encoding/path | [![GoDoc][encoding-path-status]][encoding-path] | path Marshaling and Unmarshaling
 | node          | [![GoDoc][node-status]][node]                   | get information about the local node
 | stack         | [![GoDoc][stack-status]][stack]                 | runtime call stack utils
-| stats         | [![GoDoc][stats-status]][stats]                 | application status and stats
+| statc         | [![GoDoc][statc-status]][statc]                 | application status and stats
 | stringc       | [![GoDoc][stringc-status]][stringc]             | extra strings utils
 | unsafec       | [![GoDoc][unsafec-status]][unsafec]             | making things more unsafe
 
@@ -40,6 +41,8 @@ Cog consists of the following modules:
 [clog-status]: https://godoc.org/github.com/thatguystone/cog/clog?status.svg
 [cnet]: https://godoc.org/github.com/thatguystone/cog/cnet
 [cnet-status]: https://godoc.org/github.com/thatguystone/cog/cnet?status.svg
+[config]: https://godoc.org/github.com/thatguystone/cog/config
+[config-status]: https://godoc.org/github.com/thatguystone/cog/config?status.svg
 [cort]: https://godoc.org/github.com/thatguystone/cog/cort
 [cort-status]: https://godoc.org/github.com/thatguystone/cog/cort?status.svg
 [ctime]: https://godoc.org/github.com/thatguystone/cog/ctime
@@ -54,8 +57,8 @@ Cog consists of the following modules:
 [node-status]: https://godoc.org/github.com/thatguystone/cog/node?status.svg
 [stack]: https://godoc.org/github.com/thatguystone/cog/stack
 [stack-status]: https://godoc.org/github.com/thatguystone/cog/stack?status.svg
-[stats]: https://godoc.org/github.com/thatguystone/cog/stats
-[stats-status]: https://godoc.org/github.com/thatguystone/cog/stats?status.svg
+[statc]: https://godoc.org/github.com/thatguystone/cog/statc
+[statc-status]: https://godoc.org/github.com/thatguystone/cog/statc?status.svg
 [stringc]: https://godoc.org/github.com/thatguystone/cog/stringc
 [stringc-status]: https://godoc.org/github.com/thatguystone/cog/stringc?status.svg
 [unsafec]: https://godoc.org/github.com/thatguystone/cog/unsafec

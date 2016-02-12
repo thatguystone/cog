@@ -38,6 +38,13 @@ func (es *Errors) Add(err error) {
 	es.Addf(err, "")
 }
 
+// Drain removes every error from the given channel until the channel closes
+func (es *Errors) Drain(ch <-chan error) {
+	for err := range ch {
+		es.Add(err)
+	}
+}
+
 // Addf is like Add, but prefixes the error with the given format and args. If
 // err==nil, this does nothing.
 func (es *Errors) Addf(err error, format string, args ...interface{}) {

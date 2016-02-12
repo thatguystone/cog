@@ -26,30 +26,25 @@ func init() {
 		})
 }
 
-func Example_terminal() {
+func Example_stdout() {
 	cfg := clog.Config{
 		Outputs: map[string]*clog.OutputConfig{
-			"term": {
-				Which: "term",
+			"stdout": {
+				Prod: "stdout",
+				Fmt:  "human",
+				FmtArgs: config.Args{
+					"ShortTime": true,
+				},
 				Level: clog.Info,
-				Formatter: clog.FormatterConfig{
-					Name: "Human",
-					Args: config.Args{
-						"ShortTime": true,
-					},
-				},
-				Args: config.Args{
-					"Stdout": true,
-				},
 			},
 		},
 
 		Modules: map[string]*clog.ModuleConfig{
 			"": {
-				Outputs: []string{"term"},
+				Outputs: []string{"stdout"},
 			},
 			"rude.module": {
-				Outputs: []string{"term"},
+				Outputs: []string{"stdout"},
 				Filters: []clog.FilterConfig{
 					clog.FilterConfig{
 						Which: "insult",
@@ -75,7 +70,7 @@ func Example_terminal() {
 	rude.Error("I'm better than you")
 
 	// Output:
-	// [000000] I-polite.module : example_term_test.go:69 : You're very pretty
-	// [000000] I-polite.module : example_term_test.go:70 : I like you
-	// [000000] E-rude.module : example_term_test.go:75 : I'm better than you
+	// [000000] I-polite.module : example_stdout_test.go:64 : You're very pretty
+	// [000000] I-polite.module : example_stdout_test.go:65 : I like you
+	// [000000] E-rude.module : example_stdout_test.go:70 : I'm better than you
 }

@@ -7,18 +7,18 @@ import (
 	"github.com/thatguystone/cog/config"
 )
 
-// LogfmtFormat formats messages in heroku's LogFmt
-type LogfmtFormat struct{}
+// LogFmtFormat formats messages in heroku's LogFmt
+type LogFmtFormat struct{}
 
 func init() {
 	RegisterFormatter("logfmt",
 		func(args config.Args) (Formatter, error) {
-			return LogfmtFormat{}, nil
+			return LogFmtFormat{}, nil
 		})
 }
 
 // FormatEntry implements Formatter
-func (LogfmtFormat) FormatEntry(e Entry) ([]byte, error) {
+func (LogFmtFormat) FormatEntry(e Entry) ([]byte, error) {
 	b := bytes.Buffer{}
 	enc := logfmt.NewEncoder(&b)
 

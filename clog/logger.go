@@ -95,22 +95,14 @@ func (lg *logger) LogEntry(e Entry) {
 				}
 
 				b, err := o.FormatEntry(e)
-				if err == nil {
-					err = o.Write(b)
+				if err != nil {
+					if !e.ignoreErrors {
+						o.logErr(fmt.Errorf("format failed: %v", err))
+					}
+					continue
 				}
 
-				if err != nil && !e.ignoreErrors {
-					// This should never happen, so screw efficiency at this
-					// point
-					lg.l.Get("").LogEntry(Entry{
-						Level: Error,
-						Depth: 1,
-						Msg: fmt.Sprintf("failed to write log entry to %s: %v",
-							o.String(),
-							err),
-						ignoreErrors: true,
-					})
-				}
+				o.Produce(b)
 			}
 		}
 

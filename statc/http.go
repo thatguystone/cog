@@ -1,4 +1,4 @@
-package stats
+package statc
 
 import (
 	"fmt"
@@ -80,8 +80,7 @@ var httpCodes = []int{
 }
 
 // NewHTTPMuxer creates a new HTTP muxer that exposes status information for
-// all endpoints. Each endpoint has a corresponding /_status/<URL>. At
-// /_status, all endpoints are reported.
+// all endpoints. At /_status, information from the last snapshot is reported.
 func (s *S) NewHTTPMuxer(name string) *HTTPMuxer {
 	m := &HTTPMuxer{
 		name: name,
@@ -90,13 +89,34 @@ func (s *S) NewHTTPMuxer(name string) *HTTPMuxer {
 		R:    httprouter.New(),
 	}
 
+	m.Handle("GET", "/_status", m.statusHandler)
+
 	return m
+}
+
+func (m *HTTPMuxer) statusHandler(
+	rw http.ResponseWriter,
+	req *http.Request,
+	params httprouter.Params) {
+
+	jf := JSONFormat{}
+	jf.Args.Pretty = true
+
+	b, err := jf.Format(m.s.Snapshot())
+	if err != nil {
+		m.log.Errorf("failed to format snapshot: %v", err)
+		http.Error(rw,
+			"failed to format snapshot",
+			http.StatusInternalServerError)
+	} else {
+		rw.Write(b)
+	}
 }
 
 // Handle wraps the given Handle with stats reporting
 func (m *HTTPMuxer) Handle(method, path string, handle httprouter.Handle) {
 	path = httprouter.CleanPath(path)
-	name := Join(m.name, path, method)
+	name := JoinPath(m.name, path, method)
 
 	status := m.newHTTPStatuses(name)
 	m.s.AddSnapshotter(name, status)
@@ -142,7 +162,7 @@ func (rw *httpResp) WriteHeader(status int) {
 
 func (m *HTTPMuxer) newHTTPStatuses(name string) *httpStatuses {
 	newTimer := func(s string) *Timer {
-		return NewTimer(Join(name, s), m.s.cfg.HTTPSamplePercent)
+		return NewTimer(JoinPath(name, s), m.s.cfg.HTTPSamplePercent)
 	}
 
 	hss := &httpStatuses{

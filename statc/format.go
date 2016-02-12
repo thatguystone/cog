@@ -1,4 +1,4 @@
-package clog
+package statc
 
 import (
 	"fmt"
@@ -7,10 +7,9 @@ import (
 	"github.com/thatguystone/cog/config"
 )
 
-// Formatter formats messages
+// A Formatter formats a snapshot
 type Formatter interface {
-	// Format a message.
-	FormatEntry(Entry) ([]byte, error)
+	Format(snap Snapshot) ([]byte, error)
 }
 
 // NewFormatter creates a new, configured Formatter.
@@ -18,7 +17,7 @@ type NewFormatter func(args config.Args) (Formatter, error)
 
 var regdFormatters = map[string]NewFormatter{}
 
-// RegisterFormatter adds a Formatter to the list of formats
+// RegisterFormatter adds a Filter to the list of filters
 func RegisterFormatter(name string, nf NewFormatter) {
 	lname := strings.ToLower(name)
 

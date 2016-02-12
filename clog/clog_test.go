@@ -2,6 +2,9 @@ package clog
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
@@ -19,11 +22,12 @@ func basicTestConfig(c *check.C) Config {
 	return Config{
 		Outputs: map[string]*OutputConfig{
 			"test": {
-				Which: "file",
-				Level: Debug,
-				Args: config.Args{
+				Prod: "file",
+				ProdArgs: config.Args{
 					"path": c.FS.Path("test"),
 				},
+				Fmt:   "logfmt",
+				Level: Debug,
 			},
 		},
 		Modules: map[string]*ModuleConfig{
@@ -42,25 +46,28 @@ func TestBasic(t *testing.T) {
 		`{
 			"outputs": {
 				"plain": {
-					"which": "file",
-					"level": "info",
-					"args": {
+					"prod": "file",
+					"prodArgs": {
 						"path": %q
-					}
+					},
+					"fmt": "logfmt",
+					"level": "info"
 				},
 				"json": {
-					"which": "jsonfile",
-					"level": "info",
-					"args": {
+					"prod": "file",
+					"prodArgs": {
 						"path": %q
-					}
+					},
+					"fmt": "json",
+					"level": "info"
 				},
 				"plain-error": {
-					"which": "file",
-					"level": "error",
-					"args": {
+					"prod": "file",
+					"prodArgs": {
 						"path": %q
-					}
+					},
+					"fmt": "logfmt",
+					"level": "error"
 				}
 			},
 			"modules": {
@@ -124,11 +131,12 @@ func TestBasic(t *testing.T) {
 		`{
 			"outputs": {
 				"plain": {
-					"which": "file",
-					"level": "error",
-					"args": {
+					"prod": "file",
+					"fmt": "logfmt",
+					"prodArgs": {
 						"path": %q
-					}
+					},
+					"level": "error"
 				}
 			},
 			"modules": {
@@ -176,7 +184,20 @@ func TestNewFromFileJSON(t *testing.T) {
 	c.MustNotError(err)
 }
 
-func TestNewFromFileErrors(t *testing.T) {
+func TestNewErrors(t *testing.T) {
+	c := check.New(t)
+
+	_, err := New(Config{
+		Outputs: map[string]*OutputConfig{
+			"test": {
+				Prod: "sadfkjsadkf",
+			},
+		},
+	})
+	c.Error(err)
+}
+
+func TestReconfigureFromFileErrors(t *testing.T) {
 	c := check.New(t)
 
 	c.FS.SWriteFile("config.merp", "merp")
@@ -219,20 +240,20 @@ func TestReconfigureErrors(t *testing.T) {
 
 	cfg = basicTestConfig(c)
 	cfg.Outputs["doesntExist"] = &OutputConfig{
-		Which: "doesntExist",
+		Prod: "doesntExist",
 	}
 
 	cfg.Outputs["errOut"] = &OutputConfig{
-		Which: "errOut",
+		Prod: "errOut",
 	}
 
 	cfg.Outputs["badFilters"] = &OutputConfig{
-		Which: "file",
+		Prod: "file",
+		ProdArgs: config.Args{
+			"path": c.FS.Path("badFilters"),
+		},
 		Filters: []FilterConfig{
 			FilterConfig{Which: "iDontExist"},
-		},
-		Args: config.Args{
-			"path": c.FS.Path("badFilters"),
 		},
 	}
 
@@ -279,38 +300,74 @@ func TestReopen(t *testing.T) {
 	c.Contains(c.FS.SReadFile("test"), "after")
 }
 
-func TestExit(t *testing.T) {
+func TestFlush(t *testing.T) {
 	c := check.New(t)
 
+	bch := make(chan []byte, 1)
+	ts := httptest.NewServer(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			b, err := ioutil.ReadAll(r.Body)
+			c.MustNotError(err)
+			bch <- b
+		}))
+	defer ts.Close()
+
 	cfg := basicTestConfig(c)
-
-	cfg.File = c.FS.Path("default_file")
-	out := cfg.Outputs["test"]
-	out.Which = "exitOut"
-
-	cfg.Modules["test"] = &ModuleConfig{
-		Outputs: []string{"test", defaultConfigFileOutputName},
+	cfg.Outputs["test"] = &OutputConfig{
+		Prod: "http",
+		ProdArgs: config.Args{
+			"Servers":    []string{ts.URL},
+			"BatchDelay": "1m",
+		},
+		Fmt:   "json",
+		Level: Debug,
 	}
 
 	l, err := New(cfg)
 	c.MustNotError(err)
 
-	eo := l.outputs["test"].Outputter.(*exitOutput)
-	l.Exit()
-	c.True(eo.exited)
+	l.Get("fwoop").Info("fleemp")
 
-	err = l.Reconfigure(cfg)
-	c.MustNotError(err)
+	select {
+	case <-bch:
+		c.Fatal("should not get message")
+	case <-time.After(time.Millisecond * 10):
+	}
 
-	lg := l.Get("test")
+	// Hold a reference so that GC is forced to run
+	ls := l.logState
 	go func() {
-		time.Sleep(time.Millisecond * 100)
-		lg.Info("Delayed message")
+		time.Sleep(time.Millisecond * 50)
+		ls.outputs = nil
 	}()
 
-	eo = l.outputs["test"].Outputter.(*exitOutput)
-	l.Exit()
-	c.True(eo.exited)
+	err = l.Flush()
+	c.MustNotError(err)
+
+	select {
+	case b := <-bch:
+		c.Contains(string(b), `msg":"fleemp"`)
+	case <-time.After(time.Second):
+		c.Fatal("did not flush :(")
+	}
+}
+
+func TestFlushErrors(t *testing.T) {
+	c := check.New(t)
+
+	cfg := basicTestConfig(c)
+
+	l, err := New(cfg)
+	c.MustNotError(err)
+
+	l.cfg.Outputs = map[string]*OutputConfig{
+		"test": {
+			Prod: "sadfkjsadkf",
+		},
+	}
+
+	err = l.Flush()
+	c.Error(err)
 }
 
 func TestDontPropagate(t *testing.T) {
