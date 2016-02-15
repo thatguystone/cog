@@ -1,100 +1,83 @@
-package cfs
+package cfs_test
 
 import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"testing"
+
+	"github.com/thatguystone/cog/cfs"
+	"github.com/thatguystone/cog/check"
 )
 
+func TestMain(m *testing.M) {
+	check.Main(m)
+}
+
 func TestFindDirInParents(t *testing.T) {
-	t.Parallel()
+	c := check.New(t)
 
-	_, err := FindDirInParents("idontexist")
-	if err == nil {
-		t.Fail()
-	}
+	_, err := cfs.FindDirInParents("idontexist")
+	c.Error(err)
 
-	_, err = FindDirInParents("cog")
-	if err != nil {
-		t.Fail()
-	}
+	_, err = cfs.FindDirInParents("cog")
+	c.NotError(err)
 }
 
 func TestFileExists(t *testing.T) {
-	t.Parallel()
+	c := check.New(t)
 
 	fs, err := filepath.Glob("*")
-	if len(fs) == 0 || err != nil {
-		t.Errorf("could not find files: len=%d, err=%v", len(fs), err)
-	}
+	c.MustNotError(err)
+	c.MustTrue(len(fs) > 0)
 
-	ex, err := FileExists(fs[0])
-	if !ex || err != nil {
-		t.Errorf("%s should exist: ex=%t, err=%v", fs[0], ex, err)
-	}
+	ex, err := cfs.FileExists(fs[0])
+	c.MustNotError(err)
+	c.True(ex, "%s does not exist", fs[0])
 
-	ex, err = FileExists("/i/dont/exist")
-	if ex || err != nil {
-		t.Errorf("should not exist: ex=%t, err=%v", ex, err)
-	}
+	ex, err = cfs.FileExists("/i/dont/exist")
+	c.MustNotError(err)
+	c.False(ex)
 }
 
 func TestDirExists(t *testing.T) {
-	t.Parallel()
+	c := check.New(t)
 
 	dir, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("could not get cwd: %v", err)
-	}
+	c.MustNotError(err)
 
-	ex, err := DirExists(dir)
-	if !ex || err != nil {
-		t.Errorf("%s should exist: ex=%t err=%v", dir, ex, err)
-	}
+	ex, err := cfs.DirExists(dir)
+	c.MustNotError(err)
+	c.True(ex, "%s does not exist", dir)
 
-	ex, err = DirExists("/i/dont/exist/")
-	if ex || err != nil {
-		t.Errorf("%s should not exist: ex=%t err=%v", dir, ex, err)
-	}
+	ex, err = cfs.DirExists("/i/dont/exist/")
+	c.MustNotError(err)
+	c.False(ex)
 }
 
 func TestTempFile(t *testing.T) {
-	t.Parallel()
+	c := check.New(t)
 
-	f, err := TempFile("tmp-", "aac")
-	if err != nil {
-		t.Fatalf("failed to create TempFile: %v", err)
-	}
+	f, err := cfs.TempFile("tmp-", "aac")
+	c.MustNotError(err)
 
 	defer func() {
 		f.Close()
 		os.Remove(f.Name())
 	}()
 
-	if !strings.Contains(f.Name(), "tmp-") {
-		t.Errorf("%s doesn't contain %s", f.Name(), "tmp-")
-	}
-
-	if !strings.Contains(f.Name(), ".aac") {
-		t.Errorf("%s doesn't contain %s", f.Name(), ".aac")
-	}
+	c.Contains(f.Name(), "tmp-")
+	c.Contains(f.Name(), ".aac")
 }
 
 func TestImportPath(t *testing.T) {
-	t.Parallel()
+	c := check.New(t)
 
-	_, err := ImportPath("does not exist", false)
-	if err == nil {
-		t.Errorf("Found a file that doesn't exist...")
-	}
+	_, err := cfs.ImportPath("does not exist", false)
+	c.MustError(err)
 
 	_, filename, _, _ := runtime.Caller(0)
-	path, err := ImportPath(filename, false)
-	if err != nil {
-		t.Errorf("File should have been found: %s", filename)
-	} else if path != "github.com/thatguystone/cog/cfs" {
-		t.Errorf("Wrong path returned: %s", path)
-	}
+	path, err := cfs.ImportPath(filename, false)
+	c.MustNotError(err, "filename=%s", filename)
+	c.Equal(path, "github.com/thatguystone/cog/cfs")
 }
