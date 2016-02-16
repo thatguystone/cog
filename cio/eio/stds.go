@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/thatguystone/cog"
-	"github.com/thatguystone/cog/config"
 )
 
 // OutProducer writes to either stdout or stderr, depending on if you create a
@@ -16,11 +15,11 @@ type OutProducer struct {
 
 func init() {
 	RegisterProducer("stdout",
-		func(args config.Args) (Producer, error) {
+		func(args Args) (Producer, error) {
 			return &OutProducer{out: os.Stdout}, nil
 		})
 	RegisterProducer("stderr",
-		func(args config.Args) (Producer, error) {
+		func(args Args) (Producer, error) {
 			return &OutProducer{out: os.Stderr}, nil
 		})
 }

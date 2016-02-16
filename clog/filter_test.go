@@ -6,18 +6,18 @@ import (
 	"testing"
 
 	"github.com/thatguystone/cog/check"
-	"github.com/thatguystone/cog/config"
+	"github.com/thatguystone/cog/cio/eio"
 )
 
 type rejectMsgFilter struct{}
 type rejectDataFilter struct{}
 
 func init() {
-	RegisterFilter("rejectMsg", func(config.Args) (Filter, error) {
+	RegisterFilter("rejectMsg", func(eio.Args) (Filter, error) {
 		return rejectMsgFilter{}, nil
 	})
 
-	RegisterFilter("rejectData", func(config.Args) (Filter, error) {
+	RegisterFilter("rejectData", func(eio.Args) (Filter, error) {
 		return rejectDataFilter{}, nil
 	})
 }

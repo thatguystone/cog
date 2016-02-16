@@ -1,5 +1,4 @@
-// Package config has some shared configuration helpers
-package config
+package eio
 
 import "encoding/json"
 

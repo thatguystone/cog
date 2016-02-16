@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/thatguystone/cog"
-	"github.com/thatguystone/cog/config"
 )
 
 // LocalProducer is a channel-backed producer that works locally
@@ -49,7 +48,7 @@ var (
 
 func init() {
 	RegisterProducer("local",
-		func(args config.Args) (Producer, error) {
+		func(args Args) (Producer, error) {
 			p := &LocalProducer{}
 
 			err := args.ApplyTo(p)
@@ -62,7 +61,7 @@ func init() {
 			return p, nil
 		})
 	RegisterConsumer("local",
-		func(args config.Args) (Consumer, error) {
+		func(args Args) (Consumer, error) {
 			c := &LocalConsumer{}
 
 			err := args.ApplyTo(c)

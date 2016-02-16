@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/thatguystone/cog/check"
-	"github.com/thatguystone/cog/config"
+	"github.com/thatguystone/cog/cio/eio"
 )
 
 func TestFilterLevelBasic(t *testing.T) {
@@ -17,7 +17,7 @@ func TestFilterLevelBasic(t *testing.T) {
 	out.Filters = []FilterConfig{
 		FilterConfig{
 			Which: lvlFilterName,
-			Args:  config.Args{"Level": Info},
+			Args:  eio.Args{"Level": Info},
 		},
 	}
 
@@ -41,7 +41,7 @@ func TestFilterLevelErrors(t *testing.T) {
 	_, err := newFilters(Info, []FilterConfig{
 		FilterConfig{
 			Which: lvlFilterName,
-			Args:  config.Args{"Level": "ponies"},
+			Args:  eio.Args{"Level": "ponies"},
 		},
 	})
 	c.Error(err)

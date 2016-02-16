@@ -5,13 +5,12 @@ import (
 	"testing"
 
 	"github.com/thatguystone/cog/check"
-	"github.com/thatguystone/cog/config"
 )
 
 func testOut(t *testing.T, name string) {
 	c := check.New(t)
 
-	p, err := regdPs[name](config.Args{})
+	p, err := regdPs[name](Args{})
 	c.MustNotError(err)
 	defer p.Close()
 

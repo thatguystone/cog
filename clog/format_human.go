@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/thatguystone/cog/config"
+	"github.com/thatguystone/cog/cio/eio"
 )
 
 // HumanFormat formats log entries so that a human can quickly decipher them
@@ -19,7 +19,7 @@ var startTime = time.Now()
 
 func init() {
 	RegisterFormatter("Human",
-		func(args config.Args) (Formatter, error) {
+		func(args eio.Args) (Formatter, error) {
 			f := HumanFormat{}
 			err := args.ApplyTo(&f.Args)
 			if err != nil {

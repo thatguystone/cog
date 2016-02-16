@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/thatguystone/cog/check"
-	"github.com/thatguystone/cog/config"
+	"github.com/thatguystone/cog/cio/eio"
 )
 
 func TestMain(m *testing.M) {
@@ -23,7 +23,7 @@ func basicTestConfig(c *check.C) Config {
 		Outputs: map[string]*OutputConfig{
 			"test": {
 				Prod: "file",
-				ProdArgs: config.Args{
+				ProdArgs: eio.Args{
 					"path": c.FS.Path("test"),
 				},
 				Fmt:   "logfmt",
@@ -249,7 +249,7 @@ func TestReconfigureErrors(t *testing.T) {
 
 	cfg.Outputs["badFilters"] = &OutputConfig{
 		Prod: "file",
-		ProdArgs: config.Args{
+		ProdArgs: eio.Args{
 			"path": c.FS.Path("badFilters"),
 		},
 		Filters: []FilterConfig{
@@ -315,7 +315,7 @@ func TestFlush(t *testing.T) {
 	cfg := basicTestConfig(c)
 	cfg.Outputs["test"] = &OutputConfig{
 		Prod: "http",
-		ProdArgs: config.Args{
+		ProdArgs: eio.Args{
 			"Servers":    []string{ts.URL},
 			"BatchDelay": "1m",
 		},

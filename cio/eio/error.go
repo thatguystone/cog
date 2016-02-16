@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/thatguystone/cog"
-	"github.com/thatguystone/cog/config"
 )
 
 // An ErrorProducer only ever returns errors. It's useful for testing error
@@ -17,7 +16,7 @@ type ErrorProducer struct {
 
 func init() {
 	RegisterProducer("test_errors",
-		func(args config.Args) (Producer, error) {
+		func(args Args) (Producer, error) {
 			p := &ErrorProducer{
 				ch: make(chan error, 1),
 			}

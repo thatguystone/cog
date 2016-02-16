@@ -13,7 +13,7 @@ import (
 
 	"github.com/tchap/go-patricia/patricia"
 	"github.com/thatguystone/cog"
-	"github.com/thatguystone/cog/config"
+	"github.com/thatguystone/cog/cio/eio"
 )
 
 // Log provides access to the logging facilities
@@ -113,7 +113,7 @@ func (l *Log) Reconfigure(cfg Config) error {
 	if cfg.File != "" {
 		cfg.Outputs[defaultConfigFileOutputName] = &OutputConfig{
 			Prod: "file",
-			ProdArgs: config.Args{
+			ProdArgs: eio.Args{
 				"path": cfg.File,
 			},
 			Fmt:   "json",

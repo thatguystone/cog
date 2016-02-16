@@ -46,7 +46,7 @@
 //             // Only errors with level >= Error will be logged here
 //             "errors": {
 //                 Prod: "file",
-//                 ProdArgs: config.Args{
+//                 ProdArgs: eio.Args{
 //                     "path": "/var/log/app.error.json.log",
 //                 },
 //                 Fmt:   "json",
@@ -54,7 +54,7 @@
 //                 Filters: []FilterConfig{
 //                     FilterConfig{
 //                         Which: "exampleFilter",
-//                         Args: config.Args{
+//                         Args: eio.Args{
 //                             "exampleConfig": "someValue",
 //                         },
 //                     },
@@ -64,7 +64,7 @@
 //             // All messages will be accepted here
 //             "debug": {
 //                 Prod: "file",
-//                 ProdArgs: config.Args{
+//                 ProdArgs: eio.Args{
 //                     "path": "/var/log/app.log.json",
 //                 },
 //                 Fmt:   "human", // Or "logfmt", or any other valid formatter
@@ -74,11 +74,11 @@
 //             // Only errors level >= Warn will be accepted here
 //             "heroku": {
 //                 Prod: "file",
-//                 ProdArgs: config.Args{
+//                 ProdArgs: eio.Args{
 //                     "path": "/var/log/app.logfmt",
 //                 },
 //                 Fmt: "logfmt",
-//                 FmtArgs: config.Args{
+//                 FmtArgs: eio.Args{
 //                     "ShortTime": true,
 //                 },
 //                 Level: Warn,
@@ -101,7 +101,7 @@
 //                 Filters: []FilterConfig{
 //                     FilterConfig{
 //                         Which: "exampleFilter",
-//                         Args: config.Args{
+//                         Args: eio.Args{
 //                             "exampleConfig": "someValue",
 //                         },
 //                     },

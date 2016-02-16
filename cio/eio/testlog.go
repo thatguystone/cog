@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/thatguystone/cog"
-	"github.com/thatguystone/cog/config"
 	"github.com/thatguystone/cog/stack"
 )
 
@@ -23,7 +22,7 @@ type testLogger interface {
 func init() {
 	RegisterProducer(
 		"TestLog",
-		func(args config.Args) (Producer, error) {
+		func(args Args) (Producer, error) {
 			var log testLogger
 
 			l, ok := args["log"]

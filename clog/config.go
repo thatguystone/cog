@@ -1,6 +1,6 @@
 package clog
 
-import "github.com/thatguystone/cog/config"
+import "github.com/thatguystone/cog/cio/eio"
 
 const (
 	defaultConfigFileOutputName = "__default_config_file__"
@@ -38,11 +38,11 @@ type OutputConfig struct {
 	// The full list of Producers can be found at:
 	// https://godoc.org/github.com/thatguystone/cog/cio/eio
 	Prod     string
-	ProdArgs config.Args // Args to pass to the Producer
+	ProdArgs eio.Args // Args to pass to the Producer
 
 	// Which Formatter to use for this output.
 	Fmt     string
-	FmtArgs config.Args // Args to pass to the Fmt
+	FmtArgs eio.Args // Args to pass to the Fmt
 
 	// Log level to use for this output. Use Debug to accept all. This is
 	// actually an implicit (and required) Filter.
@@ -76,7 +76,7 @@ type FilterConfig struct {
 	Which string
 
 	// Filter arguments
-	Args config.Args
+	Args eio.Args
 }
 
 var asdasdcfg = Config{
@@ -89,7 +89,7 @@ var asdasdcfg = Config{
 		// Only errors with level >= Error will be logged here
 		"errors": {
 			Prod: "file",
-			ProdArgs: config.Args{
+			ProdArgs: eio.Args{
 				"path": "/var/log/app.error.json.log",
 			},
 			Fmt:   "json",
@@ -97,7 +97,7 @@ var asdasdcfg = Config{
 			Filters: []FilterConfig{
 				FilterConfig{
 					Which: "exampleFilter",
-					Args: config.Args{
+					Args: eio.Args{
 						"exampleConfig": "someValue",
 					},
 				},
@@ -107,7 +107,7 @@ var asdasdcfg = Config{
 		// All messages will be accepted here
 		"debug": {
 			Prod: "file",
-			ProdArgs: config.Args{
+			ProdArgs: eio.Args{
 				"path": "/var/log/app.log.json",
 			},
 			Fmt:   "human", // Or "logfmt", or any other valid formatter
@@ -117,11 +117,11 @@ var asdasdcfg = Config{
 		// Only errors level >= Warn will be accepted here
 		"heroku": {
 			Prod: "file",
-			ProdArgs: config.Args{
+			ProdArgs: eio.Args{
 				"path": "/var/log/app.logfmt",
 			},
 			Fmt: "human",
-			FmtArgs: config.Args{
+			FmtArgs: eio.Args{
 				"ShortTime": true,
 			},
 			Level: Warn,
@@ -144,7 +144,7 @@ var asdasdcfg = Config{
 			Filters: []FilterConfig{
 				FilterConfig{
 					Which: "exampleFilter",
-					Args: config.Args{
+					Args: eio.Args{
 						"exampleConfig": "someValue",
 					},
 				},

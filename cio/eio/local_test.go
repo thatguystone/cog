@@ -4,12 +4,11 @@ import (
 	"testing"
 
 	"github.com/thatguystone/cog/check"
-	"github.com/thatguystone/cog/config"
 )
 
 func TestLocals(t *testing.T) {
 	c := check.New(t)
-	args := config.Args{
+	args := Args{
 		"topic": check.GetTestName(),
 	}
 
@@ -47,7 +46,7 @@ func TestLocals(t *testing.T) {
 
 func TestLocalErrors(t *testing.T) {
 	c := check.New(t)
-	args := config.Args{
+	args := Args{
 		"topic": make(chan []byte),
 	}
 
@@ -60,7 +59,7 @@ func TestLocalErrors(t *testing.T) {
 
 func TestLocalMessagesOnClose(t *testing.T) {
 	c := check.New(t)
-	args := config.Args{
+	args := Args{
 		"topic": check.GetTestName(),
 	}
 

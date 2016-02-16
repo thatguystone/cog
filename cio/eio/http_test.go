@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/thatguystone/cog/check"
-	"github.com/thatguystone/cog/config"
 )
 
 type httpTest struct {
@@ -25,7 +24,7 @@ type httpReq struct {
 	body []byte
 }
 
-func newHTTPTest(t *testing.T, args config.Args) (*check.C, *httpTest) {
+func newHTTPTest(t *testing.T, args Args) (*check.C, *httpTest) {
 	mux := http.NewServeMux()
 	ht := &httpTest{
 		c:    check.New(t),
@@ -64,7 +63,7 @@ func (ht *httpTest) exit() {
 
 func TestHTTPBasic(t *testing.T) {
 	ep := "some/path"
-	c, ht := newHTTPTest(t, config.Args{
+	c, ht := newHTTPTest(t, Args{
 		"Endpoint":          ep,
 		"BatchDelay":        "100us",
 		"InitialRetryDelay": "100us",
@@ -101,7 +100,7 @@ func TestHTTPBasic(t *testing.T) {
 func TestHTTPScheming(t *testing.T) {
 	c := check.New(t)
 
-	p, err := regdPs["http"](config.Args{
+	p, err := regdPs["http"](Args{
 		"Servers": []string{
 			"12345",
 			"http://12345",
@@ -122,7 +121,7 @@ func TestHTTPScheming(t *testing.T) {
 }
 
 func TestHTTPCloseThenSend(t *testing.T) {
-	_, ht := newHTTPTest(t, config.Args{})
+	_, ht := newHTTPTest(t, Args{})
 	defer ht.exit()
 
 	// Don't panic!
@@ -130,7 +129,7 @@ func TestHTTPCloseThenSend(t *testing.T) {
 }
 
 func TestHTTPSizedFlush(t *testing.T) {
-	c, ht := newHTTPTest(t, config.Args{
+	c, ht := newHTTPTest(t, Args{
 		"BatchSize":  4,
 		"BatchDelay": 0,
 	})
@@ -159,7 +158,7 @@ func TestHTTPSizedFlush(t *testing.T) {
 }
 
 func TestHTTPRetryTimeout(t *testing.T) {
-	c, ht := newHTTPTest(t, config.Args{
+	c, ht := newHTTPTest(t, Args{
 		"Endpoint":          "error",
 		"BatchDelay":        "100us",
 		"InitialRetryDelay": "100us",
@@ -180,6 +179,6 @@ func TestHTTPRetryTimeout(t *testing.T) {
 func TestHTTPError(t *testing.T) {
 	c := check.New(t)
 
-	_, err := NewProducer("http", config.Args{})
+	_, err := NewProducer("http", Args{})
 	c.Error(err)
 }

@@ -4,13 +4,13 @@ import (
 	"testing"
 
 	"github.com/thatguystone/cog/check"
-	"github.com/thatguystone/cog/config"
+	"github.com/thatguystone/cog/cio/eio"
 )
 
 func TestJSONFormatNew(t *testing.T) {
 	c := check.New(t)
 
-	jf, err := newFormatter("json", config.Args{
+	jf, err := newFormatter("json", eio.Args{
 		"pretty": true,
 	})
 	c.NotError(err)

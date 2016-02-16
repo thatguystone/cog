@@ -10,7 +10,6 @@ import (
 
 	"github.com/thatguystone/cog"
 	"github.com/thatguystone/cog/bytec"
-	"github.com/thatguystone/cog/config"
 	"github.com/thatguystone/cog/ctime"
 )
 
@@ -34,7 +33,7 @@ type HTTPProducer struct {
 
 func init() {
 	RegisterProducer("http",
-		func(args config.Args) (Producer, error) {
+		func(args Args) (Producer, error) {
 			p := &HTTPProducer{
 				Retries:    3,
 				BatchSize:  64,

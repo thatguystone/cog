@@ -12,8 +12,8 @@ import (
 	"testing"
 
 	"github.com/thatguystone/cog/check"
+	"github.com/thatguystone/cog/cio/eio"
 	"github.com/thatguystone/cog/clog"
-	"github.com/thatguystone/cog/config"
 )
 
 // New creates a new TestLog that outputs all log messages to the given TB. This
@@ -25,7 +25,7 @@ func New(tb testing.TB) (*check.C, *clog.Log) {
 		Outputs: map[string]*clog.OutputConfig{
 			"testlog": {
 				Prod: "testlog",
-				ProdArgs: config.Args{
+				ProdArgs: eio.Args{
 					"log": c,
 				},
 				Fmt:   "human",

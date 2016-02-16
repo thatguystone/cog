@@ -1,7 +1,7 @@
 package statc
 
 import (
-	"github.com/thatguystone/cog/config"
+	"github.com/thatguystone/cog/cio/eio"
 	"github.com/thatguystone/cog/ctime"
 )
 
@@ -20,10 +20,10 @@ type Config struct {
 
 // OutputConfig is used to configure outputs
 type OutputConfig struct {
-	Prod     string      // Which eio Producer to use
-	ProdArgs config.Args // Args to pass to the sink
-	Fmt      string      // Name of formatter
-	FmtArgs  config.Args // Args to pass to the formatter
+	Prod     string   // Which eio Producer to use
+	ProdArgs eio.Args // Args to pass to the sink
+	Fmt      string   // Name of formatter
+	FmtArgs  eio.Args // Args to pass to the formatter
 }
 
 func (cfg *Config) setDefaults() {

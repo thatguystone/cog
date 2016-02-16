@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/pquerna/ffjson/fflib/v1"
-	"github.com/thatguystone/cog/config"
+	"github.com/thatguystone/cog/cio/eio"
 	"github.com/thatguystone/cog/unsafec"
 )
 
@@ -34,7 +34,7 @@ var (
 
 func init() {
 	RegisterFormatter("json",
-		func(args config.Args) (Formatter, error) {
+		func(args eio.Args) (Formatter, error) {
 			jf := JSONFormat{}
 			err := args.ApplyTo(&jf.Args)
 			return jf, err

@@ -6,11 +6,10 @@ import (
 	"strings"
 
 	"github.com/thatguystone/cog"
-	"github.com/thatguystone/cog/config"
 )
 
 // MakeProducer creates a new Producer
-type MakeProducer func(args config.Args) (Producer, error)
+type MakeProducer func(args Args) (Producer, error)
 
 // A Producer writes messages
 type Producer interface {
@@ -39,7 +38,7 @@ type producer struct {
 }
 
 // MakeConsumer creates a new Consumer
-type MakeConsumer func(args config.Args) (Consumer, error)
+type MakeConsumer func(args Args) (Consumer, error)
 
 // A Consumer reads messages
 type Consumer interface {
@@ -72,7 +71,7 @@ func RegisterProducer(name string, np MakeProducer) {
 }
 
 // NewProducer creates a new producer with the given arguments
-func NewProducer(name string, args config.Args) (Producer, error) {
+func NewProducer(name string, args Args) (Producer, error) {
 	lname := strings.ToLower(name)
 
 	np, ok := regdPs[lname]
@@ -112,7 +111,7 @@ func RegisterConsumer(name string, nc MakeConsumer) {
 }
 
 // NewConsumer creates a new consumer with the given arguments
-func NewConsumer(name string, args config.Args) (Consumer, error) {
+func NewConsumer(name string, args Args) (Consumer, error) {
 	lname := strings.ToLower(name)
 
 	nc, ok := regdCs[lname]

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/thatguystone/cog/check"
-	"github.com/thatguystone/cog/config"
+	"github.com/thatguystone/cog/cio/eio"
 )
 
 func TestRegisterFormatterErrors(t *testing.T) {
@@ -12,11 +12,11 @@ func TestRegisterFormatterErrors(t *testing.T) {
 
 	c.Panic(func() {
 		RegisterFormatter("JSON",
-			func(args config.Args) (Formatter, error) {
+			func(args eio.Args) (Formatter, error) {
 				return nil, nil
 			})
 	})
 
-	_, err := newFormatter("lulz what", config.Args{})
+	_, err := newFormatter("lulz what", eio.Args{})
 	c.MustError(err)
 }

@@ -5,14 +5,14 @@ import (
 	"testing"
 
 	"github.com/thatguystone/cog/check"
-	"github.com/thatguystone/cog/config"
+	"github.com/thatguystone/cog/cio/eio"
 )
 
 type formatErrors struct{}
 
 func init() {
 	RegisterFormatter("errors",
-		func(config.Args) (Formatter, error) {
+		func(eio.Args) (Formatter, error) {
 			return formatErrors{}, nil
 		})
 }

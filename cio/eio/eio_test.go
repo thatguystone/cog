@@ -7,7 +7,6 @@ import (
 
 	"github.com/thatguystone/cog"
 	"github.com/thatguystone/cog/check"
-	"github.com/thatguystone/cog/config"
 )
 
 type noopProdCons struct {
@@ -16,12 +15,12 @@ type noopProdCons struct {
 
 func init() {
 	RegisterProducer("test_noop",
-		func(config.Args) (Producer, error) {
+		func(Args) (Producer, error) {
 			return &noopProdCons{}, nil
 		})
 
 	RegisterConsumer("test_noop",
-		func(config.Args) (Consumer, error) {
+		func(Args) (Consumer, error) {
 			return &noopProdCons{}, nil
 		})
 }
@@ -39,10 +38,10 @@ func (n *noopProdCons) Close() cog.Errors     { n.closed = true; return cog.Erro
 func TestEIOFinalizers(t *testing.T) {
 	c := check.New(t)
 
-	pr, err := NewProducer("test_noop", config.Args{})
+	pr, err := NewProducer("test_noop", Args{})
 	c.MustNotError(err)
 
-	co, err := NewConsumer("test_noop", config.Args{})
+	co, err := NewConsumer("test_noop", Args{})
 	c.MustNotError(err)
 
 	prp := pr.(*producer).Producer.(*noopProdCons)

@@ -3,8 +3,8 @@ package clog_test
 import (
 	"strings"
 
+	"github.com/thatguystone/cog/cio/eio"
 	"github.com/thatguystone/cog/clog"
-	"github.com/thatguystone/cog/config"
 )
 
 // Rejects any messages that might be insulting
@@ -20,7 +20,7 @@ func (insultFilter) Exit() {
 
 func init() {
 	clog.RegisterFilter("insult",
-		func(args config.Args) (clog.Filter, error) {
+		func(args eio.Args) (clog.Filter, error) {
 			// If args were used here, args.ApplyTo might come in handy
 			return insultFilter{}, nil
 		})
@@ -32,7 +32,7 @@ func Example_stdout() {
 			"stdout": {
 				Prod: "stdout",
 				Fmt:  "human",
-				FmtArgs: config.Args{
+				FmtArgs: eio.Args{
 					"ShortTime": true,
 				},
 				Level: clog.Info,

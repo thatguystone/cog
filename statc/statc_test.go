@@ -7,8 +7,8 @@ import (
 	"github.com/thatguystone/cog"
 	"github.com/thatguystone/cog/check"
 	"github.com/thatguystone/cog/check/chlog"
+	"github.com/thatguystone/cog/cio/eio"
 	"github.com/thatguystone/cog/clog"
-	"github.com/thatguystone/cog/config"
 	"github.com/thatguystone/cog/ctime"
 )
 
@@ -36,7 +36,7 @@ func newTest(t *testing.T, cfg *Config) (*check.C, *sTest) {
 			Outputs: []OutputConfig{
 				OutputConfig{
 					Prod: "file",
-					ProdArgs: config.Args{
+					ProdArgs: eio.Args{
 						"path": c.FS.Path("stats"),
 					},
 					Fmt: "json",

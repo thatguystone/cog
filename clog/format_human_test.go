@@ -5,13 +5,13 @@ import (
 	"time"
 
 	"github.com/thatguystone/cog/check"
-	"github.com/thatguystone/cog/config"
+	"github.com/thatguystone/cog/cio/eio"
 )
 
 func TestHumanFormatNew(t *testing.T) {
 	c := check.New(t)
 
-	_, err := newFormatter("Human", config.Args{
+	_, err := newFormatter("Human", eio.Args{
 		"ShortTime": "funny",
 	})
 	c.MustError(err)

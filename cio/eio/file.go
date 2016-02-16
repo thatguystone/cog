@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"github.com/thatguystone/cog"
-	"github.com/thatguystone/cog/config"
 )
 
 // FileProducer writes each message as a single line to the given file
@@ -24,7 +23,7 @@ type FileProducer struct {
 
 func init() {
 	RegisterProducer("file",
-		func(args config.Args) (Producer, error) {
+		func(args Args) (Producer, error) {
 			p := &FileProducer{
 				errs: make(chan error, 8),
 			}

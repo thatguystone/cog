@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/thatguystone/cog/config"
+	"github.com/thatguystone/cog/cio/eio"
 )
 
 // Formatter formats messages
@@ -14,7 +14,7 @@ type Formatter interface {
 }
 
 // NewFormatter creates a new, configured Formatter.
-type NewFormatter func(args config.Args) (Formatter, error)
+type NewFormatter func(args eio.Args) (Formatter, error)
 
 var regdFormatters = map[string]NewFormatter{}
 
@@ -29,7 +29,7 @@ func RegisterFormatter(name string, nf NewFormatter) {
 	regdFormatters[lname] = nf
 }
 
-func newFormatter(name string, args config.Args) (Formatter, error) {
+func newFormatter(name string, args eio.Args) (Formatter, error) {
 	lname := strings.ToLower(name)
 	nf, ok := regdFormatters[lname]
 	if !ok {

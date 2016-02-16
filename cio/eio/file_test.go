@@ -5,13 +5,12 @@ import (
 	"testing"
 
 	"github.com/thatguystone/cog/check"
-	"github.com/thatguystone/cog/config"
 )
 
 func TestFileBasic(t *testing.T) {
 	c := check.New(t)
 
-	p, err := NewProducer("file", config.Args{
+	p, err := NewProducer("file", Args{
 		"Path": c.FS.Path("file"),
 	})
 	c.MustNotError(err)
@@ -39,7 +38,7 @@ func TestFileOpenErrors(t *testing.T) {
 	err := os.Chmod(path, 0)
 	c.MustNotError(err)
 
-	_, err = NewProducer("file", config.Args{
+	_, err = NewProducer("file", Args{
 		"Path": path,
 	})
 	c.MustError(err)
@@ -49,7 +48,7 @@ func TestFileProduceErrors(t *testing.T) {
 	c := check.New(t)
 
 	path := c.FS.Path("file")
-	p, err := regdPs["file"](config.Args{
+	p, err := regdPs["file"](Args{
 		"Path": path,
 	})
 	c.MustNotError(err)
@@ -71,7 +70,7 @@ func TestFileRotateErrors(t *testing.T) {
 	c := check.New(t)
 
 	path := c.FS.Path("file")
-	p, err := NewProducer("file", config.Args{
+	p, err := NewProducer("file", Args{
 		"Path": path,
 	})
 	c.MustNotError(err)

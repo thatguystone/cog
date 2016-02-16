@@ -1,21 +1,18 @@
 package eio
 
-import (
-	"github.com/thatguystone/cog"
-	"github.com/thatguystone/cog/config"
-)
+import "github.com/thatguystone/cog"
 
 // Blackhole drops everything and returns nil slices
 type Blackhole struct{}
 
 func init() {
 	RegisterProducer("blackhole",
-		func(config.Args) (Producer, error) {
+		func(Args) (Producer, error) {
 			return Blackhole{}, nil
 		})
 
 	RegisterConsumer("blackhole",
-		func(config.Args) (Consumer, error) {
+		func(Args) (Consumer, error) {
 			return Blackhole{}, nil
 		})
 }
