@@ -34,3 +34,12 @@ func TestFSExists(t *testing.T) {
 	c.FS.FileNotExists("file")
 	c.FS.DirNotExists("dir2")
 }
+
+func TestDumpTree(t *testing.T) {
+	c := New(t)
+
+	c.FS.SWriteFile("dir/file", "")
+	c.FS.SWriteFile("dir2/file", "")
+
+	c.FS.DumpTree("")
+}

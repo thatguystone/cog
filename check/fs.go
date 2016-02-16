@@ -131,3 +131,25 @@ func (fs *FS) GetDataDir() string {
 func (fs *FS) CleanDataDir() {
 	os.RemoveAll(fs.GetDataDir())
 }
+
+// DumpTree walks the tree at the given path and writes each file to the test
+// log
+func (fs *FS) DumpTree(path string) {
+	fs.c.Logf("Tree at `%s`:", path)
+
+	rootPath := fs.Path(path)
+	filepath.Walk(rootPath,
+		func(path string, info os.FileInfo, err error) error {
+			if info.IsDir() {
+				return nil
+			}
+
+			fs.c.MustNotError(err)
+
+			rel, err := filepath.Rel(rootPath, path)
+			fs.c.MustNotError(err)
+
+			fs.c.Logf("\t%s", rel)
+			return nil
+		})
+}
