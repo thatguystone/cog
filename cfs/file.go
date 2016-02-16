@@ -4,13 +4,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 )
-
-// CreateParents creates all parents of the given file
-func CreateParents(path string) error {
-	return os.MkdirAll(filepath.Dir(path), 0750)
-}
 
 // Create creates the given file by ensuring that is parent directories exist,
 // then it creates the file.
