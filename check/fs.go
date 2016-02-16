@@ -39,36 +39,34 @@ func (fs *FS) Path(parts ...string) string {
 func (fs *FS) FileExists(path string) {
 	exists, err := cfs.FileExists(fs.Path(path))
 	fs.c.MustNotError(err)
-	fs.c.True(exists)
+	fs.c.True(exists, "%s does not exist", path)
 }
 
 // FileNotExists checks that the given file does not exist
 func (fs *FS) FileNotExists(path string) {
 	exists, err := cfs.FileExists(fs.Path(path))
 	fs.c.MustNotError(err)
-	fs.c.False(exists)
+	fs.c.False(exists, "%s exists when it shouldn't", path)
 }
 
 // DirExists checks that the given directory exists
 func (fs *FS) DirExists(path string) {
 	exists, err := cfs.DirExists(fs.Path(path))
 	fs.c.MustNotError(err)
-	fs.c.True(exists)
+	fs.c.True(exists, "%s does not exist", path)
 }
 
 // DirNotExists checks that the given directory exists
 func (fs *FS) DirNotExists(path string) {
 	exists, err := cfs.DirExists(fs.Path(path))
 	fs.c.MustNotError(err)
-	fs.c.False(exists)
+	fs.c.False(exists, "%s exists when it shouldn't", path)
 }
 
 // WriteFile writes the given contents to the given path in the test's data
 // dir, creating everything as necessary.
 func (fs *FS) WriteFile(path string, contents []byte) {
-	path = fs.Path(path)
-
-	err := ioutil.WriteFile(path, contents, 0600)
+	err := cfs.Write(fs.Path(path), contents)
 	fs.c.MustNotError(err)
 }
 
