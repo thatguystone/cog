@@ -97,7 +97,7 @@ func (p *producer) Close() (es cog.Errors) {
 }
 
 func finalizeProducer(p *producer) {
-	p.Close()
+	go p.Close()
 }
 
 // RegisterConsumer registers a Consumer for use. Names are case insensitive.
@@ -137,5 +137,5 @@ func (c *consumer) Close() (es cog.Errors) {
 }
 
 func finalizeConsumer(c *consumer) {
-	c.Close()
+	go c.Close()
 }
