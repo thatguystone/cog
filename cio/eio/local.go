@@ -51,7 +51,7 @@ func init() {
 		func(args Args) (Producer, error) {
 			p := &LocalProducer{}
 
-			err := args.ApplyTo(p)
+			err := args.ApplyTo(&p.Args)
 			if err != nil {
 				return nil, err
 			}
@@ -64,7 +64,7 @@ func init() {
 		func(args Args) (Consumer, error) {
 			c := &LocalConsumer{}
 
-			err := args.ApplyTo(c)
+			err := args.ApplyTo(&c.Args)
 			if err != nil {
 				return nil, err
 			}
