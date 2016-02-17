@@ -7,7 +7,7 @@ gradle jar
 DIR=$(mktemp -d)
 
 echo "Running kafka..."
-CMD="java -jar build/libs/local.jar $DIR"
+CMD="java -jar build/libs/testing.jar $DIR"
 
 case "$1" in
 travis)
