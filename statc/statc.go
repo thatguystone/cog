@@ -16,6 +16,11 @@ import (
 
 // S is a stats aggregator.
 type S struct {
+	*s
+	prefix string
+}
+
+type s struct {
 	cfg  Config
 	log  *clog.Logger
 	exit *cog.GExit
@@ -29,29 +34,28 @@ type S struct {
 }
 
 // NewS creates a new stats aggregator
-func NewS(cfg Config, log *clog.Logger, exit *cog.GExit) (s *S, err error) {
+func NewS(cfg Config, log *clog.Logger, exit *cog.GExit) (*S, error) {
 	cfg.setDefaults()
 
-	s = &S{
-		cfg:  cfg,
-		log:  log,
-		exit: exit,
+	s := &S{
+		s: &s{
+			cfg:  cfg,
+			log:  log,
+			exit: exit,
 
-		// Nest exits so that, if there's an error setting up any output, all
-		// the outputs can be terminated by killing this
-		outExit: cog.NewExit(),
-		outs:    make([]*output, 0, len(cfg.Outputs)),
+			// Nest exits so that, if there's an error setting up any output,
+			// all the outputs can be terminated by killing this
+			outExit: cog.NewExit(),
+			outs:    make([]*output, 0, len(cfg.Outputs)),
+		},
 	}
 
 	for _, cfg := range cfg.Outputs {
 		var out *output
-		out, err = newOutput(cfg, log, s.outExit.GExit)
+		out, err := newOutput(cfg, log, s.outExit.GExit)
 		if err != nil {
 			s.outExit.Exit()
-			s = nil
-
-			err = fmt.Errorf("failed to create output %s: %v", cfg.Prod, err)
-			return
+			return nil, fmt.Errorf("failed to create output %s: %v", cfg.Prod, err)
 		}
 
 		s.outs = append(s.outs, out)
@@ -60,12 +64,19 @@ func NewS(cfg Config, log *clog.Logger, exit *cog.GExit) (s *S, err error) {
 	s.exit.Add(1)
 	go s.run()
 
-	return
+	return s, nil
+}
+
+// Prefixed returns a new S that prefixes all stats with the given prefix
+func (s *S) Prefixed(prefix string) *S {
+	sc := *s
+	sc.prefix = JoinNoEscape(s.prefix, prefix)
+	return &sc
 }
 
 // AddSnapshotter binds a snapshotter to this S.
 func (s *S) AddSnapshotter(name string, snapper Snapshotter) {
-	name = CleanPath(name)
+	name = JoinNoEscape(s.prefix, name)
 	l := len(s.snappers)
 	i := sort.Search(l, func(i int) bool {
 		return s.snappers[i].name >= name

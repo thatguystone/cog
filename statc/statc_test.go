@@ -131,6 +131,23 @@ func TestStatsBasic(t *testing.T) {
 	c.Equal(sg.Get(), "efgh")
 }
 
+func TestStatsPrefixed(t *testing.T) {
+	c, st := newTest(t, nil)
+	defer st.exit.Exit()
+
+	st.NewCounter("top-level", true)
+
+	pst := st.Prefixed("long.prefix...")
+	pst.NewCounter("sub", true)
+
+	pst = st.Prefixed("...another..prefix...")
+	pst.NewCounter("magic", true)
+
+	c.Equal(st.snappers[0].name, "another.prefix.magic")
+	c.Equal(st.snappers[1].name, "long.prefix.sub")
+	c.Equal(st.snappers[2].name, "top-level")
+}
+
 func TestStatsAlreadyExists(t *testing.T) {
 	c, st := newTest(t, nil)
 	defer st.exit.Exit()

@@ -13,6 +13,12 @@ func JoinPath(parent string, parts ...string) string {
 	return CleanPath(path)
 }
 
+// JoinNoEscape joins all parts together without escaping each part. This
+// means that parts may contain ".".
+func JoinNoEscape(parts ...string) string {
+	return CleanPath(strings.Join(parts, "."))
+}
+
 // CleanPath cleans extra dots and such from the path
 func CleanPath(path string) string {
 	for strings.Contains(path, "..") {
