@@ -69,8 +69,20 @@ type consumer struct {
 	Consumer
 }
 
-var regdPs = map[string]MakeProducer{}
-var regdCs = map[string]MakeConsumer{}
+var (
+	// ClosedErrCh should be returned from Errs() when no errors can be
+	// produced. This ensures that any receiver immediately returns and doesn't
+	// block forever.
+	ClosedErrCh chan error
+
+	regdPs = map[string]MakeProducer{}
+	regdCs = map[string]MakeConsumer{}
+)
+
+func init() {
+	ClosedErrCh = make(chan error)
+	close(ClosedErrCh)
+}
 
 // RegisterProducer registers a Producer for use. Names are case insensitive.
 //

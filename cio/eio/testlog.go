@@ -47,7 +47,7 @@ func (p *TestLogProducer) Produce(b []byte) {
 }
 
 // Errs implements Producer.Errs
-func (*TestLogProducer) Errs() <-chan error { return nil }
+func (*TestLogProducer) Errs() <-chan error { return ClosedErrCh }
 
 // Rotate implements Producer.Rotate
 func (*TestLogProducer) Rotate() error { return nil }

@@ -32,7 +32,7 @@ func TestMain(m *testing.M) {
 func (n *noopProdCons) Produce([]byte)           {}
 func (n *noopProdCons) ProduceTo(string, []byte) {}
 func (n *noopProdCons) Next() ([]byte, error)    { return nil, nil }
-func (n *noopProdCons) Errs() <-chan error       { return nil }
+func (n *noopProdCons) Errs() <-chan error       { return ClosedErrCh }
 func (n *noopProdCons) Rotate() error            { return nil }
 func (n *noopProdCons) Close() cog.Errors        { n.closed = true; return cog.Errors{} }
 

@@ -143,7 +143,7 @@ func (p *LocalProducer) ProduceTo(topic string, b []byte) {
 }
 
 // Errs implements Producer.Errs
-func (p *LocalProducer) Errs() <-chan error { return nil }
+func (p *LocalProducer) Errs() <-chan error { return ClosedErrCh }
 
 // Rotate implements Producer.Rotate
 func (p *LocalProducer) Rotate() error { return nil }

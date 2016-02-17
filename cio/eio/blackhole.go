@@ -24,7 +24,7 @@ func (Blackhole) Produce([]byte) {}
 func (Blackhole) Next() ([]byte, error) { return nil, nil }
 
 // Errs implements Producer.Errs
-func (Blackhole) Errs() <-chan error { return nil }
+func (Blackhole) Errs() <-chan error { return ClosedErrCh }
 
 // Rotate implements Producer.Rotate
 func (Blackhole) Rotate() error { return nil }

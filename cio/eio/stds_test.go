@@ -24,7 +24,7 @@ func testOut(t *testing.T, name string) {
 	p.Produce([]byte("   test   \n"))
 	c.Equal(c.FS.SReadFile("file"), "test\n")
 
-	c.Equal(nil, p.Errs())
+	c.Equal(nil, <-p.Errs())
 	c.NotError(p.Rotate())
 	errs := p.Close()
 	c.NotError(errs.Error())

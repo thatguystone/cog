@@ -16,7 +16,7 @@ func TestTestLogBasic(t *testing.T) {
 
 	p.Produce([]byte("test"))
 
-	c.Equal(nil, p.Errs())
+	c.Equal(nil, <-p.Errs())
 	c.NotError(p.Rotate())
 	errs := p.Close()
 	c.NotError(errs.Error())

@@ -41,7 +41,7 @@ func TestLocals(t *testing.T) {
 
 	pr.Produce([]byte("test"))
 
-	c.Equal(nil, pr.Errs())
+	c.Equal(nil, <-pr.Errs())
 	c.NotError(pr.Rotate())
 }
 

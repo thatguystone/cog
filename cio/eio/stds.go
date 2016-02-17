@@ -36,7 +36,7 @@ func (p *OutProducer) Produce(b []byte) {
 }
 
 // Errs implements Producer.Errs
-func (p *OutProducer) Errs() <-chan error { return nil }
+func (p *OutProducer) Errs() <-chan error { return ClosedErrCh }
 
 // Rotate implements Producer.Rotate
 func (p *OutProducer) Rotate() error { return nil }
