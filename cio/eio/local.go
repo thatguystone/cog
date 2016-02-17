@@ -128,6 +128,20 @@ func (p *LocalProducer) Produce(b []byte) {
 	}
 }
 
+// ProduceTo implements TopicProducer.ProduceTo
+func (p *LocalProducer) ProduceTo(topic string, b []byte) {
+	localMtx.Lock()
+	lt := localTopics[topic]
+	localMtx.Unlock()
+
+	if lt != nil {
+		select {
+		case lt.ch <- b:
+		case <-p.exit:
+		}
+	}
+}
+
 // Errs implements Producer.Errs
 func (p *LocalProducer) Errs() <-chan error { return nil }
 

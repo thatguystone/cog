@@ -31,7 +31,8 @@ func TestLocals(t *testing.T) {
 	es = co.Close()
 	c.MustNotError(es.Error())
 
-	c.Len(localTopics, 0)
+	_, ok := localTopics[check.GetTestName()]
+	c.False(ok)
 
 	// Should not block
 	b, err = co.Next()
@@ -44,6 +45,26 @@ func TestLocals(t *testing.T) {
 	c.NotError(pr.Rotate())
 }
 
+func TestLocalTopicProducer(t *testing.T) {
+	const topic = "some-random-topic"
+
+	c := check.New(t)
+	tp, err := NewTopicProducer("local", nil)
+	c.MustNotError(err)
+	defer tp.Close()
+
+	co, err := NewConsumer("local", Args{
+		"topic": topic,
+	})
+	c.MustNotError(err)
+
+	tp.ProduceTo("no-one-is-listening", []byte("nothing"))
+
+	tp.ProduceTo(topic, []byte("super important info"))
+	msg, err := co.Next()
+	c.Equal(string(msg), "super important info")
+}
+
 func TestLocalErrors(t *testing.T) {
 	c := check.New(t)
 	args := Args{
@@ -51,6 +72,9 @@ func TestLocalErrors(t *testing.T) {
 	}
 
 	_, err := NewProducer("local", args)
+	c.Error(err)
+
+	_, err = NewTopicProducer("local", args)
 	c.Error(err)
 
 	_, err = NewConsumer("local", args)

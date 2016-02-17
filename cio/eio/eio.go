@@ -37,6 +37,19 @@ type producer struct {
 	Producer
 }
 
+// TopicProducer is just like Producer, except it allows you to send events to
+// specific topics.
+type TopicProducer interface {
+	Producer
+
+	// Send to the given topic
+	ProduceTo(topic string, b []byte)
+}
+
+type topicProducer struct {
+	TopicProducer
+}
+
 // MakeConsumer creates a new Consumer
 type MakeConsumer func(args Args) (Consumer, error)
 
@@ -60,6 +73,9 @@ var regdPs = map[string]MakeProducer{}
 var regdCs = map[string]MakeConsumer{}
 
 // RegisterProducer registers a Producer for use. Names are case insensitive.
+//
+// If your producer implements TopicProducer, it will automatically be made
+// available.
 func RegisterProducer(name string, np MakeProducer) {
 	lname := strings.ToLower(name)
 
@@ -70,8 +86,7 @@ func RegisterProducer(name string, np MakeProducer) {
 	regdPs[lname] = np
 }
 
-// NewProducer creates a new producer with the given arguments
-func NewProducer(name string, args Args) (Producer, error) {
+func newProducer(name string, args Args) (Producer, error) {
 	lname := strings.ToLower(name)
 
 	np, ok := regdPs[lname]
@@ -82,6 +97,16 @@ func NewProducer(name string, args Args) (Producer, error) {
 	p, err := np(args)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create producer %s: %v", name, err)
+	}
+
+	return p, nil
+}
+
+// NewProducer creates a new producer with the given arguments
+func NewProducer(name string, args Args) (Producer, error) {
+	p, err := newProducer(name, args)
+	if err != nil {
+		return nil, err
 	}
 
 	pp := &producer{Producer: p}
@@ -97,6 +122,35 @@ func (p *producer) Close() (es cog.Errors) {
 
 func finalizeProducer(p *producer) {
 	go p.Close()
+}
+
+// NewTopicProducer creates a new producer, provided that the producer
+// implements TopicProducer.
+func NewTopicProducer(name string, args Args) (TopicProducer, error) {
+	p, err := newProducer(name, args)
+	if err != nil {
+		return nil, err
+	}
+
+	tp, ok := p.(TopicProducer)
+	if !ok {
+		p.Close()
+		return nil, fmt.Errorf("%s does not implement TopicProducer", name)
+	}
+
+	tpp := &topicProducer{TopicProducer: tp}
+	runtime.SetFinalizer(tpp, finalizeTopicProducer)
+
+	return tpp, nil
+}
+
+func (tp *topicProducer) Close() (es cog.Errors) {
+	runtime.SetFinalizer(tp, nil)
+	return tp.TopicProducer.Close()
+}
+
+func finalizeTopicProducer(tp *topicProducer) {
+	go tp.Close()
 }
 
 // RegisterConsumer registers a Consumer for use. Names are case insensitive.
