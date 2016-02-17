@@ -20,6 +20,11 @@ func (c *Counter) Add(i int64) {
 	atomic.AddInt64(&c.v, i)
 }
 
+// AddI is the integer version of Add
+func (c *Counter) AddI(i int) {
+	c.Add(int64(i))
+}
+
 // Inc is the equivalent of Add(1)
 func (c *Counter) Inc() {
 	c.Add(1)

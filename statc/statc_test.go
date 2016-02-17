@@ -76,7 +76,9 @@ func TestStatsBasic(t *testing.T) {
 		cr.Dec()
 	}
 
-	c.Equal(cs.Get(), 50)
+	cs.AddI(int(10))
+
+	c.Equal(cs.Get(), 60)
 	c.Equal(cr.Get(), 50)
 
 	g.Set(123)
@@ -113,9 +115,9 @@ func TestStatsBasic(t *testing.T) {
 	c.Equal(snap.Get("test.timer_empty.min").Val.(int64), 0)
 	c.Equal(snap.Get("test.timer_empty.max").Val.(int64), 0)
 
-	c.Equal(snap.Get("test.counter.save").Val.(int64), 50)
+	c.Equal(snap.Get("test.counter.save").Val.(int64), 60)
 	c.Equal(snap.Get("test.counter.reset").Val.(int64), 50)
-	c.Equal(cs.Get(), 50)
+	c.Equal(cs.Get(), 60)
 	c.Equal(cr.Get(), 0)
 
 	c.Equal(snap.Get("test.gauge").Val.(int64), 345)
