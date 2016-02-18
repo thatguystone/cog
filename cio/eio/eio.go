@@ -92,7 +92,7 @@ func RegisterProducer(name string, np MakeProducer) {
 	lname := strings.ToLower(name)
 
 	if _, ok := regdPs[lname]; ok {
-		panic(fmt.Errorf("producer %s already exists", name))
+		panic(fmt.Errorf("producer `%s` already exists", name))
 	}
 
 	regdPs[lname] = np
@@ -103,12 +103,12 @@ func newProducer(name string, args Args) (Producer, error) {
 
 	np, ok := regdPs[lname]
 	if !ok {
-		return nil, fmt.Errorf("producer %s does not exist", name)
+		return nil, fmt.Errorf("producer `%s` does not exist", name)
 	}
 
 	p, err := np(args)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create producer %s: %v", name, err)
+		return nil, fmt.Errorf("failed to create producer `%s`: %v", name, err)
 	}
 
 	return p, nil
@@ -147,7 +147,7 @@ func NewTopicProducer(name string, args Args) (TopicProducer, error) {
 	tp, ok := p.(TopicProducer)
 	if !ok {
 		p.Close()
-		return nil, fmt.Errorf("%s does not implement TopicProducer", name)
+		return nil, fmt.Errorf("`%s` does not implement TopicProducer", name)
 	}
 
 	tpp := &topicProducer{TopicProducer: tp}
@@ -182,12 +182,12 @@ func NewConsumer(name string, args Args) (Consumer, error) {
 
 	nc, ok := regdCs[lname]
 	if !ok {
-		return nil, fmt.Errorf("consumer %s does not exist", name)
+		return nil, fmt.Errorf("consumer `%s` does not exist", name)
 	}
 
 	c, err := nc(args)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create consumer %s: %v", name, err)
+		return nil, fmt.Errorf("failed to create consumer `%s`: %v", name, err)
 	}
 
 	cp := &consumer{Consumer: c}

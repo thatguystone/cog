@@ -33,7 +33,7 @@ func newFormatter(name string, args eio.Args) (Formatter, error) {
 	lname := strings.ToLower(name)
 	nf, ok := regdFormatters[lname]
 	if !ok {
-		return nil, fmt.Errorf("formatter %s does not exist", name)
+		return nil, fmt.Errorf("formatter `%s` does not exist", name)
 	}
 
 	return nf(args)
