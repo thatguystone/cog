@@ -9,7 +9,7 @@ dist: trusty
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y gradle
-  - cd $GOPATH/src/github.com/thatguystone/cog/misc/kafka && ./run.sh travis
+  - ./misc/kafka/run.sh travis
 
 script:
   - go generate ./...

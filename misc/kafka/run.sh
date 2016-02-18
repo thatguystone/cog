@@ -2,11 +2,12 @@
 
 set -e
 
+cd $(dirname "$0")
+
 gradle jar
 
-DIR=$(mktemp -d)
-
 echo "Running kafka..."
+DIR=$(mktemp -d)
 CMD="java -jar build/libs/kafka.jar $DIR"
 
 case "$1" in
