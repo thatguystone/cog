@@ -13,7 +13,7 @@ func Example_xNetUsage() {
 	// Don't let anything flow.
 	xnet.SetOffline(true)
 
-	l, err := xnet.Listen(":0")
+	l, err := xnet.Listen("127.0.0.1:0")
 	if err != nil {
 		panic(err)
 	}

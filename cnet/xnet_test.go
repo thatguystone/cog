@@ -75,7 +75,7 @@ func TestXNetAcceptOffline(t *testing.T) {
 
 	x.SetOffline(true)
 
-	l, err := x.Listen(":0")
+	l, err := x.Listen("127.0.0.1:0")
 	c.MustNotError(err)
 	defer l.Close()
 
