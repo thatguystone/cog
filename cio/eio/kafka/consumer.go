@@ -23,40 +23,41 @@ type Consumer struct {
 }
 
 func init() {
-	eio.RegisterConsumer("kafka",
-		func(args eio.Args) (eio.Consumer, error) {
-			c := &Consumer{
-				msgs: make(chan []byte, 32),
-				errs: make(chan error, 8),
-				exit: cog.NewExit(),
-			}
+	eio.RegisterConsumer("kafka", newConsumer)
+}
 
-			err := args.ApplyTo(&c.Args)
-			if err != nil {
-				return nil, err
-			}
+func newConsumer(args eio.Args) (eio.Consumer, error) {
+	c := &Consumer{
+		msgs: make(chan []byte, 32),
+		errs: make(chan error, 8),
+		exit: cog.NewExit(),
+	}
 
-			c.c, err = sarama.NewConsumer(c.Args.Brokers, nil)
-			if err != nil {
-				return nil, err
-			}
+	err := args.ApplyTo(&c.Args)
+	if err != nil {
+		return nil, err
+	}
 
-			parts, err := c.c.Partitions(c.Args.Topic)
-			if err == nil {
-				c.exit.Add(len(parts))
-				for _, part := range parts {
-					go c.consume(part)
-				}
+	c.c, err = sarama.NewConsumer(c.Args.Brokers, nil)
+	if err != nil {
+		return nil, err
+	}
 
-				go c.waitForExit()
-			} else {
-				c.waitForExit()
-				c.Close()
-				c = nil
-			}
+	parts, err := c.c.Partitions(c.Args.Topic)
+	if err == nil {
+		c.exit.Add(len(parts))
+		for _, part := range parts {
+			go c.consume(part)
+		}
 
-			return c, err
-		})
+		go c.waitForExit()
+	} else {
+		c.waitForExit()
+		c.Close()
+		c = nil
+	}
+
+	return c, err
 }
 
 func (c *Consumer) waitForExit() {

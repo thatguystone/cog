@@ -45,6 +45,8 @@ func TestBasic(t *testing.T) {
 	})
 	c.MustNotError(err)
 
+	pr.Rotate()
+
 	const smsg = "fancy message"
 	pr.Produce([]byte(smsg))
 

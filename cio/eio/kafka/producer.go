@@ -25,27 +25,28 @@ type Producer struct {
 }
 
 func init() {
-	eio.RegisterProducer("kafka",
-		func(args eio.Args) (eio.Producer, error) {
-			p := &Producer{
-				errs: make(chan error, 8),
-			}
+	eio.RegisterProducer("kafka", newProducer)
+}
 
-			err := args.ApplyTo(&p.Args)
-			if err != nil {
-				return nil, err
-			}
+func newProducer(args eio.Args) (eio.Producer, error) {
+	p := &Producer{
+		errs: make(chan error, 8),
+	}
 
-			p.ap, err = sarama.NewAsyncProducer(p.Args.Brokers, nil)
+	err := args.ApplyTo(&p.Args)
+	if err != nil {
+		return nil, err
+	}
 
-			if err == nil {
-				go p.drainErrors()
-			} else {
-				p = nil
-			}
+	p.ap, err = sarama.NewAsyncProducer(p.Args.Brokers, nil)
 
-			return p, err
-		})
+	if err == nil {
+		go p.drainErrors()
+	} else {
+		p = nil
+	}
+
+	return p, err
 }
 
 func (p *Producer) drainErrors() {
