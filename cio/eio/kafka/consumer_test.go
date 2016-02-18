@@ -30,8 +30,9 @@ func TestConsumerErrorsCoverage(t *testing.T) {
 	c.MustNotError(err)
 
 	kc := co.(*Consumer)
-
+	kc.exit.Add(1)
 	kc.consume(math.MaxInt32)
+
 	_, err = co.Next()
 	c.Error(err)
 }
