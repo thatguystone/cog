@@ -57,7 +57,7 @@ func TestStatsBasic(t *testing.T) {
 	defer st.exit.Exit()
 
 	tr := st.NewTimer("test.timer", 50)
-	st.NewTimer("test.timer_empty", 50)
+	tre := st.NewTimer("test.timer_empty", 50)
 	cs := st.NewCounter("test.counter.save", false)
 	cr := st.NewCounter("test.counter.reset", true)
 	g := st.NewGauge("test.gauge")
@@ -102,34 +102,34 @@ func TestStatsBasic(t *testing.T) {
 	snap := st.snapshot()
 	c.True(len(snap) > 0, "len(snap) = %d", len(snap))
 
-	c.Equal(snap.Get("test.timer.mean").Val.(int64), time.Millisecond)
-	c.Equal(snap.Get("test.timer.min").Val.(int64), time.Millisecond)
-	c.Equal(snap.Get("test.timer.max").Val.(int64), time.Millisecond)
-	c.Equal(snap.Get("test.timer.count").Val.(int64), 100)
-	c.Equal(snap.Get("test.timer.stddev").Val.(int64), 0)
-	c.Equal(snap.Get("test.timer.p50").Val.(int64), time.Millisecond)
-	c.Equal(snap.Get("test.timer.p75").Val.(int64), time.Millisecond)
-	c.Equal(snap.Get("test.timer.p90").Val.(int64), time.Millisecond)
-	c.Equal(snap.Get("test.timer.p95").Val.(int64), time.Millisecond)
+	c.Equal(snap.Get(tr.nMean).Val.(int64), time.Millisecond)
+	c.Equal(snap.Get(tr.nMin).Val.(int64), time.Millisecond)
+	c.Equal(snap.Get(tr.nMax).Val.(int64), time.Millisecond)
+	c.Equal(snap.Get(tr.nCount).Val.(int64), 100)
+	c.Equal(snap.Get(tr.nStddev).Val.(int64), 0)
+	c.Equal(snap.Get(tr.nP50).Val.(int64), time.Millisecond)
+	c.Equal(snap.Get(tr.nP75).Val.(int64), time.Millisecond)
+	c.Equal(snap.Get(tr.nP90).Val.(int64), time.Millisecond)
+	c.Equal(snap.Get(tr.nP95).Val.(int64), time.Millisecond)
 
-	c.Equal(snap.Get("test.timer_empty.min").Val.(int64), 0)
-	c.Equal(snap.Get("test.timer_empty.max").Val.(int64), 0)
+	c.Equal(snap.Get(tre.nMin).Val.(int64), 0)
+	c.Equal(snap.Get(tre.nMax).Val.(int64), 0)
 
-	c.Equal(snap.Get("test.counter.save").Val.(int64), 60)
-	c.Equal(snap.Get("test.counter.reset").Val.(int64), 50)
+	c.Equal(snap.Get(st.Names("test", "counter", "save")).Val.(int64), 60)
+	c.Equal(snap.Get(st.Names("test", "counter", "reset")).Val.(int64), 50)
 	c.Equal(cs.Get(), 60)
 	c.Equal(cr.Get(), 0)
 
-	c.Equal(snap.Get("test.gauge").Val.(int64), 345)
+	c.Equal(snap.Get(st.Names("test", "gauge")).Val.(int64), 345)
 	c.Equal(g.Get(), 345)
 
-	c.Equal(snap.Get("test.gauge_bool").Val.(bool), true)
+	c.Equal(snap.Get(st.Names("test", "gauge_bool")).Val.(bool), true)
 	c.Equal(bg.Get(), true)
 
-	c.Equal(snap.Get("test.gauge_float").Val.(float64), 4.567)
+	c.Equal(snap.Get(st.Names("test", "gauge_float")).Val.(float64), 4.567)
 	c.Equal(fg.Get(), 4.567)
 
-	c.Equal(snap.Get("test.gauge_string").Val.(string), "efgh")
+	c.Equal(snap.Get(st.Names("test", "gauge_string")).Val.(string), "efgh")
 	c.Equal(sg.Get(), "efgh")
 }
 
@@ -145,9 +145,9 @@ func TestStatsPrefixed(t *testing.T) {
 	pst = st.Prefixed("...another..prefix...")
 	pst.NewCounter("magic", true)
 
-	c.Equal(st.snappers[0].name, "another.prefix.magic")
-	c.Equal(st.snappers[1].name, "long.prefix.sub")
-	c.Equal(st.snappers[2].name, "top-level")
+	c.Equal(st.snappers[0].name, st.Name("another.prefix.magic"))
+	c.Equal(st.snappers[1].name, st.Name("long.prefix.sub"))
+	c.Equal(st.snappers[2].name, st.Name("top-level"))
 }
 
 func TestStatsAlreadyExists(t *testing.T) {
@@ -180,7 +180,7 @@ func TestStatsGet(t *testing.T) {
 	defer st.exit.Exit()
 
 	snap := st.snapshot()
-	c.Equal(snap.Get("i don't exist").Val, nil)
+	c.Equal(snap.Get(st.Names("i don't exist")).Val, nil)
 }
 
 func TestStatsSnapshotting(t *testing.T) {
@@ -199,5 +199,18 @@ func TestStatsSnapshotting(t *testing.T) {
 
 	c.Until(time.Second, func() bool {
 		return &snap[0] != &st.Snapshot()[0]
+	})
+}
+
+func TestStatsNameErrors(t *testing.T) {
+	c, st := newTest(t, nil)
+	defer st.exit.Exit()
+
+	c.Panic(func() {
+		st.Names("", "", "")
+	})
+
+	c.Panic(func() {
+		st.Name("")
 	})
 }

@@ -74,16 +74,31 @@ func (s *S) Prefixed(prefix string) *S {
 	return &sc
 }
 
+// Name returns a new name, appended to this S's prefix. The given name is not
+// escaped.
+func (s *S) Name(name string) Name {
+	if name == "" {
+		panic(fmt.Errorf("cannot create a name with an empty string"))
+	}
+
+	return newName(s.prefix).Append(name)
+}
+
+// Names returns a new Name with the given names joined with this S's prefix.
+// The names are escaped individually.
+func (s *S) Names(names ...string) Name {
+	return s.Name(JoinPath("", names...))
+}
+
 // AddSnapshotter binds a snapshotter to this S.
-func (s *S) AddSnapshotter(name string, snapper Snapshotter) {
-	name = JoinNoEscape(s.prefix, name)
+func (s *S) AddSnapshotter(name Name, snapper Snapshotter) {
 	l := len(s.snappers)
 	i := sort.Search(l, func(i int) bool {
-		return s.snappers[i].name >= name
+		return s.snappers[i].name.Str() >= name.Str()
 	})
 
 	if i < l && s.snappers[i].name == name {
-		panic(fmt.Errorf("a Snapshotter with name `%s` already exists", name))
+		panic(fmt.Errorf("a Snapshotter with name `%s` already exists", name.Str()))
 	}
 
 	s.snappers = append(s.snappers, snapshotter{})
@@ -97,43 +112,44 @@ func (s *S) AddSnapshotter(name string, snapper Snapshotter) {
 
 // NewTimer creates a timer that's bound to this S
 func (s *S) NewTimer(name string, sampPercent int) *Timer {
-	t := NewTimer(name, sampPercent)
-	s.AddSnapshotter(name, t)
+	n := s.Name(name)
+	t := NewTimer(n, sampPercent)
+	s.AddSnapshotter(n, t)
 	return t
 }
 
 // NewCounter creates a counter that's bound to this S
 func (s *S) NewCounter(name string, reset bool) *Counter {
 	c := NewCounter(reset)
-	s.AddSnapshotter(name, c)
+	s.AddSnapshotter(s.Name(name), c)
 	return c
 }
 
 // NewGauge creates a gauge that's bound to this S
 func (s *S) NewGauge(name string) *Gauge {
 	g := new(Gauge)
-	s.AddSnapshotter(name, g)
+	s.AddSnapshotter(s.Name(name), g)
 	return g
 }
 
 // NewBoolGauge creates a bool gauge that's bound to this S
 func (s *S) NewBoolGauge(name string) *BoolGauge {
 	g := new(BoolGauge)
-	s.AddSnapshotter(name, g)
+	s.AddSnapshotter(s.Name(name), g)
 	return g
 }
 
 // NewFloatGauge creates a float gauge that's bound to this S
 func (s *S) NewFloatGauge(name string) *FloatGauge {
 	g := new(FloatGauge)
-	s.AddSnapshotter(name, g)
+	s.AddSnapshotter(s.Name(name), g)
 	return g
 }
 
 // NewStringGauge creates a string gauge that's bound to this S
 func (s *S) NewStringGauge(name string) *StringGauge {
 	g := new(StringGauge)
-	s.AddSnapshotter(name, g)
+	s.AddSnapshotter(s.Name(name), g)
 	return g
 }
 

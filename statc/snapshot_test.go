@@ -1,13 +1,25 @@
 package statc
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/thatguystone/cog/check"
+)
 
 func (snap *Snapshot) addTestData() {
-	snap.Add("int", int64(1))
-	snap.Add("str", "string")
-	snap.Add("bool.true", true)
-	snap.Add("bool.false", false)
-	snap.Add("float", 1.2445)
+	snap.Add(newName("int"), int64(1))
+	snap.Add(newName("str"), "string")
+	snap.Add(newName("bool.true"), true)
+	snap.Add(newName("bool.false"), false)
+	snap.Add(newName("float"), 1.2445)
+}
+
+func TestNameError(t *testing.T) {
+	c := check.New(t)
+
+	c.Panic(func() {
+		Name{}.Str()
+	})
 }
 
 func BenchmarkSnapAdd(b *testing.B) {

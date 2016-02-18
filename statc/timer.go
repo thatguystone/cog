@@ -1,7 +1,6 @@
 package statc
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 	"sort"
@@ -18,7 +17,7 @@ type Timer struct {
 	samples     int64Slice
 
 	// Cached names
-	nStddev, nMean, nMin, nMax, nCount, nP50, nP75, nP90, nP95 string
+	nStddev, nMean, nMin, nMax, nCount, nP50, nP75, nP90, nP95 Name
 }
 
 type int64Slice []int64
@@ -29,7 +28,7 @@ type timerSnap struct {
 	mean               int64
 	min, max           int64
 	count              int64
-	p50, p75, p90, p95 int64 // 50th, 75th, and 90th percentiles
+	p50, p75, p90, p95 int64 // 50th, 75th, 90th, and 95th percentiles
 }
 
 var (
@@ -43,9 +42,9 @@ var (
 // name. The names are cached internally to limit allocations.
 //
 // The timer also reports percentiles of data by sampling. The given
-// `sampPercent` control what percent of samples to save for percentile
+// `sampPercent` controls what percent of samples to save for percentile
 // calculations (0 - 100).
-func NewTimer(name string, sampPercent int) *Timer {
+func NewTimer(name Name, sampPercent int) *Timer {
 	if sampPercent < 0 {
 		sampPercent = 0
 	}
@@ -57,15 +56,15 @@ func NewTimer(name string, sampPercent int) *Timer {
 	return &Timer{
 		timerSnap:   timerReset,
 		sampPercent: sampPercent,
-		nStddev:     fmt.Sprintf("%s.stddev", name),
-		nMean:       fmt.Sprintf("%s.mean", name),
-		nMin:        fmt.Sprintf("%s.min", name),
-		nMax:        fmt.Sprintf("%s.max", name),
-		nCount:      fmt.Sprintf("%s.count", name),
-		nP50:        fmt.Sprintf("%s.p50", name),
-		nP75:        fmt.Sprintf("%s.p75", name),
-		nP90:        fmt.Sprintf("%s.p90", name),
-		nP95:        fmt.Sprintf("%s.p95", name),
+		nStddev:     name.Join("stddev"),
+		nMean:       name.Join("mean"),
+		nMin:        name.Join("min"),
+		nMax:        name.Join("max"),
+		nCount:      name.Join("count"),
+		nP50:        name.Join("p50"),
+		nP75:        name.Join("p75"),
+		nP90:        name.Join("p90"),
+		nP95:        name.Join("p95"),
 	}
 }
 

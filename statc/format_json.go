@@ -67,17 +67,18 @@ func (js *jsonState) dump(prefix string) {
 
 	for len(js.snap) > 0 && js.err == nil {
 		stat := js.snap[0]
+		statName := stat.Name.Str()
 
-		if !strings.HasPrefix(stat.Name, prefix) {
+		if !strings.HasPrefix(statName, prefix) {
 			break
 		}
 
-		name := stat.Name[len(prefix):]
+		name := statName[len(prefix):]
 
 		doti := strings.IndexByte(name, '.')
 		if doti != -1 {
 			js.key(name[:doti])
-			js.dump(stat.Name[:len(prefix)+doti+1])
+			js.dump(statName[:len(prefix)+doti+1])
 			continue
 		}
 

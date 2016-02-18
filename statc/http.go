@@ -17,7 +17,7 @@ type HTTPMuxer struct {
 	// recorded for them.
 	R    *httprouter.Router
 	log  *clog.Logger
-	name string
+	name Name
 	s    *S
 }
 
@@ -81,7 +81,7 @@ var httpCodes = []int{
 
 // NewHTTPMuxer creates a new HTTP muxer that exposes status information for
 // all endpoints. At /_status, information from the last snapshot is reported.
-func (s *S) NewHTTPMuxer(name string) *HTTPMuxer {
+func (s *S) NewHTTPMuxer(name Name) *HTTPMuxer {
 	m := &HTTPMuxer{
 		name: name,
 		log:  s.log.Get("http"),
@@ -116,7 +116,7 @@ func (m *HTTPMuxer) statusHandler(
 // Handle wraps the given Handle with stats reporting
 func (m *HTTPMuxer) Handle(method, path string, handle httprouter.Handle) {
 	path = httprouter.CleanPath(path)
-	name := JoinPath(m.name, path, method)
+	name := m.name.Join(path, method)
 
 	status := m.newHTTPStatuses(name)
 	m.s.AddSnapshotter(name, status)
@@ -160,9 +160,9 @@ func (rw *httpResp) WriteHeader(status int) {
 	rw.ResponseWriter.WriteHeader(status)
 }
 
-func (m *HTTPMuxer) newHTTPStatuses(name string) *httpStatuses {
+func (m *HTTPMuxer) newHTTPStatuses(name Name) *httpStatuses {
 	newTimer := func(s string) *Timer {
-		return NewTimer(JoinPath(name, s), m.s.cfg.HTTPSamplePercent)
+		return NewTimer(name.Join(s), m.s.cfg.HTTPSamplePercent)
 	}
 
 	hss := &httpStatuses{

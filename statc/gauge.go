@@ -40,7 +40,7 @@ func (g *Gauge) Get() int64 {
 
 // Snapshot implements Snapshotter
 func (g *Gauge) Snapshot(a Adder) {
-	a.AddInt("", g.Get())
+	a.AddInt(Name{}, g.Get())
 }
 
 // Set sets the current value of this gauge
@@ -60,7 +60,7 @@ func (g *BoolGauge) Get() (v bool) {
 
 // Snapshot implements Snapshotter
 func (g *BoolGauge) Snapshot(a Adder) {
-	a.AddBool("", g.Get())
+	a.AddBool(Name{}, g.Get())
 }
 
 // Set sets the current value of this gauge
@@ -80,7 +80,7 @@ func (g *FloatGauge) Get() (v float64) {
 
 // Snapshot implements Snapshotter
 func (g *FloatGauge) Snapshot(a Adder) {
-	a.AddFloat("", g.Get())
+	a.AddFloat(Name{}, g.Get())
 }
 
 // Set sets the current value of this gauge
@@ -100,5 +100,5 @@ func (g *StringGauge) Get() (v string) {
 
 // Snapshot implements Snapshotter
 func (g *StringGauge) Snapshot(a Adder) {
-	a.AddString("", g.Get())
+	a.AddString(Name{}, g.Get())
 }

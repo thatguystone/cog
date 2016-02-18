@@ -14,7 +14,7 @@ import (
 
 func newHTTPTest(t *testing.T) (*check.C, *sTest, *HTTPMuxer) {
 	c, st := newTest(t, &Config{})
-	mux := st.NewHTTPMuxer("http")
+	mux := st.NewHTTPMuxer(st.Name("http"))
 	return c, st, mux
 }
 
@@ -68,13 +68,13 @@ func TestHTTPBasic(t *testing.T) {
 
 	snap := st.snapshot()
 	for _, st := range snap {
-		c.Logf("%s = %v", st.Name, st.Val)
+		c.Logf("%s = %v", st.Name.Str(), st.Val)
 	}
 
-	c.Equal(snap.Get("http./sleep/1.GET.200.count").Val.(int64), 10)
-	c.Equal(snap.Get("http./500.GET.500.count").Val.(int64), 10)
-	c.Equal(snap.Get("http./404.GET.404.count").Val.(int64), 10)
-	c.Equal(snap.Get("http./164.GET.0.count").Val.(int64), 10)
+	c.Equal(snap.Get(st.Names("http", "/sleep/1", "GET", "200", "count")).Val.(int64), 10)
+	c.Equal(snap.Get(st.Names("http", "/500", "GET", "500", "count")).Val.(int64), 10)
+	c.Equal(snap.Get(st.Names("http", "/404", "GET", "404", "count")).Val.(int64), 10)
+	c.Equal(snap.Get(st.Names("http", "/164", "GET", "0", "count")).Val.(int64), 10)
 }
 
 func TestHTTPPanic(t *testing.T) {
@@ -96,10 +96,10 @@ func TestHTTPPanic(t *testing.T) {
 
 	snap := st.snapshot()
 	for _, st := range snap {
-		c.Logf("%s = %v", st.Name, st.Val)
+		c.Logf("%s = %v", st.Name.Str(), st.Val)
 	}
 
-	c.Equal(snap.Get("http./panic.GET.panic.count").Val.(int64), 1)
+	c.Equal(snap.Get(st.Names("http", "/panic", "GET", "panic", "count")).Val.(int64), 1)
 }
 
 func TestHTTPStatusHandler(t *testing.T) {
@@ -158,7 +158,7 @@ func TestHTTPStatusHandlerError(t *testing.T) {
 
 	st.lastSnap = Snapshot{
 		Stat{
-			Name: "blah",
+			Name: st.Name("blah"),
 			Val:  nil,
 		},
 	}

@@ -31,7 +31,7 @@ func TestJSONFormatBasic(t *testing.T) {
 
 	snap := Snapshot{}
 	snap.addTestData()
-	snap.Add("a.really.nested.value", int64(1))
+	snap.Add(newName("a.really.nested.value"), int64(1))
 
 	b, err := JSONFormat{}.Format(snap)
 	c.MustNotError(err)
@@ -46,7 +46,7 @@ func TestJSONFormatPretty(t *testing.T) {
 
 	snap := Snapshot{}
 	snap.addTestData()
-	snap.Add("a.really.nested.value", int64(1))
+	snap.Add(newName("a.really.nested.value"), int64(1))
 
 	jf := JSONFormat{}
 	jf.Args.Pretty = true
@@ -79,7 +79,7 @@ func TestJSONFormatErrors(t *testing.T) {
 	c := check.New(t)
 
 	snap := Snapshot{}
-	snap.Add("test", struct{}{})
+	snap.Add(newName("test"), struct{}{})
 
 	jf := JSONFormat{}
 	jf.Args.Pretty = true

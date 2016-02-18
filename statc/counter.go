@@ -49,5 +49,5 @@ func (c *Counter) Snapshot(a Adder) {
 		old = c.Get()
 	}
 
-	a.AddInt("", old)
+	a.AddInt(Name{}, old)
 }
