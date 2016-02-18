@@ -11,8 +11,12 @@ type Config struct {
 	// How often to take snapshots. Defaults to 10s.
 	SnapshotInterval ctime.HumanDuration
 
-	// Percent of HTTP requests to sample. Defaults to 10%. Range (0-100) for 0% - 100%.
+	// Percent of HTTP requests to sample. Defaults to 10%. Range (0-100) for
+	// 0% - 100%.
 	HTTPSamplePercent int
+
+	// StatusKey is the key used to secure the HTTPMuxer's /_status endpoint
+	StatusKey string
 
 	// Where stats should be put
 	Outputs []OutputConfig

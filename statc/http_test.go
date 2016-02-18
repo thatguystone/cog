@@ -12,8 +12,12 @@ import (
 	"github.com/thatguystone/cog/check"
 )
 
+const statusKey = "test-key"
+
 func newHTTPTest(t *testing.T) (*check.C, *sTest, *HTTPMuxer) {
-	c, st := newTest(t, &Config{})
+	c, st := newTest(t, &Config{
+		StatusKey: statusKey,
+	})
 	mux := st.NewHTTPMuxer(st.Name("http"))
 	return c, st, mux
 }
@@ -115,7 +119,7 @@ func TestHTTPStatusHandler(t *testing.T) {
 	srv := httptest.NewServer(mux.R)
 	defer srv.Close()
 
-	resp, err := http.Get(srv.URL + "/_status")
+	resp, err := http.Get(srv.URL + "/_status?key=" + statusKey)
 	c.MustNotError(err)
 	defer resp.Body.Close()
 
@@ -163,8 +167,13 @@ func TestHTTPStatusHandlerError(t *testing.T) {
 		},
 	}
 
-	resp, err := http.Get(srv.URL + "/_status")
+	resp, err := http.Get(srv.URL + "/_status?key=" + statusKey)
 	c.MustNotError(err)
 	defer resp.Body.Close()
 	c.Equal(resp.StatusCode, http.StatusInternalServerError)
+
+	resp, err = http.Get(srv.URL + "/_status?key=invalidkey")
+	c.MustNotError(err)
+	defer resp.Body.Close()
+	c.Equal(resp.StatusCode, http.StatusForbidden)
 }

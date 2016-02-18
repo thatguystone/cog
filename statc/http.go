@@ -18,6 +18,7 @@ type HTTPMuxer struct {
 	R    *httprouter.Router
 	log  *clog.Logger
 	name Name
+	key  string
 	s    *S
 }
 
@@ -80,13 +81,17 @@ var httpCodes = []int{
 }
 
 // NewHTTPMuxer creates a new HTTP muxer that exposes status information for
-// all endpoints. At /_status, information from the last snapshot is reported.
+// all endpoints.
+//
+// At /_status, information from the last snapshot is accessible with the
+// given key (ie. GET "/_status?key=<key>").
 func (s *S) NewHTTPMuxer(name Name) *HTTPMuxer {
 	m := &HTTPMuxer{
-		name: name,
-		log:  s.log.Get("http"),
-		s:    s,
 		R:    httprouter.New(),
+		log:  s.log.Get("http"),
+		name: name,
+		key:  s.cfg.StatusKey,
+		s:    s,
 	}
 
 	m.Handle("GET", "/_status", m.statusHandler)
@@ -98,6 +103,11 @@ func (m *HTTPMuxer) statusHandler(
 	rw http.ResponseWriter,
 	req *http.Request,
 	params httprouter.Params) {
+
+	if req.FormValue("key") != m.key {
+		http.Error(rw, "", http.StatusForbidden)
+		return
+	}
 
 	jf := JSONFormat{}
 	jf.Args.Pretty = true

@@ -1,10 +1,6 @@
 package statc
 
-import (
-	"fmt"
-
-	"github.com/thatguystone/cog/clog"
-)
+import "github.com/thatguystone/cog/clog"
 
 type logStats struct {
 	n Name
@@ -16,7 +12,6 @@ func (ls *logStats) Snapshot(a Adder) {
 
 	for _, s := range ss {
 		n := ls.n.Append(s.Module)
-		fmt.Println(s.Module)
 
 		for lvl, cnt := range s.Counts {
 			a.AddInt(

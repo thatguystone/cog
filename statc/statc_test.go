@@ -33,6 +33,7 @@ func newTest(t *testing.T, cfg *Config) (*check.C, *sTest) {
 		cfg = &Config{
 			SnapshotInterval:  ctime.Millisecond,
 			HTTPSamplePercent: 100,
+			StatusKey:         statusKey,
 			Outputs: []OutputConfig{
 				OutputConfig{
 					Prod: "file",
