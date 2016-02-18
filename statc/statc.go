@@ -153,6 +153,12 @@ func (s *S) NewStringGauge(name string) *StringGauge {
 	return g
 }
 
+// AddLog adds log stats at the given path
+func (s *S) AddLog(name string, l *clog.Log) {
+	n := s.Name(name)
+	s.AddSnapshotter(n, &logStats{n: n, l: l})
+}
+
 // Snapshot gets the last snapshot. If len(snap) == 0, then no snapshot has
 // been taken yet.
 func (s *S) Snapshot() (snap Snapshot) {

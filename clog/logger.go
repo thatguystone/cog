@@ -7,6 +7,7 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/tchap/go-patricia/patricia"
@@ -26,11 +27,12 @@ type goLogger struct {
 }
 
 type logger struct {
-	l    *Log
-	pfx  patricia.Prefix
-	key  string
-	refs uint
-	mod  *module
+	l     *Log
+	pfx   patricia.Prefix
+	key   string
+	refs  uint
+	mod   *module
+	stats Stats
 }
 
 func newLogger(lg *logger) *Logger {
@@ -113,12 +115,14 @@ func (lg *logger) LogEntry(e Entry) {
 		mod = mod.parent
 	}
 
-	if e.Level == Panic {
-		panic(errors.New(e.Msg))
-	}
-
 	if e.Level == Fatal {
 		os.Exit(2)
+	}
+
+	atomic.AddInt64(&lg.stats.Counts[e.Level], 1)
+
+	if e.Level == Panic {
+		panic(errors.New(e.Msg))
 	}
 }
 

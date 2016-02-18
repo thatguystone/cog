@@ -330,6 +330,9 @@ func (l *Log) Get(name string) *Logger {
 			l:   l,
 			pfx: pfx,
 			key: name,
+			stats: Stats{
+				Module: name,
+			},
 		}
 
 		if l.modules != nil {
@@ -340,4 +343,18 @@ func (l *Log) Get(name string) *Logger {
 	}
 
 	return newLogger(lg)
+}
+
+// Stats gets the log stats since the last time this was called.
+//
+// Don't call this directly; it's meant for use with statc.
+func (l *Log) Stats() (ss []Stats) {
+	l.mtx.Lock()
+	defer l.mtx.Unlock()
+
+	for _, lg := range l.active {
+		ss = append(ss, lg.stats.flush())
+	}
+
+	return
 }
