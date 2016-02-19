@@ -109,7 +109,7 @@ func TestHTTPScheming(t *testing.T) {
 	})
 	c.MustNotError(err)
 
-	for _, s := range p.(*HTTPProducer).Servers {
+	for _, s := range p.(*HTTPProducer).Args.Servers {
 		c.Equal(
 			strings.Count(s, "http://")+
 				strings.Count(s, "https://"),

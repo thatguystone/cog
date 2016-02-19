@@ -16,14 +16,16 @@ import (
 // HTTPProducer implements batched POSTing. It allows for load balancing amongst a
 // number of backend servers with automatic retries.
 type HTTPProducer struct {
-	Servers    []string            // Backend servers to balance amongst (may include scheme)
-	Endpoint   string              // Path to POST to
-	Retries    uint                // How many times to retry failed requests
-	BatchSize  uint                // How large a batch may grow before flushing
-	BatchDelay ctime.HumanDuration // How long to wait before forcing a flush (0 = forever)
+	Args struct {
+		Servers    []string            // Backend servers to balance amongst (may include scheme)
+		Endpoint   string              // Path to POST to
+		Retries    uint                // How many times to retry failed requests
+		BatchSize  uint                // How large a batch may grow before flushing
+		BatchDelay ctime.HumanDuration // How long to wait before forcing a flush (0 = forever)
 
-	InitialRetryDelay ctime.HumanDuration // Time to wait when first request fails
-	MaxRetryBackoff   ctime.HumanDuration // Max duration to wait when retrying
+		InitialRetryDelay ctime.HumanDuration // Time to wait when first request fails
+		MaxRetryBackoff   ctime.HumanDuration // Max duration to wait when retrying
+	}
 
 	in chan []byte
 
@@ -35,23 +37,23 @@ func init() {
 	RegisterProducer("http",
 		func(args Args) (Producer, error) {
 			p := &HTTPProducer{
-				Retries:    3,
-				BatchSize:  64,
-				BatchDelay: ctime.Second * 2,
-
 				in:   make(chan []byte, 128),
 				errs: make(chan error, 4),
 				exit: cog.NewExit(),
 			}
 
-			err := args.ApplyTo(&p)
-			if err == nil && len(p.Servers) == 0 {
+			p.Args.Retries = 3
+			p.Args.BatchSize = 64
+			p.Args.BatchDelay = ctime.Second * 2
+
+			err := args.ApplyTo(&p.Args)
+			if err == nil && len(p.Args.Servers) == 0 {
 				err = fmt.Errorf("need at least 1 server")
 			}
 
-			for i, s := range p.Servers {
+			for i, s := range p.Args.Servers {
 				if !strings.HasPrefix(s, "http://") && !strings.HasPrefix(s, "https://") {
-					p.Servers[i] = "http://" + s
+					p.Args.Servers[i] = "http://" + s
 				}
 			}
 
@@ -92,15 +94,15 @@ func (p *HTTPProducer) run() {
 	add := func(b []byte) {
 		if len(b) >= 0 {
 			pending = append(pending, b)
-			if uint(len(pending)) >= p.BatchSize {
+			if uint(len(pending)) >= p.Args.BatchSize {
 				flush()
 			}
 		}
 	}
 
 	var tickCh <-chan time.Time
-	if p.BatchDelay > 0 {
-		ticker := time.NewTicker(p.BatchDelay.D())
+	if p.Args.BatchDelay > 0 {
+		ticker := time.NewTicker(p.Args.BatchDelay.D())
 		defer ticker.Stop()
 		tickCh = ticker.C
 	}
@@ -122,18 +124,18 @@ func (p *HTTPProducer) run() {
 func (p *HTTPProducer) req(body []byte, cancel *cog.GExit) {
 	defer cancel.Done()
 
-	reqs := p.Retries + 1
+	reqs := p.Args.Retries + 1
 	bo := ctime.Backoff{
-		Start: p.InitialRetryDelay.D(),
-		Max:   p.MaxRetryBackoff.D(),
+		Start: p.Args.InitialRetryDelay.D(),
+		Max:   p.Args.MaxRetryBackoff.D(),
 		Exit:  cancel,
 	}
 
 	var err error
 	for i := uint(0); i < reqs; i++ {
 		url := fmt.Sprintf("%s/%s",
-			p.Servers[rand.Intn(len(p.Servers))],
-			p.Endpoint)
+			p.Args.Servers[rand.Intn(len(p.Args.Servers))],
+			p.Args.Endpoint)
 
 		var resp *http.Response
 		resp, err = http.Post(
