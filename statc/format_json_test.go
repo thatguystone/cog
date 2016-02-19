@@ -20,7 +20,7 @@ func TestJSONFormatNew(t *testing.T) {
 func TestJSONFormatEmpty(t *testing.T) {
 	c := check.New(t)
 
-	b, err := JSONFormat{}.Format(Snapshot{})
+	b, err := JSONFormat{}.FormatSnap(Snapshot{})
 	c.MustNotError(err)
 
 	c.Equal(string(b), `{}`)
@@ -33,7 +33,7 @@ func TestJSONFormatBasic(t *testing.T) {
 	snap.addTestData()
 	snap.Add(newName("a.really.nested.value"), int64(1))
 
-	b, err := JSONFormat{}.Format(snap)
+	b, err := JSONFormat{}.FormatSnap(snap)
 	c.MustNotError(err)
 
 	c.Equal(
@@ -51,7 +51,7 @@ func TestJSONFormatPretty(t *testing.T) {
 	jf := JSONFormat{}
 	jf.Args.Pretty = true
 
-	b, err := jf.Format(snap)
+	b, err := jf.FormatSnap(snap)
 	c.MustNotError(err)
 
 	c.Log(string(b))
@@ -84,18 +84,18 @@ func TestJSONFormatErrors(t *testing.T) {
 	jf := JSONFormat{}
 	jf.Args.Pretty = true
 
-	_, err := jf.Format(snap)
+	_, err := jf.FormatSnap(snap)
 	c.Error(err)
 }
 
-func BenchmarkJSONFormat(b *testing.B) {
+func BenchmarkJSONFormatSnap(b *testing.B) {
 	c := check.New(b)
 
 	snap := Snapshot{}
 	snap.addTestData()
 
 	for i := 0; i < b.N; i++ {
-		_, err := JSONFormat{}.Format(snap)
+		_, err := JSONFormat{}.FormatSnap(snap)
 		c.MustNotError(err)
 	}
 }

@@ -9,7 +9,8 @@ import (
 
 // A Formatter formats a snapshot
 type Formatter interface {
-	Format(snap Snapshot) ([]byte, error)
+	// Format a snapshot
+	FormatSnap(snap Snapshot) ([]byte, error)
 }
 
 // NewFormatter creates a new, configured Formatter.

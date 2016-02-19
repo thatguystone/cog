@@ -22,13 +22,14 @@ func init() {
 		})
 }
 
-// Format implements Formatter.Format
-func (LogstashFormat) Format(snap Snapshot) ([]byte, error) {
+// FormatSnap implements Formatter.FormatSnap
+func (LogstashFormat) FormatSnap(snap Snapshot) ([]byte, error) {
 	now, _ := time.Now().MarshalText()
 
 	snap.add("@version", int64(1))
 	snap.add("@timestamp", string(now))
 	snap.add("@host", clog.Hostname())
 
-	return JSONFormat{}.Format(snap)
+	return JSONFormat{}.FormatSnap(snap)
+}
 }

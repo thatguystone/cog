@@ -43,7 +43,7 @@ func newOutput(
 }
 
 func (o *output) send(snap Snapshot) {
-	b, err := o.fmt.Format(snap)
+	b, err := o.fmt.FormatSnap(snap)
 	if err != nil {
 		o.logErr(fmt.Errorf("format error: %v", err))
 		return

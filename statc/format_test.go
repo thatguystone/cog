@@ -17,7 +17,7 @@ func init() {
 		})
 }
 
-func (formatErrors) Format(Snapshot) ([]byte, error) {
+func (formatErrors) FormatSnap(Snapshot) ([]byte, error) {
 	return nil, fmt.Errorf("i have issues with that snapshot")
 }
 

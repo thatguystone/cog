@@ -112,7 +112,7 @@ func (m *HTTPMuxer) statusHandler(
 	jf := JSONFormat{}
 	jf.Args.Pretty = true
 
-	b, err := jf.Format(m.s.Snapshot())
+	b, err := jf.FormatSnap(m.s.Snapshot())
 	if err != nil {
 		m.log.Errorf("failed to format snapshot: %v", err)
 		http.Error(rw,

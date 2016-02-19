@@ -14,7 +14,7 @@ func TestLogstashFormatBasic(t *testing.T) {
 	fmttr, err := newFormatter("logstash", nil)
 	c.MustNotError(err)
 
-	b, err := fmttr.Format(Snapshot{
+	b, err := fmttr.FormatSnap(Snapshot{
 		Stat{
 			Name: "int",
 			Val:  int64(123),

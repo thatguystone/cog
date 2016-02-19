@@ -41,8 +41,8 @@ func init() {
 		})
 }
 
-// Format implements Formatter.Format
-func (j JSONFormat) Format(snap Snapshot) ([]byte, error) {
+// FormatSnap implements Formatter.FormatSnap
+func (j JSONFormat) FormatSnap(snap Snapshot) ([]byte, error) {
 	js := jsonState{
 		snap: snap,
 	}
