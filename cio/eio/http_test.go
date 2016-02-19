@@ -83,6 +83,7 @@ func TestHTTPBasic(t *testing.T) {
 			select {
 			case r := <-ht.reqs:
 				c.Equal(r.req.URL.Path, "/"+ep)
+				c.Equal(r.req.Header.Get("Content-Type"), httpContentType)
 				lines += bytes.Count(r.body, []byte("\n"))
 
 			default:
@@ -95,6 +96,24 @@ func TestHTTPBasic(t *testing.T) {
 		drain()
 		return lines == 10
 	})
+}
+
+func TestHTTPContentType(t *testing.T) {
+	c, ht := newHTTPTest(t, Args{
+		"BatchDelay": "100us",
+		"MimeType":   "application/json",
+	})
+	defer ht.exit()
+
+	ht.p.Produce([]byte("test"))
+
+	select {
+	case r := <-ht.reqs:
+		c.Equal(r.req.Header.Get("Content-Type"), "application/json")
+
+	case <-time.After(time.Second):
+		c.Fatal("did not get request after 1 second")
+	}
 }
 
 func TestHTTPScheming(t *testing.T) {

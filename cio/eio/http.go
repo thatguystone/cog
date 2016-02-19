@@ -25,6 +25,9 @@ type HTTPProducer struct {
 
 		InitialRetryDelay ctime.HumanDuration // Time to wait when first request fails
 		MaxRetryBackoff   ctime.HumanDuration // Max duration to wait when retrying
+
+		// MimeType to use instead of "application/octet-stream".
+		MimeType string
 	}
 
 	in chan []byte
@@ -32,6 +35,8 @@ type HTTPProducer struct {
 	errs chan error
 	exit *cog.Exit
 }
+
+const httpContentType = "application/octet-stream"
 
 var httpNewline = []byte("\n")
 
@@ -55,6 +60,10 @@ func init() {
 
 			// A newline is added after every message. This fixes batch size.
 			p.Args.BatchSize *= 2
+
+			if p.Args.MimeType == "" {
+				p.Args.MimeType = httpContentType
+			}
 
 			for i, s := range p.Args.Servers {
 				if !strings.HasPrefix(s, "http://") && !strings.HasPrefix(s, "https://") {
@@ -141,10 +150,7 @@ func (p *HTTPProducer) req(body io.Reader, cancel *cog.GExit) {
 			p.Args.Endpoint)
 
 		var resp *http.Response
-		resp, err = http.Post(
-			url,
-			"application/octet-stream",
-			body)
+		resp, err = http.Post(url, p.Args.MimeType, body)
 
 		if err == nil {
 			resp.Body.Close()
