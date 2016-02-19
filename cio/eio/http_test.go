@@ -83,7 +83,7 @@ func TestHTTPBasic(t *testing.T) {
 			select {
 			case r := <-ht.reqs:
 				c.Equal(r.req.URL.Path, "/"+ep)
-				lines += bytes.Count(r.body, []byte("\n")) + 1
+				lines += bytes.Count(r.body, []byte("\n"))
 
 			default:
 				return
@@ -151,7 +151,7 @@ func TestHTTPSizedFlush(t *testing.T) {
 
 	select {
 	case r := <-ht.reqs:
-		c.Equal(4, bytes.Count(r.body, []byte("\n"))+1)
+		c.Equal(4, bytes.Count(r.body, []byte("\n")))
 	case <-time.After(time.Second):
 		c.Fatal("no request after 1s")
 	}

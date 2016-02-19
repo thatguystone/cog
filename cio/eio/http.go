@@ -1,8 +1,8 @@
 package eio
 
 import (
-	"bytes"
 	"fmt"
+	"io"
 	"math/rand"
 	"net/http"
 	"strings"
@@ -33,6 +33,8 @@ type HTTPProducer struct {
 	exit *cog.Exit
 }
 
+var httpNewline = []byte("\n")
+
 func init() {
 	RegisterProducer("http",
 		func(args Args) (Producer, error) {
@@ -50,6 +52,9 @@ func init() {
 			if err == nil && len(p.Args.Servers) == 0 {
 				err = fmt.Errorf("need at least 1 server")
 			}
+
+			// A newline is added after every message. This fixes batch size.
+			p.Args.BatchSize *= 2
 
 			for i, s := range p.Args.Servers {
 				if !strings.HasPrefix(s, "http://") && !strings.HasPrefix(s, "https://") {
@@ -81,10 +86,8 @@ func (p *HTTPProducer) run() {
 			return
 		}
 
-		body := bytes.Join(pending, []byte("\n"))
-
 		reqCancel.Add(1)
-		go p.req(body, reqCancel.GExit)
+		go p.req(bytec.MultiReader(pending...), reqCancel.GExit)
 
 		pending = pending[:0]
 	}
@@ -93,7 +96,7 @@ func (p *HTTPProducer) run() {
 
 	add := func(b []byte) {
 		if len(b) >= 0 {
-			pending = append(pending, b)
+			pending = append(pending, b, httpNewline)
 			if uint(len(pending)) >= p.Args.BatchSize {
 				flush()
 			}
@@ -121,7 +124,7 @@ func (p *HTTPProducer) run() {
 	}
 }
 
-func (p *HTTPProducer) req(body []byte, cancel *cog.GExit) {
+func (p *HTTPProducer) req(body io.Reader, cancel *cog.GExit) {
 	defer cancel.Done()
 
 	reqs := p.Args.Retries + 1
@@ -138,10 +141,7 @@ func (p *HTTPProducer) req(body []byte, cancel *cog.GExit) {
 			p.Args.Endpoint)
 
 		var resp *http.Response
-		resp, err = http.Post(
-			url,
-			http.DetectContentType(body),
-			bytes.NewReader(body))
+		resp, err = http.Post(url, "", body)
 
 		if err == nil {
 			resp.Body.Close()
