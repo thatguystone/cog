@@ -32,4 +32,8 @@ func (LogstashFormat) FormatSnap(snap Snapshot) ([]byte, error) {
 
 	return JSONFormat{}.FormatSnap(snap)
 }
+
+// MimeType implements Formatter.MimeType
+func (LogstashFormat) MimeType() string {
+	return "application/json"
 }

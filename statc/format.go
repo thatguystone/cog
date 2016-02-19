@@ -11,6 +11,9 @@ import (
 type Formatter interface {
 	// Format a snapshot
 	FormatSnap(snap Snapshot) ([]byte, error)
+
+	// Get the MimeType of data produced by this Formatter
+	MimeType() string
 }
 
 // NewFormatter creates a new, configured Formatter.

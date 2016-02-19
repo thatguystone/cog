@@ -62,6 +62,11 @@ func (j JSONFormat) FormatSnap(snap Snapshot) ([]byte, error) {
 	return js.Bytes(), err
 }
 
+// MimeType implements Formatter.MimeType
+func (JSONFormat) MimeType() string {
+	return "application/json"
+}
+
 func (js *jsonState) dump(prefix string) {
 	js.open()
 

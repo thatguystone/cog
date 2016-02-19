@@ -21,6 +21,10 @@ func (formatErrors) FormatSnap(Snapshot) ([]byte, error) {
 	return nil, fmt.Errorf("i have issues with that snapshot")
 }
 
+func (formatErrors) MimeType() string {
+	return "application/errors"
+}
+
 func TestFormatErrors(t *testing.T) {
 	c := check.New(t)
 

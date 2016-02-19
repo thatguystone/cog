@@ -14,6 +14,8 @@ func TestLogstashFormatBasic(t *testing.T) {
 	fmttr, err := newFormatter("logstash", nil)
 	c.MustNotError(err)
 
+	c.Contains(fmttr.MimeType(), "json")
+
 	b, err := fmttr.FormatSnap(Snapshot{
 		Stat{
 			Name: "int",

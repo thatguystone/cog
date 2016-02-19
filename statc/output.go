@@ -32,6 +32,12 @@ func newOutput(
 			cfg.Fmt, err)
 	}
 
+	if cfg.ProdArgs == nil {
+		cfg.ProdArgs = eio.Args{}
+	}
+
+	cfg.ProdArgs["MimeType"] = o.fmt.MimeType()
+
 	o.out, err = eio.NewProducer(cfg.Prod, cfg.ProdArgs)
 
 	if err == nil {
