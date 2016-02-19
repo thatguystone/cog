@@ -22,7 +22,7 @@ func TestLogStats(t *testing.T) {
 
 	snap := st.snapshot()
 	for _, st := range snap {
-		c.Logf("%s = %v", st.Name.Str(), st.Val)
+		c.Logf("%s = %v", st.Name, st.Val)
 	}
 
 	c.Equal(snap.Get(st.Names("log", "fun", "debug")).Val.(int64), 1)

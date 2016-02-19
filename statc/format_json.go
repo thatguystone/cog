@@ -67,18 +67,17 @@ func (js *jsonState) dump(prefix string) {
 
 	for len(js.snap) > 0 && js.err == nil {
 		stat := js.snap[0]
-		statName := stat.Name.Str()
 
-		if !strings.HasPrefix(statName, prefix) {
+		if !strings.HasPrefix(stat.Name, prefix) {
 			break
 		}
 
-		name := statName[len(prefix):]
+		name := stat.Name[len(prefix):]
 
 		doti := strings.IndexByte(name, '.')
 		if doti != -1 {
 			js.key(name[:doti])
-			js.dump(statName[:len(prefix)+doti+1])
+			js.dump(stat.Name[:len(prefix)+doti+1])
 			continue
 		}
 
@@ -88,7 +87,7 @@ func (js *jsonState) dump(prefix string) {
 
 		switch v := stat.Val.(type) {
 		case string:
-			vb, js.err = json.Marshal(v)
+			vb, js.err = json.Marshal(stat.Val)
 
 		case int64:
 			vb = unsafec.Bytes(strconv.FormatInt(v, 10))
@@ -104,7 +103,7 @@ func (js *jsonState) dump(prefix string) {
 			}
 
 		default:
-			js.err = fmt.Errorf("unrecgnized type: %T", v)
+			js.err = fmt.Errorf("unrecognized type: %T", v)
 		}
 
 		js.key(name)

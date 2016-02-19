@@ -72,7 +72,7 @@ func TestHTTPBasic(t *testing.T) {
 
 	snap := st.snapshot()
 	for _, st := range snap {
-		c.Logf("%s = %v", st.Name.Str(), st.Val)
+		c.Logf("%s = %v", st.Name, st.Val)
 	}
 
 	c.Equal(snap.Get(st.Names("http", "/sleep/1", "GET", "200", "count")).Val.(int64), 10)
@@ -100,7 +100,7 @@ func TestHTTPPanic(t *testing.T) {
 
 	snap := st.snapshot()
 	for _, st := range snap {
-		c.Logf("%s = %v", st.Name.Str(), st.Val)
+		c.Logf("%s = %v", st.Name, st.Val)
 	}
 
 	c.Equal(snap.Get(st.Names("http", "/panic", "GET", "panic", "count")).Val.(int64), 1)
@@ -162,7 +162,7 @@ func TestHTTPStatusHandlerError(t *testing.T) {
 
 	st.lastSnap = Snapshot{
 		Stat{
-			Name: st.Name("blah"),
+			Name: "blah",
 			Val:  nil,
 		},
 	}

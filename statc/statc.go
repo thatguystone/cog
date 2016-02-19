@@ -200,7 +200,7 @@ func (s *S) doSnapshot() {
 }
 
 func (s *S) snapshot() (snap Snapshot) {
-	snap = make(Snapshot, 0, len(s.lastSnap))
+	snap = make(Snapshot, 0, cap(s.lastSnap))
 
 	for _, sn := range s.snappers {
 		snap.Take(sn.name, sn.snapper)

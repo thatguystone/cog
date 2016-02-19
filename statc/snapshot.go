@@ -11,7 +11,9 @@ type Snapshot []Stat
 
 // A Stat is a single stat value
 type Stat struct {
-	Name Name
+	// String here, not Name: once in a snapshot, name should already have
+	// been checked
+	Name string
 	Val  interface{}
 }
 
@@ -58,7 +60,7 @@ type adder struct {
 // Get gets the Stat with the given name
 func (s Snapshot) Get(name Name) Stat {
 	for _, st := range s {
-		if st.Name == name {
+		if st.Name == name.Str() {
 			return st
 		}
 	}
@@ -81,14 +83,14 @@ func (s *Snapshot) Take(name Name, sr Snapshotter) {
 func (s *Snapshot) Add(name Name, val interface{}) {
 	l := len(*s)
 	i := sort.Search(l, func(i int) bool {
-		return (*s)[i].Name.Str() >= name.Str()
+		return (*s)[i].Name >= name.Str()
 	})
 
 	*s = append(*s, Stat{})
 
 	copy((*s)[i+1:], (*s)[i:])
 	(*s)[i] = Stat{
-		Name: name,
+		Name: name.Str(),
 		Val:  val,
 	}
 }
