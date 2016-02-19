@@ -1,7 +1,7 @@
 package bytec
 
 import (
-	"io/ioutil"
+	"bytes"
 	"testing"
 
 	"github.com/thatguystone/cog/check"
@@ -18,8 +18,16 @@ func TestMultiReader(t *testing.T) {
 		[]byte("three"),
 		[]byte("4"))
 
-	b, err := ioutil.ReadAll(r)
-	c.MustNotError(err)
+	var b bytes.Buffer
 
-	c.Equal(string(b), "onetwothree4")
+	var err error
+	for err == nil {
+		buff := make([]byte, 1)
+		_, err = r.Read(buff)
+		if err == nil {
+			b.Write(buff)
+		}
+	}
+
+	c.Equal(b.String(), "onetwothree4")
 }

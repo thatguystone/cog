@@ -22,6 +22,8 @@ func (mr *multiReader) Read(p []byte) (n int, err error) {
 		r = r[n:]
 		if len(r) == 0 {
 			mr.rs = mr.rs[1:]
+		} else {
+			mr.rs[0] = r
 		}
 
 		if n > 0 {
