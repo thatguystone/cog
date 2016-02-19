@@ -14,10 +14,13 @@ func MultiReader(bs ...[]byte) io.Reader {
 	return &multiReader{rs: rs}
 }
 
-func (mr *multiReader) Read(p []byte) (n int, err error) {
-	for len(mr.rs) > 0 {
+func (mr *multiReader) Read(p []byte) (rn int, err error) {
+	for len(mr.rs) > 0 && len(p) > 0 {
 		r := mr.rs[0]
-		n = copy(p, r)
+		n := copy(p, r)
+		rn += n
+
+		p = p[n:]
 
 		r = r[n:]
 		if len(r) == 0 {
@@ -25,11 +28,11 @@ func (mr *multiReader) Read(p []byte) (n int, err error) {
 		} else {
 			mr.rs[0] = r
 		}
-
-		if n > 0 {
-			return
-		}
 	}
 
-	return 0, io.EOF
+	if len(mr.rs) == 0 {
+		err = io.EOF
+	}
+
+	return
 }
