@@ -40,6 +40,10 @@ func (LogFmtFormat) FormatEntry(e Entry) ([]byte, error) {
 		err = enc.EncodeKeyval("msg", e.Msg)
 	}
 
+	if err == nil {
+		err = enc.EncodeKeyval("host", e.Host)
+	}
+
 	for k, v := range e.Data {
 		err = enc.EncodeKeyval("data."+k, v)
 		if err != nil {

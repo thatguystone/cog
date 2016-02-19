@@ -13,10 +13,12 @@ type LogstashFormat struct{}
 type logstashEntry struct {
 	Entry
 	Time    time.Time `json:"@timestamp"`
+	Host    string    `json:"@host"`
 	Version int       `json:"@version"`
 
-	// Hide time field in Entry
+	// Hide these fields
 	OmitTime *struct{} `json:"time,omitempty"`
+	OmitHost *struct{} `json:"host,omitempty"`
 }
 
 func init() {
@@ -31,6 +33,7 @@ func (LogstashFormat) FormatEntry(e Entry) ([]byte, error) {
 	le := logstashEntry{
 		Entry:   e,
 		Time:    e.Time,
+		Host:    Hostname(),
 		Version: 1,
 	}
 

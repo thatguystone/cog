@@ -33,6 +33,7 @@ func TestLogstashFormatOutput(t *testing.T) {
 	c.NotError(err)
 
 	c.Equal(m["@timestamp"], string(tt))
+	c.Equal(m["@host"], Hostname())
 	c.Equal(m["@version"], 1.0)
 	c.Equal(m["time"], nil)
 

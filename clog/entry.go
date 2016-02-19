@@ -25,6 +25,9 @@ type Entry struct {
 	// Formatted text
 	Msg string `json:"msg"`
 
+	// Name of the host this originated on
+	Host string `json:"host"`
+
 	// Data to include with the Entry
 	Data Data `json:"data"`
 

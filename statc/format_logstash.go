@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/thatguystone/cog/cio/eio"
+	"github.com/thatguystone/cog/clog"
 )
 
 // LogstashFormat formats snapshots as JSON, ready for shipping to logstash
@@ -25,11 +26,9 @@ func init() {
 func (LogstashFormat) Format(snap Snapshot) ([]byte, error) {
 	now, _ := time.Now().MarshalText()
 
-	snap = append(snap, logstashVersion)
-	snap = append(snap, Stat{
-		Name: "@timestamp",
-		Val:  string(now),
-	})
+	snap.add("@version", int64(1))
+	snap.add("@timestamp", string(now))
+	snap.add("@host", clog.Hostname())
 
 	return JSONFormat{}.Format(snap)
 }

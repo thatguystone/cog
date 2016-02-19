@@ -85,6 +85,10 @@ func (lg *logger) LogEntry(e Entry) {
 		e.Module = "(root)"
 	}
 
+	if e.Host == "" {
+		e.Host = Hostname()
+	}
+
 	lg.l.rwmtx.RLock()
 	mod := lg.mod
 	lg.l.rwmtx.RUnlock()

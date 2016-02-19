@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/thatguystone/cog/check"
+	"github.com/thatguystone/cog/clog"
 )
 
 func TestLogstashFormatBasic(t *testing.T) {
@@ -26,6 +27,7 @@ func TestLogstashFormatBasic(t *testing.T) {
 	c.MustNotError(err)
 
 	c.NotEqual(m["@timestamp"], "")
+	c.Equal(m["@host"], clog.Hostname())
 	c.Equal(m["@version"], float64(1))
 	c.Equal(m["int"], float64(123))
 }

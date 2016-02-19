@@ -81,16 +81,20 @@ func (s *Snapshot) Take(name Name, sr Snapshotter) {
 // Add a new value to this snapshot. Must be one of [bool, int64, float64,
 // string].
 func (s *Snapshot) Add(name Name, val interface{}) {
+	s.add(name.Str(), val)
+}
+
+func (s *Snapshot) add(name string, val interface{}) {
 	l := len(*s)
 	i := sort.Search(l, func(i int) bool {
-		return (*s)[i].Name >= name.Str()
+		return (*s)[i].Name >= name
 	})
 
 	*s = append(*s, Stat{})
 
 	copy((*s)[i+1:], (*s)[i:])
 	(*s)[i] = Stat{
-		Name: name.Str(),
+		Name: name,
 		Val:  val,
 	}
 }
