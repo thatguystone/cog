@@ -20,7 +20,7 @@ func TestNewOutputErrors(t *testing.T) {
 
 	_, err = newOutput(
 		&OutputConfig{
-			Prod: "stdout",
+			Fmt: "json",
 		},
 		nil,
 		wg)
@@ -28,8 +28,8 @@ func TestNewOutputErrors(t *testing.T) {
 
 	_, err = newOutput(
 		&OutputConfig{
-			Prod: "stdout",
-			Fmt:  "mehhhhhhh",
+			Prod: "mehhhh",
+			Fmt:  "json",
 		},
 		nil,
 		wg)

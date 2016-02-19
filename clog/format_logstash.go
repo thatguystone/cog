@@ -28,7 +28,7 @@ func init() {
 		})
 }
 
-// FormatEntry implements Formatter
+// FormatEntry implements Formatter.FormatEntry
 func (LogstashFormat) FormatEntry(e Entry) ([]byte, error) {
 	le := logstashEntry{
 		Entry:   e,
@@ -38,4 +38,9 @@ func (LogstashFormat) FormatEntry(e Entry) ([]byte, error) {
 	}
 
 	return json.Marshal(le)
+}
+
+// MimeType implements Formatter.MimeType
+func (LogstashFormat) MimeType() string {
+	return "application/json"
 }

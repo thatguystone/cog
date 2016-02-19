@@ -44,12 +44,18 @@ func newOutput(oc *OutputConfig, lg *Logger, wg *sync.WaitGroup) (o *output, err
 		}
 	}()
 
-	po.Producer, err = eio.NewProducer(oc.Prod, oc.ProdArgs)
+	po.Formatter, err = newFormatter(oc.Fmt, oc.FmtArgs)
 	if err != nil {
 		return
 	}
 
-	po.Formatter, err = newFormatter(oc.Fmt, oc.FmtArgs)
+	if oc.ProdArgs == nil {
+		oc.ProdArgs = eio.Args{}
+	}
+
+	oc.ProdArgs["MimeType"] = po.Formatter.MimeType()
+
+	po.Producer, err = eio.NewProducer(oc.Prod, oc.ProdArgs)
 	if err != nil {
 		return
 	}

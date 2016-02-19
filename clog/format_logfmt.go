@@ -17,7 +17,7 @@ func init() {
 		})
 }
 
-// FormatEntry implements Formatter
+// FormatEntry implements Formatter.FormatEntry
 func (LogFmtFormat) FormatEntry(e Entry) ([]byte, error) {
 	b := bytes.Buffer{}
 	enc := logfmt.NewEncoder(&b)
@@ -56,4 +56,9 @@ func (LogFmtFormat) FormatEntry(e Entry) ([]byte, error) {
 	}
 
 	return b.Bytes(), nil
+}
+
+// MimeType implements Formatter.MimeType
+func (LogFmtFormat) MimeType() string {
+	return "application/logfmt"
 }

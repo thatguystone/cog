@@ -14,6 +14,8 @@ func TestLogstashFormatOutput(t *testing.T) {
 	f, err := newFormatter("logstash", nil)
 	c.MustNotError(err)
 
+	c.Contains(f.MimeType(), "json")
+
 	e := Entry{
 		Time: time.Now(),
 		Msg:  "stash that log",

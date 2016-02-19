@@ -30,7 +30,7 @@ func init() {
 		})
 }
 
-// FormatEntry implements Formatter
+// FormatEntry implements Formatter.FormatEntry
 func (f HumanFormat) FormatEntry(e Entry) ([]byte, error) {
 	b := bytes.Buffer{}
 
@@ -53,4 +53,9 @@ func (f HumanFormat) FormatEntry(e Entry) ([]byte, error) {
 	}
 
 	return bytes.TrimSpace(b.Bytes()), nil
+}
+
+// MimeType implements Formatter.MimeType
+func (HumanFormat) MimeType() string {
+	return "text/plain"
 }
