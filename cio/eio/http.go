@@ -141,7 +141,10 @@ func (p *HTTPProducer) req(body io.Reader, cancel *cog.GExit) {
 			p.Args.Endpoint)
 
 		var resp *http.Response
-		resp, err = http.Post(url, "", body)
+		resp, err = http.Post(
+			url,
+			"application/octet-stream",
+			body)
 
 		if err == nil {
 			resp.Body.Close()
