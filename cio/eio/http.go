@@ -1,6 +1,7 @@
 package eio
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"math/rand"
@@ -25,6 +26,9 @@ type HTTPProducer struct {
 
 		InitialRetryDelay ctime.HumanDuration // Time to wait when first request fails
 		MaxRetryBackoff   ctime.HumanDuration // Max duration to wait when retrying
+
+		// Some servers don't know how to handle Chunked bodies.
+		DisableChunked bool
 
 		// MimeType to use instead of "application/octet-stream".
 		MimeType string
@@ -95,8 +99,15 @@ func (p *HTTPProducer) run() {
 			return
 		}
 
+		var r io.Reader
+		if p.Args.DisableChunked {
+			r = bytes.NewReader(bytes.Join(pending, nil))
+		} else {
+			r = bytec.MultiReader(pending...)
+		}
+
 		reqCancel.Add(1)
-		go p.req(bytec.MultiReader(pending...), reqCancel.GExit)
+		go p.req(r, reqCancel.GExit)
 
 		pending = pending[:0]
 	}

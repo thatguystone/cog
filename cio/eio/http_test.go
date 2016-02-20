@@ -84,6 +84,7 @@ func TestHTTPBasic(t *testing.T) {
 			case r := <-ht.reqs:
 				c.Equal(r.req.URL.Path, "/"+ep)
 				c.Equal(r.req.Header.Get("Content-Type"), httpContentType)
+				c.Equal(r.req.Header.Get("Content-Length"), "")
 				lines += bytes.Count(r.body, []byte("\n"))
 
 			default:
@@ -96,6 +97,25 @@ func TestHTTPBasic(t *testing.T) {
 		drain()
 		return lines == 10
 	})
+}
+
+func TestHTTPDisableChunked(t *testing.T) {
+	c, ht := newHTTPTest(t, Args{
+		"BatchDelay":     "100us",
+		"MimeType":       "application/json",
+		"DisableChunked": true,
+	})
+	defer ht.exit()
+
+	ht.p.Produce([]byte("test"))
+
+	select {
+	case r := <-ht.reqs:
+		c.NotEqual(r.req.Header.Get("Content-Length"), "")
+
+	case <-time.After(time.Second):
+		c.Fatal("did not get request after 1 second")
+	}
 }
 
 func TestHTTPContentType(t *testing.T) {
