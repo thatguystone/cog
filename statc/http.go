@@ -1,7 +1,9 @@
 package statc
 
 import (
+	"bufio"
 	"fmt"
+	"net"
 	"net/http"
 	"time"
 
@@ -85,11 +87,11 @@ var httpCodes = []int{
 //
 // At /_status, information from the last snapshot is accessible with the
 // given key (ie. GET "/_status?key=<key>").
-func (s *S) NewHTTPMuxer(name Name) *HTTPMuxer {
+func (s *S) NewHTTPMuxer(name string) *HTTPMuxer {
 	m := &HTTPMuxer{
 		R:    httprouter.New(),
 		log:  s.log.Get("http"),
-		name: name,
+		name: s.Name(name),
 		key:  s.cfg.StatusKey,
 		s:    s,
 	}
@@ -168,6 +170,17 @@ func (m *HTTPMuxer) HandlerFunc(method, path string, handler http.HandlerFunc) {
 func (rw *httpResp) WriteHeader(status int) {
 	rw.status = status
 	rw.ResponseWriter.WriteHeader(status)
+}
+
+func (rw *httpResp) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	hj, ok := rw.ResponseWriter.(http.Hijacker)
+
+	if !ok {
+		err := fmt.Errorf("%T does not implement http.Hijacker", rw.ResponseWriter)
+		return nil, nil, err
+	}
+
+	return hj.Hijack()
 }
 
 func (m *HTTPMuxer) newHTTPStatuses(name Name) *httpStatuses {

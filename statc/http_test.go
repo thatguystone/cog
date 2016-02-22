@@ -18,7 +18,7 @@ func newHTTPTest(t *testing.T) (*check.C, *sTest, *HTTPMuxer) {
 	c, st := newTest(t, &Config{
 		StatusKey: statusKey,
 	})
-	mux := st.NewHTTPMuxer(st.Name("http"))
+	mux := st.NewHTTPMuxer("http")
 	return c, st, mux
 }
 
@@ -46,29 +46,52 @@ func TestHTTPBasic(t *testing.T) {
 		func(rw http.ResponseWriter, req *http.Request) {
 			http.Error(rw, "164", 164)
 		})
+	mux.HandlerFunc("GET", "/hijack",
+		func(rw http.ResponseWriter, req *http.Request) {
+			c, _, err := rw.(http.Hijacker).Hijack()
+			if err != nil {
+				rw.WriteHeader(500)
+				rw.Write([]byte(err.Error()))
+			} else {
+				c.Close()
+			}
+		})
 
 	srv := httptest.NewServer(mux.R)
 	defer srv.Close()
 
 	wg := sync.WaitGroup{}
-	get := func(url string) {
+	get := func(url string, expectOk bool) {
 		defer wg.Done()
 
 		resp, err := http.Get(url)
-		c.MustNotError(err)
-		resp.Body.Close()
+
+		if expectOk {
+			c.MustNotError(err)
+			resp.Body.Close()
+		} else {
+			c.MustError(err)
+		}
 	}
 
 	for i := 0; i < 10; i++ {
-		wg.Add(5)
-		go get(fmt.Sprintf("%s/sleep/1/", srv.URL))
-		go get(fmt.Sprintf("%s/sleep/5/", srv.URL))
-		go get(fmt.Sprintf("%s/404", srv.URL))
-		go get(fmt.Sprintf("%s/500", srv.URL))
-		go get(fmt.Sprintf("%s/164", srv.URL))
+		wg.Add(6)
+		go get(fmt.Sprintf("%s/sleep/1/", srv.URL), true)
+		go get(fmt.Sprintf("%s/sleep/5/", srv.URL), true)
+		go get(fmt.Sprintf("%s/404", srv.URL), true)
+		go get(fmt.Sprintf("%s/500", srv.URL), true)
+		go get(fmt.Sprintf("%s/164", srv.URL), true)
+		go get(fmt.Sprintf("%s/hijack", srv.URL), false)
 	}
 
 	wg.Wait()
+
+	rec := httptest.NewRecorder()
+	h, params, _ := mux.R.Lookup("GET", "/hijack")
+	c.MustTrue(h != nil)
+	h(rec, nil, params)
+	c.Equal(rec.Code, 500)
+	c.Contains(rec.Body.String(), "does not implement http.Hijacker")
 
 	snap := st.snapshot()
 	for _, st := range snap {
