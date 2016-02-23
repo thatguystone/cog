@@ -1,7 +1,10 @@
 // Package unsafec makes unsafe even more unsafe.
 package unsafec
 
-import "unsafe"
+import (
+	"reflect"
+	"unsafe"
+)
 
 // String turns a byte slice into a string. This is unsafe as it leaves
 // a string mutable. Don't use this if you will EVER modify the underlying
@@ -22,5 +25,8 @@ func String(b []byte) string {
 // Seriously, if you do, unicorns will die, kittens will commit suicide, and
 // puppies will maul you.
 func Bytes(s string) []byte {
-	return *(*[]byte)(unsafe.Pointer(&s))
+	sh := *((*reflect.SliceHeader)(unsafe.Pointer(&s)))
+	sh.Cap = sh.Len
+
+	return *(*[]byte)(unsafe.Pointer(&sh))
 }
