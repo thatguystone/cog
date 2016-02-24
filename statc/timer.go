@@ -2,6 +2,7 @@ package statc
 
 import (
 	"math"
+	"math/big"
 	"math/rand"
 	"sort"
 	"sync"
@@ -23,18 +24,20 @@ type Timer struct {
 type int64Slice []int64
 
 type timerSnap struct {
-	sum, sumOfSq       int64 // For stddev + mean
+	sum                int64
+	sumOfSq            *big.Int
 	stddev             int64
-	mean               int64
 	min, max           int64
 	count              int64
 	p50, p75, p90, p95 int64 // 50th, 75th, 90th, and 95th percentiles
 }
 
 var (
-	timerRand  = rand.New(rand.NewSource(time.Now().Unix()))
-	timerReset = timerSnap{
-		min: math.MaxInt64,
+	// This amounts to ~2x speedup
+	bigPool = sync.Pool{
+		New: func() interface{} {
+			return big.NewInt(0)
+		},
 	}
 
 	// Rand is not safe to use concurrently, and the global rand functions all
@@ -46,13 +49,17 @@ var (
 	}
 )
 
+func bigInt(i int64) *big.Int {
+	return bigPool.Get().(*big.Int).SetInt64(i)
+}
+
 // NewTimer creates a new timer that outputs stats prefixed with the given
 // name. The names are cached internally to limit allocations.
 //
 // The timer also reports percentiles of data by sampling. The given
 // `sampPercent` controls what percent of samples to save for percentile
 // calculations (0 - 100).
-func NewTimer(name Name, sampPercent int) *Timer {
+func NewTimer(name Name, sampPercent int) (t *Timer) {
 	if sampPercent < 0 {
 		sampPercent = 0
 	}
@@ -61,8 +68,7 @@ func NewTimer(name Name, sampPercent int) *Timer {
 		sampPercent = 100
 	}
 
-	return &Timer{
-		timerSnap:   timerReset,
+	t = &Timer{
 		sampPercent: sampPercent,
 		nStddev:     name.Join("stddev"),
 		nMean:       name.Join("mean"),
@@ -74,6 +80,10 @@ func NewTimer(name Name, sampPercent int) *Timer {
 		nP90:        name.Join("p90"),
 		nP95:        name.Join("p95"),
 	}
+
+	t.timerSnap.reset()
+
+	return t
 }
 
 // TimeFunc times how long it takes the given function to run
@@ -86,7 +96,8 @@ func (t *Timer) TimeFunc(cb func()) {
 // Add adds timing information
 func (t *Timer) Add(dd time.Duration) {
 	d := int64(dd)
-	sq := d * d
+	sq := bigInt(d)
+	sq.Mul(sq, sq)
 
 	rand := randPool.Get().(*rand.Rand)
 	keep := t.sampPercent > int(rand.Int31n(100))
@@ -95,7 +106,7 @@ func (t *Timer) Add(dd time.Duration) {
 	t.mtx.Lock()
 
 	t.count++
-	t.sumOfSq += sq
+	t.sumOfSq.Add(t.sumOfSq, sq)
 	t.sum += d
 
 	if d > t.max {
@@ -111,6 +122,8 @@ func (t *Timer) Add(dd time.Duration) {
 	}
 
 	t.mtx.Unlock()
+
+	bigPool.Put(sq)
 }
 
 // Snapshot implements Snapshotter
@@ -121,10 +134,13 @@ func (t *Timer) Snapshot(a Adder) {
 func (t *Timer) snapshot(a Adder, ignoreIfEmpty bool) {
 	nsamps := make(int64Slice, 0, t.count)
 
+	tsr := timerSnap{}
+	tsr.reset()
+
 	t.mtx.Lock()
 
 	ts := t.timerSnap
-	t.timerSnap = timerReset
+	t.timerSnap = tsr
 
 	samps := t.samples
 	t.samples = nsamps
@@ -133,7 +149,7 @@ func (t *Timer) snapshot(a Adder, ignoreIfEmpty bool) {
 
 	sort.Sort(samps)
 
-	if ts.min == timerReset.min {
+	if ts.min == math.MaxInt64 {
 		ts.min = 0
 	}
 
@@ -141,10 +157,21 @@ func (t *Timer) snapshot(a Adder, ignoreIfEmpty bool) {
 		return
 	}
 
+	var mean int64
 	if ts.count > 0 {
-		ss := ts.sumOfSq - ((ts.sum * ts.sum) / ts.count)
+		// This is the equivalent of: ts.sumOfSq - ((ts.sum * ts.sum) / ts.count)
+		sumSq := bigInt(ts.sum)
+		sumSq.Mul(sumSq, sumSq)
+
+		cnt := bigInt(ts.count)
+		sumSq.Div(sumSq, cnt)
+		bigPool.Put(cnt)
+
+		ss := ts.sumOfSq.Sub(ts.sumOfSq, sumSq).Int64()
+		bigPool.Put(sumSq)
+
 		ts.stddev = int64(math.Sqrt(float64(ss / ts.count)))
-		ts.mean = ts.sum / ts.count
+		mean = ts.sum / ts.count
 	}
 
 	if len(samps) > 0 {
@@ -157,7 +184,7 @@ func (t *Timer) snapshot(a Adder, ignoreIfEmpty bool) {
 	}
 
 	a.AddInt(t.nStddev, ts.stddev)
-	a.AddInt(t.nMean, ts.mean)
+	a.AddInt(t.nMean, mean)
 	a.AddInt(t.nMin, ts.min)
 	a.AddInt(t.nMax, ts.max)
 	a.AddInt(t.nCount, ts.count)
@@ -165,8 +192,18 @@ func (t *Timer) snapshot(a Adder, ignoreIfEmpty bool) {
 	a.AddInt(t.nP75, ts.p75)
 	a.AddInt(t.nP90, ts.p90)
 	a.AddInt(t.nP95, ts.p95)
+	ts.free()
 }
 
 func (p int64Slice) Len() int           { return len(p) }
 func (p int64Slice) Less(i, j int) bool { return p[i] < p[j] }
 func (p int64Slice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+
+func (ts *timerSnap) reset() {
+	ts.sumOfSq = bigInt(0)
+	ts.min = math.MaxInt64
+}
+
+func (ts *timerSnap) free() {
+	bigPool.Put(ts.sumOfSq)
+}
