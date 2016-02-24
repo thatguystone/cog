@@ -36,6 +36,14 @@ var (
 	timerReset = timerSnap{
 		min: math.MaxInt64,
 	}
+
+	// Rand is not safe to use concurrently, and the global rand functions all
+	// use a mutex. Another pool to the rescue!
+	randPool = sync.Pool{
+		New: func() interface{} {
+			return rand.New(rand.NewSource(time.Now().UnixNano()))
+		},
+	}
 )
 
 // NewTimer creates a new timer that outputs stats prefixed with the given
@@ -80,7 +88,9 @@ func (t *Timer) Add(dd time.Duration) {
 	d := int64(dd)
 	sq := d * d
 
-	keep := t.sampPercent > int(timerRand.Int31n(100))
+	rand := randPool.Get().(*rand.Rand)
+	keep := t.sampPercent > int(rand.Int31n(100))
+	randPool.Put(rand)
 
 	t.mtx.Lock()
 
