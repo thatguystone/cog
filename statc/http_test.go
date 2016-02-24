@@ -98,6 +98,7 @@ func TestHTTPBasic(t *testing.T) {
 		c.Logf("%s = %v", st.Name, st.Val)
 	}
 
+	c.Equal(snap.Get(st.Names("http", "/sleep/1", "GET", "all", "count")).Val.(int64), 10)
 	c.Equal(snap.Get(st.Names("http", "/sleep/1", "GET", "200", "count")).Val.(int64), 10)
 	c.Equal(snap.Get(st.Names("http", "/500", "GET", "500", "count")).Val.(int64), 10)
 	c.Equal(snap.Get(st.Names("http", "/404", "GET", "404", "count")).Val.(int64), 10)

@@ -223,6 +223,7 @@ func (hss *httpStatuses) record(status int, dur time.Duration, paniced bool) {
 }
 
 func (hss *httpStatuses) Snapshot(a Adder) {
+	hss.all.snapshot(a, true)
 	hss.panics.snapshot(a, true)
 	for _, t := range hss.s {
 		t.snapshot(a, true)
