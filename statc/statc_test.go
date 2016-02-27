@@ -144,9 +144,19 @@ func TestStatsPrefixed(t *testing.T) {
 	pst = st.Prefixed("...another..prefix...")
 	pst.NewCounter("magic", true)
 
-	c.Equal(st.snappers[0].name, st.Name("another.prefix.magic"))
-	c.Equal(st.snappers[1].name, st.Name("long.prefix.sub"))
-	c.Equal(st.snappers[2].name, st.Name("top-level"))
+	exists := func(n Name) bool {
+		for _, s := range st.snappers {
+			if s.name.s == n.s {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	c.True(exists(st.Name("another.prefix.magic")))
+	c.True(exists(st.Name("long.prefix.sub")))
+	c.True(exists(st.Name("top-level")))
 }
 
 func TestStatsAlreadyExists(t *testing.T) {

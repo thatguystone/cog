@@ -61,6 +61,7 @@ func NewS(cfg Config, log *clog.Logger, exit *cog.GExit) (*S, error) {
 		s.outs = append(s.outs, out)
 	}
 
+	s.watchRuntime()
 	s.exit.Add(1)
 	go s.run()
 
@@ -92,6 +93,9 @@ func (s *S) Names(names ...string) Name {
 
 // AddSnapshotter binds a snapshotter to this S.
 func (s *S) AddSnapshotter(name Name, snapper Snapshotter) {
+	s.mtx.Lock()
+	defer s.mtx.Unlock()
+
 	l := len(s.snappers)
 	i := sort.Search(l, func(i int) bool {
 		return s.snappers[i].name.Str() >= name.Str()

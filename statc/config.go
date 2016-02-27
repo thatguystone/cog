@@ -15,11 +15,19 @@ type Config struct {
 	// 0% - 100%.
 	HTTPSamplePercent int
 
+	// If memory stats should be included in reported statistics. Defaults to
+	// 60s; gathering these stats stops the world, so don't do this too often.
+	// Set to <0 to disable.
+	MemStatsInterval ctime.HumanDuration
+
 	// StatusKey is the key used to secure the HTTPMuxer's /_status endpoint
 	StatusKey string
 
 	// Where stats should be put
 	Outputs []OutputConfig
+
+	// For testing
+	disableRuntimeStats bool
 }
 
 // OutputConfig is used to configure outputs
@@ -37,5 +45,14 @@ func (cfg *Config) setDefaults() {
 
 	if cfg.HTTPSamplePercent == 0 {
 		cfg.HTTPSamplePercent = 10
+	}
+
+	if cfg.MemStatsInterval == 0 {
+		cfg.MemStatsInterval = ctime.Second * 60
+	}
+
+	// That would just be completely pointless
+	if cfg.MemStatsInterval > 0 && cfg.MemStatsInterval < cfg.SnapshotInterval {
+		cfg.MemStatsInterval = cfg.SnapshotInterval
 	}
 }

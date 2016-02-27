@@ -16,7 +16,9 @@ const statusKey = "test-key"
 
 func newHTTPTest(t *testing.T) (*check.C, *sTest, *HTTPMuxer) {
 	c, st := newTest(t, &Config{
-		StatusKey: statusKey,
+		StatusKey:           statusKey,
+		MemStatsInterval:    -1,
+		disableRuntimeStats: true,
 	})
 	mux := st.NewHTTPMuxer("http")
 	return c, st, mux
