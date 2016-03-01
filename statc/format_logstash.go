@@ -26,11 +26,14 @@ func init() {
 func (LogstashFormat) FormatSnap(snap Snapshot) ([]byte, error) {
 	now, _ := time.Now().MarshalText()
 
-	snap.add("@version", int64(1))
-	snap.add("@timestamp", string(now))
-	snap.add("@host", clog.Hostname())
+	// Don't modify the existing snapshot
+	c := snap.Dup()
 
-	return JSONFormat{}.FormatSnap(snap)
+	c.add("@version", int64(1))
+	c.add("@timestamp", string(now))
+	c.add("@host", clog.Hostname())
+
+	return JSONFormat{}.FormatSnap(c)
 }
 
 // MimeType implements Formatter.MimeType

@@ -33,3 +33,21 @@ func TestLogstashFormatBasic(t *testing.T) {
 	c.Equal(m["@version"], float64(1))
 	c.Equal(m["int"], float64(123))
 }
+
+func TestLogstashFormatNoOverride(t *testing.T) {
+	c := check.New(t)
+
+	fmttr, err := newFormatter("logstash", nil)
+	c.MustNotError(err)
+
+	snap := make(Snapshot, 1, 8)
+	snap[0] = Stat{
+		Name: "int",
+		Val:  int64(123),
+	}
+
+	_, err = fmttr.FormatSnap(snap)
+	c.MustNotError(err)
+
+	c.Equal(snap[0].Name, "int")
+}

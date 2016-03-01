@@ -84,6 +84,13 @@ func (s *Snapshot) Add(name Name, val interface{}) {
 	s.add(name.Str(), val)
 }
 
+// Dup makes a copy of the snapshot
+func (s Snapshot) Dup() (c Snapshot) {
+	c = make(Snapshot, len(s))
+	copy(c, s)
+	return
+}
+
 func (s *Snapshot) add(name string, val interface{}) {
 	l := len(*s)
 	i := sort.Search(l, func(i int) bool {
