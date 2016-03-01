@@ -38,5 +38,4 @@ func TestLogstashFormatOutput(t *testing.T) {
 	c.Equal(m["@host"], Hostname())
 	c.Equal(m["@version"], 1.0)
 	c.Equal(m["time"], nil)
-
 }
