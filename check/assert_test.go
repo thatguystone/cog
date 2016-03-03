@@ -284,7 +284,7 @@ func TestPanic(t *testing.T) {
 		panic("oh noez!")
 	}
 
-	c.Panic(panics, "expect panic")
+	c.Panics(panics, "expect panic")
 	c.MustPanic(panics, "expect panic")
 
 	c.NotPanic(func() {}, "expect no panic")

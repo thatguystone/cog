@@ -38,7 +38,7 @@ func (rejectDataFilter) Exit() {}
 func TestFilterErrors(t *testing.T) {
 	c := check.New(t)
 
-	c.Panic(func() {
+	c.Panics(func() {
 		RegisterFilter("rejectMsg", nil)
 	})
 

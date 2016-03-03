@@ -17,7 +17,7 @@ func (snap *Snapshot) addTestData() {
 func TestNameError(t *testing.T) {
 	c := check.New(t)
 
-	c.Panic(func() {
+	c.Panics(func() {
 		Name{}.Str()
 	})
 }

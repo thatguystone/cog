@@ -73,12 +73,12 @@ func TestEIOFinalizers(t *testing.T) {
 func TestEIOErrors(t *testing.T) {
 	c := check.New(t)
 
-	c.Panic(func() {
+	c.Panics(func() {
 		RegisterProducer("test", nil)
 		RegisterProducer("TEST", nil)
 	})
 
-	c.Panic(func() {
+	c.Panics(func() {
 		RegisterConsumer("test", nil)
 		RegisterConsumer("TEST", nil)
 	})

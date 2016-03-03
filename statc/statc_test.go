@@ -163,7 +163,7 @@ func TestStatsAlreadyExists(t *testing.T) {
 	c, st := newTest(t, nil)
 	defer st.exit.Exit()
 
-	c.Panic(func() {
+	c.Panics(func() {
 		st.NewTimer("test.timer", 50)
 		st.NewTimer("test.timer", 50)
 	})
@@ -215,11 +215,11 @@ func TestStatsNameErrors(t *testing.T) {
 	c, st := newTest(t, nil)
 	defer st.exit.Exit()
 
-	c.Panic(func() {
+	c.Panics(func() {
 		st.Names("", "", "")
 	})
 
-	c.Panic(func() {
+	c.Panics(func() {
 		st.Name("")
 	})
 }

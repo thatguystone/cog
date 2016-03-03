@@ -25,7 +25,7 @@ func TestStatsBasic(t *testing.T) {
 	}
 
 	lg = l.Get("panic")
-	c.Panic(func() {
+	c.Panics(func() {
 		lg.Panic("no no no")
 	})
 

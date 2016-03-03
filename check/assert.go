@@ -517,8 +517,8 @@ func (c *C) MustNotError(err error, msg ...interface{}) {
 	}
 }
 
-// Panic ensures that the given function panics
-func (c *C) Panic(fn func(), msg ...interface{}) (ok bool) {
+// Panics ensures that the given function panics
+func (c *C) Panics(fn func(), msg ...interface{}) (ok bool) {
 	defer func() {
 		if r := recover(); r == nil {
 			c.fail("%s\n"+
@@ -535,7 +535,7 @@ func (c *C) Panic(fn func(), msg ...interface{}) (ok bool) {
 
 // MustPanic is like Panic, except it panics on failure.
 func (c *C) MustPanic(fn func(), msg ...interface{}) {
-	if !c.Panic(fn, msg...) {
+	if !c.Panics(fn, msg...) {
 		c.FailNow()
 	}
 }

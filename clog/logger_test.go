@@ -30,15 +30,15 @@ func TestLoggerCoverage(t *testing.T) {
 	lg.Errord(Data{"error-data": 1}, "Error %s", "data")
 	lg.Errorf("Error#%s", "fun")
 
-	c.Panic(func() {
+	c.Panics(func() {
 		lg.Panic("one", 2, "three")
 	})
 
-	c.Panic(func() {
+	c.Panics(func() {
 		lg.Panicd(Data{"panic-data": 1}, "Panic %s", "data")
 	})
 
-	c.Panic(func() {
+	c.Panics(func() {
 		lg.Panicf("Panic#%s", "fun")
 	})
 

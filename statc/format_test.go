@@ -28,7 +28,7 @@ func (formatErrors) MimeType() string {
 func TestFormatErrors(t *testing.T) {
 	c := check.New(t)
 
-	c.Panic(func() {
+	c.Panics(func() {
 		RegisterFormatter("json", nil)
 	})
 

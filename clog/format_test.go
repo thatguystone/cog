@@ -10,7 +10,7 @@ import (
 func TestRegisterFormatterErrors(t *testing.T) {
 	c := check.New(t)
 
-	c.Panic(func() {
+	c.Panics(func() {
 		RegisterFormatter("JSON",
 			func(args eio.Args) (Formatter, error) {
 				return nil, nil

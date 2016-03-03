@@ -102,7 +102,7 @@ func TestBasic(t *testing.T) {
 	lg.Warn("Warn")
 	lg.Error("Error")
 
-	c.Panic(func() {
+	c.Panics(func() {
 		lg.Panic("Panic")
 	})
 

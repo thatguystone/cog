@@ -21,7 +21,7 @@ func Example_check() {
 	panics := func() {
 		panic("i get nervous sometimes")
 	}
-	c.Panic(panics, "this should always panic")
+	c.Panics(panics, "this should always panic")
 
 	// Make absolute path relative for example output checking
 	wd, _ := os.Getwd()

@@ -119,7 +119,7 @@ func TestHTTPPanic(t *testing.T) {
 	h, p, _ := mux.R.Lookup("GET", "/panic")
 	c.MustTrue(h != nil)
 
-	c.Panic(func() {
+	c.Panics(func() {
 		rw := httptest.NewRecorder()
 		h(rw, nil, p)
 	})

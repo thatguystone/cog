@@ -11,7 +11,7 @@ import (
 func TestMust(t *testing.T) {
 	c := check.New(t)
 
-	c.Panic(func() {
+	c.Panics(func() {
 		Must(fmt.Errorf("error"), "nope")
 	})
 
@@ -23,7 +23,7 @@ func TestMust(t *testing.T) {
 func TestAssert(t *testing.T) {
 	c := check.New(t)
 
-	c.Panic(func() {
+	c.Panics(func() {
 		Assert(false, "nope")
 	})
 
@@ -35,7 +35,7 @@ func TestAssert(t *testing.T) {
 func TestBytesMust(t *testing.T) {
 	c := check.New(t)
 
-	c.Panic(func() {
+	c.Panics(func() {
 		BytesMust(json.Marshal(struct{ Ch chan struct{} }{}))
 	})
 
