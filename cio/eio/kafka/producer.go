@@ -38,7 +38,10 @@ func newProducer(args eio.Args) (eio.Producer, error) {
 		return nil, err
 	}
 
-	p.ap, err = sarama.NewAsyncProducer(p.Args.Brokers, nil)
+	cfg := sarama.NewConfig()
+	cfg.Producer.RequiredAcks = sarama.WaitForLocal
+
+	p.ap, err = sarama.NewAsyncProducer(p.Args.Brokers, cfg)
 
 	if err == nil {
 		go p.drainErrors()
