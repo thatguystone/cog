@@ -24,6 +24,11 @@ func (es *Errors) Empty() bool {
 	return es.errs == nil || len(*es.errs) == 0
 }
 
+// Reset clears the state of Errors for use again
+func (es *Errors) Reset() {
+	es.errs = nil
+}
+
 // Prefix returns an Errors for which all errors are prefixed with `prefix`.
 func (es *Errors) Prefix(prefix string) *Errors {
 	es.init()

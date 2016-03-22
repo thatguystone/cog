@@ -15,14 +15,17 @@ func TestErrorsBasic(t *testing.T) {
 	c.NotError(es.Error())
 }
 
-func TestErrorsAdd(t *testing.T) {
+func TestErrorsAddAndReset(t *testing.T) {
 	c := check.New(t)
 
 	es := Errors{}
 	es.Add(fmt.Errorf("one"))
 	c.False(es.Empty())
-
 	c.Error(es.Error())
+
+	es.Reset()
+	c.True(es.Empty())
+	c.NotError(es.Error())
 }
 
 func TestErrorsAddf(t *testing.T) {
