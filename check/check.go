@@ -72,7 +72,12 @@ func (c *C) T() *testing.T {
 
 // GetTestName gets the name of the current test.
 func GetTestName() string {
-	name := unknownFunc
+	_, name := getTestDeets()
+	return name
+}
+
+func getTestDeets() (path, name string) {
+	name = unknownFunc
 
 	ok := true
 	for i := 0; ok; i++ {
@@ -81,17 +86,19 @@ func GetTestName() string {
 		pc, _, _, ok = runtime.Caller(i)
 		if ok {
 			fn := runtime.FuncForPC(pc)
+			file, _ := fn.FileLine(pc)
 			fnName := filepath.Ext(fn.Name())
 
 			isTest := strings.Contains(fnName, ".Test") ||
 				strings.Contains(fnName, ".Benchmark") ||
 				strings.Contains(fnName, ".Example")
 			if isTest {
+				path = filepath.Dir(file)
 				name = fnName[1:]
 				break
 			}
 		}
 	}
 
-	return name
+	return
 }

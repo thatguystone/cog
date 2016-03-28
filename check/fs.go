@@ -114,10 +114,16 @@ func (fs *FS) GetDataDir() string {
 	}
 
 	fs.dataDirOnce.Do(func() {
-		path, err := cfs.FindDirInParents(DataDir)
+		dDir, err := cfs.FindDirInParents(DataDir)
 		fs.c.MustNotError(err)
 
-		fs.dataDir = filepath.Join(path, GetTestName())
+		tDir, name := getTestDeets()
+		relPath, err := filepath.Rel(dDir, tDir)
+		fs.c.MustNotError(err)
+
+		path := filepath.Clean(filepath.Join("/", relPath))
+
+		fs.dataDir = filepath.Join(dDir, path, name)
 
 		// Since this is only called once per test, clear it on first access
 		fs.CleanDataDir()
