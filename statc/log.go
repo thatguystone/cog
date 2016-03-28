@@ -4,7 +4,7 @@ import "github.com/thatguystone/cog/clog"
 
 type logStats struct {
 	n Name
-	l *clog.Log
+	l *clog.Ctx
 }
 
 func (ls *logStats) Snapshot(a Adder) {

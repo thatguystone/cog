@@ -76,7 +76,7 @@ func TestFilterReject(t *testing.T) {
 	lg := l.Get("test")
 	lg.Info("reject")
 	lg.Info("fun")
-	lg.Infod(Data{"reject": true}, "fun-data")
+	lg.WithKV("reject", true).Info("fun-data")
 
 	test := c.FS.SReadFile("test")
 	c.Contains(test, "fun")

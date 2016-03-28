@@ -16,13 +16,13 @@ import (
 	"github.com/thatguystone/cog/cio/eio"
 )
 
-// Log provides access to the logging facilities
-type Log struct {
+// Ctx provides access to the logging facilities
+type Ctx struct {
 	rwmtx sync.RWMutex
 	logState
 
 	mtx    sync.Mutex
-	active map[string]*logger
+	active map[string]*dLog
 }
 
 type logState struct {
@@ -41,14 +41,14 @@ type module struct {
 }
 
 // New creates a new Log
-func New(cfg Config) (l *Log, err error) {
-	l = &Log{
-		active: map[string]*logger{},
+func New(cfg Config) (ctx *Ctx, err error) {
+	ctx = &Ctx{
+		active: map[string]*dLog{},
 	}
 
-	err = l.Reconfigure(cfg)
+	err = ctx.Reconfigure(cfg)
 	if err != nil {
-		l = nil
+		ctx = nil
 	}
 
 	return
@@ -56,7 +56,7 @@ func New(cfg Config) (l *Log, err error) {
 
 // NewFromFile creates a new Log, configured from the given file. The file type
 // is determined by the extension.
-func NewFromFile(path string) (l *Log, err error) {
+func NewFromFile(path string) (ctx *Ctx, err error) {
 	f, err := os.Open(path)
 
 	if err == nil {
@@ -65,7 +65,7 @@ func NewFromFile(path string) (l *Log, err error) {
 		ext := filepath.Ext(strings.ToLower(path))
 		switch ext {
 		case ".json":
-			l, err = NewFromJSONReader(f)
+			ctx, err = NewFromJSONReader(f)
 
 		default:
 			err = fmt.Errorf("unsupported config file type: %s", ext)
@@ -77,14 +77,14 @@ func NewFromFile(path string) (l *Log, err error) {
 
 // NewFromJSONReader creates a new Log configured from JSON in the given
 // reader.
-func NewFromJSONReader(r io.Reader) (l *Log, err error) {
+func NewFromJSONReader(r io.Reader) (ctx *Ctx, err error) {
 	d := json.NewDecoder(r)
 
 	cfg := Config{}
 	err = d.Decode(&cfg)
 
 	if err == nil {
-		l, err = New(cfg)
+		ctx, err = New(cfg)
 	}
 
 	return
@@ -93,7 +93,7 @@ func NewFromJSONReader(r io.Reader) (l *Log, err error) {
 // Reconfigure reconfigures the entire logging system from the ground up. All
 // active loggers are affected immediately, and all changes are applied
 // atomically. If reconfiguration fails, the previous configuration remains.
-func (l *Log) Reconfigure(cfg Config) error {
+func (ctx *Ctx) Reconfigure(cfg Config) error {
 	wg := &sync.WaitGroup{}
 	tmp := logState{
 		cfg:     cfg,
@@ -146,7 +146,7 @@ func (l *Log) Reconfigure(cfg Config) error {
 
 	es := cog.Errors{}
 	for name, ocfg := range cfg.Outputs {
-		out, err := newOutput(ocfg, l.Get("clog"), wg)
+		out, err := newOutput(ocfg, ctx.Get("clog"), wg)
 		if err != nil {
 			es.Addf(err, `while creating output "%s"`, name)
 			continue
@@ -199,8 +199,8 @@ func (l *Log) Reconfigure(cfg Config) error {
 
 	err := es.Error()
 	if err == nil {
-		l.rwmtx.Lock()
-		defer l.rwmtx.Unlock()
+		ctx.rwmtx.Lock()
+		defer ctx.rwmtx.Unlock()
 
 		tmp.modules.Visit(func(_ patricia.Prefix, item patricia.Item) error {
 			var parent *module
@@ -218,11 +218,11 @@ func (l *Log) Reconfigure(cfg Config) error {
 			return nil
 		})
 
-		for _, lg := range l.active {
+		for _, lg := range ctx.active {
 			lg.updateModule(tmp.modules)
 		}
 
-		l.logState = tmp
+		ctx.logState = tmp
 	}
 
 	return err
@@ -230,14 +230,14 @@ func (l *Log) Reconfigure(cfg Config) error {
 
 // ReconfigureFromJSONReader reconfigures the Log from the JSON in the given
 // reader.
-func (l *Log) ReconfigureFromJSONReader(r io.Reader) error {
+func (ctx *Ctx) ReconfigureFromJSONReader(r io.Reader) error {
 	d := json.NewDecoder(r)
 
 	cfg := Config{}
 	err := d.Decode(&cfg)
 
 	if err == nil {
-		err = l.Reconfigure(cfg)
+		err = ctx.Reconfigure(cfg)
 	}
 
 	return err
@@ -245,7 +245,7 @@ func (l *Log) ReconfigureFromJSONReader(r io.Reader) error {
 
 // ReconfigureFromFile reconfigures the Log from the given file. The file type
 // is determined by the extension.
-func (l *Log) ReconfigureFromFile(path string) error {
+func (ctx *Ctx) ReconfigureFromFile(path string) error {
 	f, err := os.Open(path)
 
 	if err == nil {
@@ -254,7 +254,7 @@ func (l *Log) ReconfigureFromFile(path string) error {
 		ext := filepath.Ext(strings.ToLower(path))
 		switch ext {
 		case ".json":
-			err = l.ReconfigureFromJSONReader(f)
+			err = ctx.ReconfigureFromJSONReader(f)
 
 		default:
 			err = fmt.Errorf("unsupported config file type: %s", ext)
@@ -268,14 +268,14 @@ func (l *Log) ReconfigureFromFile(path string) error {
 // write anything pending. It blocks until done.
 //
 // If it returns an error, nothing was flushed.
-func (l *Log) Flush() error {
-	l.rwmtx.RLock()
-	ls := l.logState
-	l.rwmtx.RUnlock()
+func (ctx *Ctx) Flush() error {
+	ctx.rwmtx.RLock()
+	ls := ctx.logState
+	ctx.rwmtx.RUnlock()
 
 	// A reconfigure with the current options should work just fine. Make all
 	// old outputs exit, which causes a flush.
-	err := l.Reconfigure(ls.cfg)
+	err := ctx.Reconfigure(ls.cfg)
 	if err != nil {
 		return err
 	}
@@ -304,56 +304,58 @@ func (l *Log) Flush() error {
 // Rotate causes all outputters to rotate their files, if they have any. When
 // using an external log rotator (eg. logrotated), this is what you're looking
 // for to use in postrotate.
-func (l *Log) Rotate() error {
-	l.rwmtx.RLock()
-	defer l.rwmtx.RUnlock()
+func (ctx *Ctx) Rotate() error {
+	ctx.rwmtx.RLock()
+	defer ctx.rwmtx.RUnlock()
 
 	es := cog.Errors{}
 
-	for name, o := range l.outputs {
+	for name, o := range ctx.outputs {
 		es.Addf(o.Rotate(), `failed to Rotate output "%s"`, name)
 	}
 
 	return es.Error()
 }
 
-// Get a logger for the given module
-func (l *Log) Get(name string) *Logger {
-	l.mtx.Lock()
-	defer l.mtx.Unlock()
+// Get a Log for the given module
+func (ctx *Ctx) Get(name string) *Log {
+	ctx.mtx.Lock()
+	defer ctx.mtx.Unlock()
 
 	pfx, name := modulePrefix(name)
 
-	lg, ok := l.active[name]
+	l, ok := ctx.active[name]
 	if !ok {
-		lg = &logger{
-			l:   l,
-			pfx: pfx,
-			key: name,
-			stats: Stats{
-				Module: name,
+		l = &dLog{
+			mLog: &mLog{
+				ctx: ctx,
+				pfx: pfx,
+				key: name,
+				stats: Stats{
+					Module: name,
+				},
 			},
 		}
 
-		if l.modules != nil {
-			lg.updateModule(l.modules)
+		if ctx.modules != nil {
+			l.updateModule(ctx.modules)
 		}
 
-		l.active[name] = lg
+		ctx.active[name] = l
 	}
 
-	return newLogger(lg)
+	return newLogger(l)
 }
 
 // Stats gets the log stats since the last time this was called.
 //
 // Don't call this directly; it's meant for use with statc.
-func (l *Log) Stats() (ss []Stats) {
-	l.mtx.Lock()
-	defer l.mtx.Unlock()
+func (ctx *Ctx) Stats() (ss []Stats) {
+	ctx.mtx.Lock()
+	defer ctx.mtx.Unlock()
 
-	for _, lg := range l.active {
-		ss = append(ss, lg.stats.flush())
+	for _, l := range ctx.active {
+		ss = append(ss, l.stats.flush())
 	}
 
 	return

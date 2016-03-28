@@ -22,7 +22,7 @@ type S struct {
 
 type s struct {
 	cfg  Config
-	log  *clog.Logger
+	log  *clog.Log
 	exit *cog.GExit
 
 	outExit *cog.Exit
@@ -34,7 +34,7 @@ type s struct {
 }
 
 // NewS creates a new stats aggregator
-func NewS(cfg Config, log *clog.Logger, exit *cog.GExit) (*S, error) {
+func NewS(cfg Config, log *clog.Log, exit *cog.GExit) (*S, error) {
 	cfg.setDefaults()
 
 	s := &S{
@@ -158,7 +158,7 @@ func (s *S) NewStringGauge(name string) *StringGauge {
 }
 
 // AddLog adds log stats at the given path
-func (s *S) AddLog(name string, l *clog.Log) {
+func (s *S) AddLog(name string, l *clog.Ctx) {
 	n := s.Name(name)
 	s.AddSnapshotter(n, &logStats{n: n, l: l})
 }

@@ -16,7 +16,7 @@ func TestLogfmtCoverage(t *testing.T) {
 
 	lg := l.Get("test")
 
-	lg.Infod(Data{"key with spaces": 1}, "")
+	lg.WithKV("key with spaces", 1).Info("")
 
 	conts := c.FS.SReadFile("test")
 	c.Contains(conts, "failed to write log entry")

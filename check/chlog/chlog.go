@@ -18,10 +18,18 @@ import (
 
 // New creates a new TestLog that outputs all log messages to the given TB. This
 // logs at level Debug by default.
-func New(tb testing.TB) (*check.C, *clog.Log) {
+func New(tb testing.TB) (*check.C, *clog.Ctx) {
 	c := check.New(tb)
 
-	lcfg := clog.Config{
+	log, err := clog.New(Config(c))
+	c.MustNotError(err)
+
+	return c, log
+}
+
+// Config gets logging config for testing
+func Config(c *check.C) clog.Config {
+	return clog.Config{
 		Outputs: map[string]*clog.OutputConfig{
 			"testlog": {
 				Prod: "testlog",
@@ -39,9 +47,4 @@ func New(tb testing.TB) (*check.C, *clog.Log) {
 			},
 		},
 	}
-
-	log, err := clog.New(lcfg)
-	c.MustNotError(err)
-
-	return c, log
 }

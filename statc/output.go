@@ -11,12 +11,12 @@ import (
 type output struct {
 	out eio.Producer
 	fmt Formatter
-	log *clog.Logger
+	log *clog.Log
 }
 
 func newOutput(
 	cfg OutputConfig,
-	log *clog.Logger,
+	log *clog.Log,
 	exit *cog.GExit) (o *output, err error) {
 
 	o = &output{

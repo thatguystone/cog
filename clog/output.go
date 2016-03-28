@@ -12,7 +12,7 @@ type privOutput struct {
 	eio.Producer
 	Formatter
 	data  Data
-	lg    *Logger
+	l     *Log
 	wg    *sync.WaitGroup
 	filts filterSlice
 }
@@ -24,7 +24,7 @@ type output struct {
 	*privOutput
 }
 
-func newOutput(oc *OutputConfig, lg *Logger, wg *sync.WaitGroup) (o *output, err error) {
+func newOutput(oc *OutputConfig, l *Log, wg *sync.WaitGroup) (o *output, err error) {
 	po := &privOutput{
 		data: Data{
 			"prod":     oc.Prod,
@@ -32,7 +32,7 @@ func newOutput(oc *OutputConfig, lg *Logger, wg *sync.WaitGroup) (o *output, err
 			"fmt":      oc.Fmt,
 			"fmtArgs":  fmt.Sprintf("%+v", oc.FmtArgs),
 		},
-		lg: lg,
+		l:  l,
 		wg: wg,
 	}
 
@@ -96,7 +96,7 @@ func (po *privOutput) exit() {
 
 func (po *privOutput) logErr(err error) {
 	if err != nil {
-		po.lg.LogEntry(Entry{
+		po.l.LogEntry(Entry{
 			Level:        Error,
 			Depth:        1,
 			Msg:          fmt.Sprintf("failed to write log entry: %v", err),

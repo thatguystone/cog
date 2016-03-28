@@ -18,7 +18,7 @@ type HTTPMuxer struct {
 	// handler, etc. Any routes added directly here will have no stats
 	// recorded for them.
 	R    *httprouter.Router
-	log  *clog.Logger
+	log  *clog.Log
 	name Name
 	key  string
 	s    *S

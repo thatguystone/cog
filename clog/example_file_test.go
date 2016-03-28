@@ -26,7 +26,7 @@ func Example_file() {
 
 	lg.Debug("Bug bug bug bug")
 	lg.Info("This is a very informative message")
-	lg.Warnd(clog.Data{"variable": 1234}, "I must warn you, numbers are scary")
+	lg.WithKV("variable", 1234).Warn("I must warn you, numbers are scary")
 
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {

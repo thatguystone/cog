@@ -14,7 +14,7 @@ import (
 
 type sTest struct {
 	*S
-	log  *clog.Log
+	log  *clog.Ctx
 	exit *cog.Exit
 }
 
