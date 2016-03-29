@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	levels         = []Level{Debug, Info, Warn, Error, Panic, Fatal}
+	levels         = []Level{Debug, Info, Warn, Error, Panic}
 	badLevel Level = 127
 )
 

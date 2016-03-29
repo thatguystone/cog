@@ -5,7 +5,7 @@ import "sync/atomic"
 // Stats about which module has logged how many times at which levels
 type Stats struct {
 	Module string
-	Counts [Fatal]int64 // Fatal obviously can't make it here, so use it as len
+	Counts [lvlLen]int64
 }
 
 func (s *Stats) flush() (sc Stats) {

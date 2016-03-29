@@ -26,8 +26,7 @@ const (
 	// Panic causes the current goroutine to panic after logging the message
 	Panic
 
-	// Fatal causes the entire program to crash after the message is logged
-	Fatal
+	lvlLen
 )
 
 // MarshalJSON implements JSON.Marshaler
@@ -62,8 +61,6 @@ func (l *Level) Parse(s string) error {
 		*l = Error
 	case strings.HasPrefix("panic", s):
 		*l = Panic
-	case strings.HasPrefix("fatal", s):
-		*l = Fatal
 	default:
 		return fmt.Errorf("unrecognized level: %q", s)
 	}
@@ -84,8 +81,6 @@ func (l Level) Rune() rune {
 		return 'E'
 	case Panic:
 		return 'P'
-	case Fatal:
-		return 'F'
 	default:
 		return 'U'
 	}
@@ -104,8 +99,6 @@ func (l Level) String() string {
 		return "error"
 	case Panic:
 		return "panic"
-	case Fatal:
-		return "fatal"
 	default:
 		return "unknown"
 	}

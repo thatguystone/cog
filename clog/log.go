@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
 	"runtime"
 	"strings"
 	"sync/atomic"
@@ -124,10 +123,6 @@ func (l *mLog) LogEntry(e Entry) {
 		mod = mod.parent
 	}
 
-	if e.Level == Fatal {
-		os.Exit(2)
-	}
-
 	atomic.AddInt64(&l.stats.Counts[e.Level], 1)
 
 	if e.Level == Panic {
@@ -234,12 +229,4 @@ func (l *dLog) Panic(args ...interface{}) {
 
 func (l *dLog) Panicf(format string, args ...interface{}) {
 	l.format(Panic, 1, format, args...)
-}
-
-func (l *dLog) Fatal(args ...interface{}) {
-	l.log(Fatal, 1, args...)
-}
-
-func (l *dLog) Fatalf(format string, args ...interface{}) {
-	l.format(Fatal, 1, format, args...)
 }

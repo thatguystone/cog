@@ -29,8 +29,4 @@ type Logger interface {
 	// A horrible error happened.
 	Panic(args ...interface{})
 	Panicf(format string, args ...interface{})
-
-	// Abort the program. There's no recovering from this.
-	Fatal(args ...interface{})
-	Fatalf(format string, args ...interface{})
 }
