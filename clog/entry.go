@@ -8,28 +8,28 @@ type Data map[string]interface{}
 // Entry is one complete log entry
 type Entry struct {
 	// When this Entry was originally logged
-	Time time.Time `json:"time"`
+	Time time.Time
 
 	// Which module this Entry belongs to
-	Module string `json:"module"`
+	Module string
 
 	// Level of this Entry
-	Level Level `json:"level"`
+	Level Level
 
 	// Source file and line from where this was logged
-	Src string `json:"src"`
+	Src string
 
 	// How much of the call stack to ignore when looking for a file:lineno
 	Depth int `json:"-"`
 
 	// Formatted text
-	Msg string `json:"msg"`
+	Msg string
 
 	// Name of the host this originated on
-	Host string `json:"host"`
+	Host string
 
 	// Data to include with the Entry
-	Data Data `json:"data"`
+	Data Data
 
 	// Ignore logging any errors that occur while logging. This is mainly to
 	// avoid logging errors with logging errors with logging errors (aka.

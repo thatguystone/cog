@@ -117,7 +117,7 @@ func TestBasic(t *testing.T) {
 	json := c.FS.SReadFile("json")
 	c.Equal(2,
 		strings.Count(json,
-			`"level":"info"`))
+			`"Level":"info"`))
 
 	error := c.FS.SReadFile("error")
 	c.Equal(0,
@@ -346,7 +346,7 @@ func TestFlush(t *testing.T) {
 
 	select {
 	case b := <-bch:
-		c.Contains(string(b), `msg":"fleemp"`)
+		c.Contains(string(b), `Msg":"fleemp"`)
 	case <-time.After(time.Second):
 		c.Fatal("did not flush :(")
 	}
