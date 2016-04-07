@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/julienschmidt/httprouter"
@@ -24,6 +25,20 @@ type HTTPMuxer struct {
 	s    *S
 }
 
+// An HTTPEndpoint is used for timing requests to an endpoint.
+type HTTPEndpoint struct {
+	statuses *httpStatuses
+}
+
+// An HTTPResp wraps an http.ResponseWriter, providing timing and tracking
+// support.
+type HTTPResp struct {
+	http.ResponseWriter
+	statuses *httpStatuses
+	start    time.Time
+	status   int
+}
+
 type httpStatuses struct {
 	all    *Timer
 	panics *Timer
@@ -31,56 +46,59 @@ type httpStatuses struct {
 	s      []*Timer
 }
 
-type httpResp struct {
-	http.ResponseWriter
-	status int
-}
+var (
+	httpRespPool = sync.Pool{
+		New: func() interface{} {
+			return new(HTTPResp)
+		},
+	}
 
-var httpCodes = []int{
-	0, // Unknown
-	http.StatusContinue,
-	http.StatusSwitchingProtocols,
-	http.StatusOK,
-	http.StatusCreated,
-	http.StatusAccepted,
-	http.StatusNonAuthoritativeInfo,
-	http.StatusNoContent,
-	http.StatusResetContent,
-	http.StatusPartialContent,
-	http.StatusMultipleChoices,
-	http.StatusMovedPermanently,
-	http.StatusFound,
-	http.StatusSeeOther,
-	http.StatusNotModified,
-	http.StatusUseProxy,
-	http.StatusTemporaryRedirect,
-	http.StatusBadRequest,
-	http.StatusUnauthorized,
-	http.StatusPaymentRequired,
-	http.StatusForbidden,
-	http.StatusNotFound,
-	http.StatusMethodNotAllowed,
-	http.StatusNotAcceptable,
-	http.StatusProxyAuthRequired,
-	http.StatusRequestTimeout,
-	http.StatusConflict,
-	http.StatusGone,
-	http.StatusLengthRequired,
-	http.StatusPreconditionFailed,
-	http.StatusRequestEntityTooLarge,
-	http.StatusRequestURITooLong,
-	http.StatusUnsupportedMediaType,
-	http.StatusRequestedRangeNotSatisfiable,
-	http.StatusExpectationFailed,
-	http.StatusTeapot,
-	426, // Upgrade
-	http.StatusInternalServerError,
-	http.StatusNotImplemented,
-	http.StatusBadGateway,
-	http.StatusServiceUnavailable,
-	http.StatusGatewayTimeout,
-	http.StatusHTTPVersionNotSupported,
-}
+	httpCodes = []int{
+		0, // Unknown
+		http.StatusContinue,
+		http.StatusSwitchingProtocols,
+		http.StatusOK,
+		http.StatusCreated,
+		http.StatusAccepted,
+		http.StatusNonAuthoritativeInfo,
+		http.StatusNoContent,
+		http.StatusResetContent,
+		http.StatusPartialContent,
+		http.StatusMultipleChoices,
+		http.StatusMovedPermanently,
+		http.StatusFound,
+		http.StatusSeeOther,
+		http.StatusNotModified,
+		http.StatusUseProxy,
+		http.StatusTemporaryRedirect,
+		http.StatusBadRequest,
+		http.StatusUnauthorized,
+		http.StatusPaymentRequired,
+		http.StatusForbidden,
+		http.StatusNotFound,
+		http.StatusMethodNotAllowed,
+		http.StatusNotAcceptable,
+		http.StatusProxyAuthRequired,
+		http.StatusRequestTimeout,
+		http.StatusConflict,
+		http.StatusGone,
+		http.StatusLengthRequired,
+		http.StatusPreconditionFailed,
+		http.StatusRequestEntityTooLarge,
+		http.StatusRequestURITooLong,
+		http.StatusUnsupportedMediaType,
+		http.StatusRequestedRangeNotSatisfiable,
+		http.StatusExpectationFailed,
+		http.StatusTeapot,
+		426, // Upgrade
+		http.StatusInternalServerError,
+		http.StatusNotImplemented,
+		http.StatusBadGateway,
+		http.StatusServiceUnavailable,
+		http.StatusGatewayTimeout,
+		http.StatusHTTPVersionNotSupported,
+	}
+)
 
 // NewHTTPMuxer creates a new HTTP muxer that exposes status information for
 // all endpoints.
@@ -90,7 +108,7 @@ var httpCodes = []int{
 func (s *S) NewHTTPMuxer(name string) *HTTPMuxer {
 	m := &HTTPMuxer{
 		R:    httprouter.New(),
-		log:  s.log.Get("http"),
+		log:  s.log.Get(name),
 		name: s.Name(name),
 		key:  s.cfg.StatusKey,
 		s:    s,
@@ -125,32 +143,36 @@ func (m *HTTPMuxer) statusHandler(
 	}
 }
 
-// Handle wraps the given Handle with stats reporting
-func (m *HTTPMuxer) Handle(method, path string, handle httprouter.Handle) {
+// Endpoint is used to define an HTTP endpoint. If you're not using the
+// provided handlers, you can use this to time requests.
+func (m *HTTPMuxer) Endpoint(method, path string) HTTPEndpoint {
 	path = httprouter.CleanPath(path)
 	name := m.name.Join(path, method)
 
-	status := m.newHTTPStatuses(name)
-	m.s.AddSnapshotter(name, status)
+	statuses := m.newHTTPStatuses(name)
+	m.s.AddSnapshotter(name, statuses)
+
+	return HTTPEndpoint{
+		statuses: statuses,
+	}
+}
+
+// Handle wraps the given Handle with stats reporting
+func (m *HTTPMuxer) Handle(method, path string, handle httprouter.Handle) {
+	sRec := m.Endpoint(method, path)
 
 	m.R.Handle(method, path,
-		func(rw http.ResponseWriter, req *http.Request, p httprouter.Params) {
-			start := time.Now()
-
-			hrw := &httpResp{ResponseWriter: rw}
+		func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+			sw := sRec.Start(w)
 			defer func() {
-				dur := time.Now().Sub(start)
-
 				err := recover()
-				status.record(hrw.status, dur, err != nil)
-
+				sw.Finish(err != nil)
 				if err != nil {
 					panic(err)
 				}
 			}()
 
-			rw = hrw
-			handle(rw, req, p)
+			handle(sw, r, p)
 		})
 }
 
@@ -167,16 +189,48 @@ func (m *HTTPMuxer) HandlerFunc(method, path string, handler http.HandlerFunc) {
 	m.Handler(method, path, handler)
 }
 
-func (rw *httpResp) WriteHeader(status int) {
-	rw.status = status
-	rw.ResponseWriter.WriteHeader(status)
+// Start timing the request
+func (he *HTTPEndpoint) Start(w http.ResponseWriter) *HTTPResp {
+	hr := httpRespPool.Get().(*HTTPResp)
+	*hr = HTTPResp{
+		ResponseWriter: w,
+		statuses:       he.statuses,
+		start:          time.Now(),
+	}
+
+	return hr
 }
 
-func (rw *httpResp) Hijack() (net.Conn, *bufio.ReadWriter, error) {
-	hj, ok := rw.ResponseWriter.(http.Hijacker)
+// Free releases this object and puts it back into the pool. This is optional
+// and may only be used when you're sure no one is hanging onto the *HTTPResp.
+func (hr *HTTPResp) Free() {
+	httpRespPool.Put(hr)
+}
+
+// Finish records stats about this request.
+func (hr *HTTPResp) Finish(paniced bool) time.Duration {
+	dur := time.Now().Sub(hr.start)
+	hr.statuses.record(hr.status, dur, paniced)
+	return dur
+}
+
+// Status returns the http status that was sent, or 0 if none was sent
+func (hr *HTTPResp) Status() int {
+	return hr.status
+}
+
+// WriteHeader implements http.ResponseWriter.WriteHeader
+func (hr *HTTPResp) WriteHeader(status int) {
+	hr.status = status
+	hr.ResponseWriter.WriteHeader(status)
+}
+
+// Hijack implements http.Hijacker
+func (hr *HTTPResp) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	hj, ok := hr.ResponseWriter.(http.Hijacker)
 
 	if !ok {
-		err := fmt.Errorf("%T does not implement http.Hijacker", rw.ResponseWriter)
+		err := fmt.Errorf("%T does not implement http.Hijacker", hr.ResponseWriter)
 		return nil, nil, err
 	}
 

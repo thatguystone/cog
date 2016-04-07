@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/julienschmidt/httprouter"
 	"github.com/thatguystone/cog/check"
 )
 
@@ -202,4 +203,29 @@ func TestHTTPStatusHandlerError(t *testing.T) {
 	c.MustNotError(err)
 	defer resp.Body.Close()
 	c.Equal(resp.StatusCode, http.StatusForbidden)
+}
+
+func TestHTTPCustomHandlers(t *testing.T) {
+	c, st, mux := newHTTPTest(t)
+	defer st.exit.Exit()
+
+	ep := mux.Endpoint("GET", "/custom")
+	mux.R.Handle("GET", "/custom",
+		func(rw http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+			w := ep.Start(rw)
+			w.WriteHeader(404)
+			c.Equal(w.Status(), 404)
+
+			w.Finish(false)
+			w.Free()
+		})
+
+	srv := httptest.NewServer(mux.R)
+	defer srv.Close()
+
+	resp, err := http.Get(srv.URL + "/custom")
+	c.MustNotError(err)
+	defer resp.Body.Close()
+
+	c.Equal(resp.StatusCode, 404)
 }
