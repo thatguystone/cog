@@ -14,6 +14,16 @@ func TestMain(m *testing.M) {
 	check.Main(m)
 }
 
+func TestFindInParents(t *testing.T) {
+	c := check.New(t)
+
+	_, err := cfs.FindInParents("idontexist")
+	c.Error(err)
+
+	_, err = cfs.FindInParents("README.md")
+	c.NotError(err)
+}
+
 func TestFindDirInParents(t *testing.T) {
 	c := check.New(t)
 

@@ -9,18 +9,34 @@ import (
 	"strings"
 )
 
-// FindDirInParents climbs the directory tree, from the current directory to the
-// root, looking for a directory with the given name at each level. If found,
-// its absolute path is returned.
+// FindInParents climbs the directory tree, from the current directory to the
+// root, looking for a file with the given name at each level. If found, its
+// absolute path is returned.
+func FindInParents(file string) (path string, err error) {
+	return findInParents(file, true)
+}
+
+// FindDirInParents climbs the directory tree, from the current directory to
+// the root, looking for a directory with the given name at each level. If
+// found, its absolute path is returned.
 func FindDirInParents(dir string) (path string, err error) {
+	return findInParents(dir, false)
+}
+
+func findInParents(f string, wantsFile bool) (path string, err error) {
 	path, err = os.Getwd()
 
 	if err == nil {
 		for path != "/" {
-			path = filepath.Join(path, dir)
+			path = filepath.Join(path, f)
 
 			exists := false
-			exists, err = DirExists(path)
+
+			if wantsFile {
+				exists, err = FileExists(path)
+			} else {
+				exists, err = DirExists(path)
+			}
 
 			if err != nil || exists {
 				break
@@ -31,7 +47,7 @@ func FindDirInParents(dir string) (path string, err error) {
 	}
 
 	if err == nil && path == "/" {
-		err = fmt.Errorf("could not find dir %s in parents", dir)
+		err = fmt.Errorf("could not find %s in parents", f)
 	}
 
 	return
