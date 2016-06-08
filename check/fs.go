@@ -117,7 +117,7 @@ func (fs *FS) GetDataDir() string {
 		dDir, err := cfs.FindDirInParents(DataDir)
 		fs.c.MustNotError(err)
 
-		tDir, name := getTestDeets()
+		tDir, name := GetTestDetails()
 		relPath, err := filepath.Rel(dDir, tDir)
 		fs.c.MustNotError(err)
 

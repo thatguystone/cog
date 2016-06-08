@@ -72,11 +72,12 @@ func (c *C) T() *testing.T {
 
 // GetTestName gets the name of the current test.
 func GetTestName() string {
-	_, name := getTestDeets()
+	_, name := GetTestDetails()
 	return name
 }
 
-func getTestDeets() (path, name string) {
+// GetTestDetails gets the file path and name of the test.
+func GetTestDetails() (path, name string) {
 	name = unknownFunc
 
 	ok := true
