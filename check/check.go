@@ -58,13 +58,13 @@ func New(tb testing.TB) *C {
 	return c
 }
 
-// B provides access to the underlying *testing.B. If A was not instantiated
+// B provides access to the underlying *testing.B. If C was not instantiated
 // with a *testing.B, this panics.
 func (c *C) B() *testing.B {
 	return c.TB.(*testing.B)
 }
 
-// T provides access to the underlying *testing.T. If A was not instantiated
+// T provides access to the underlying *testing.T. If C was not instantiated
 // with a *testing.T, this panics.
 func (c *C) T() *testing.T {
 	return c.TB.(*testing.T)
