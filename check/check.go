@@ -21,32 +21,10 @@ type C struct {
 
 const unknownFunc = "???:1"
 
-var (
-	// Used to ensure that t.Parallel() is only called once
-	mtx          sync.Mutex
-	parallelized = map[string]struct{}{}
-)
-
 // New creates a new C and marks this test as parallel
 func New(tb testing.TB) *C {
 	if t, ok := tb.(*testing.T); ok {
-		name := GetTestName()
-
-		alreadyParallel := name == unknownFunc || func() bool {
-			mtx.Lock()
-			defer mtx.Unlock()
-
-			_, ok := parallelized[name]
-			if !ok {
-				parallelized[name] = struct{}{}
-			}
-
-			return ok
-		}()
-
-		if !alreadyParallel {
-			t.Parallel()
-		}
+		setParallel(t)
 	}
 
 	c := &C{
@@ -68,6 +46,27 @@ func (c *C) B() *testing.B {
 // with a *testing.T, this panics.
 func (c *C) T() *testing.T {
 	return c.TB.(*testing.T)
+}
+
+// Used to ensure that calling New() from multiple goroutines is safe
+var (
+	mtx          sync.Mutex
+	parallelized = map[*testing.T]struct{}{}
+)
+
+func setParallel(t *testing.T) {
+	mtx.Lock()
+
+	_, alreadyParallel := parallelized[t]
+	if !alreadyParallel {
+		parallelized[t] = struct{}{}
+	}
+
+	mtx.Unlock()
+
+	if !alreadyParallel {
+		t.Parallel()
+	}
 }
 
 // GetTestName gets the name of the current test.
