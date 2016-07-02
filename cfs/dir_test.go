@@ -10,11 +10,14 @@ import (
 func TestCreateParents(t *testing.T) {
 	c := check.New(t)
 
-	parents := c.FS.Path("really/long/path/with/parents")
+	fs, clean := c.FS()
+	defer clean()
+
+	parents := fs.Path("really/long/path/with/parents")
 	err := cfs.CreateParents(parents + "/file")
-	c.MustNotError(err)
+	c.Must.Nil(err)
 
 	exists, err := cfs.DirExists(parents)
-	c.MustNotError(err)
+	c.Must.Nil(err)
 	c.True(exists)
 }

@@ -71,7 +71,7 @@ func TestFix(t *testing.T) {
 				sort.Sort(s)
 				Fix(at, v)
 
-				c.MustEqual(s, v)
+				c.Must.Equal(s, v)
 			}
 		}()
 	}

@@ -6,7 +6,7 @@ func TestErrorerBasic(t *testing.T) {
 	c := New(t)
 
 	er := Errorer{}
-	c.Error(er.Err())
+	c.NotNil(er.Err())
 	c.True(er.Fail())
 }
 
@@ -17,16 +17,16 @@ func TestErrorerIgnoreTestFns(t *testing.T) {
 		IgnoreTestFns: true,
 	}
 
-	c.NotError(er.Err())
+	c.Nil(er.Err())
 	c.False(er.Fail())
 }
 
 func testErrorerOnlyInHere(c *C, er *Errorer) {
-	c.Error(er.Err())
+	c.NotNil(er.Err())
 }
 
 func testErrorerOnlyInNotHere(c *C, er *Errorer) {
-	c.NotError(er.Err())
+	c.Nil(er.Err())
 }
 
 func TestErrorerOnlyIn(t *testing.T) {

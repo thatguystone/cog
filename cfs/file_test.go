@@ -10,13 +10,16 @@ import (
 func TestCreate(t *testing.T) {
 	c := check.New(t)
 
-	path := c.FS.Path("really/long/path/with/parents/file")
+	fs, clean := c.FS()
+	defer clean()
+
+	path := fs.Path("really/long/path/with/parents/file")
 	f, err := cfs.Create(path)
-	c.MustNotError(err)
+	c.Must.Nil(err)
 	f.Close()
 
 	exists, err := cfs.FileExists(path)
-	c.MustNotError(err)
+	c.Must.Nil(err)
 	c.True(exists)
 }
 
@@ -24,46 +27,55 @@ func TestCreateError(t *testing.T) {
 	c := check.New(t)
 
 	_, err := cfs.Create("/nope/not/allowed")
-	c.Error(err)
+	c.NotNil(err)
 }
 
 func TestWrite(t *testing.T) {
 	c := check.New(t)
 
-	err := cfs.Write(c.FS.Path("file"), []byte("some stuff!"))
-	c.MustNotError(err)
+	fs, clean := c.FS()
+	defer clean()
 
-	c.FS.SContentsEqual("file", "some stuff!")
+	err := cfs.Write(fs.Path("file"), []byte("some stuff!"))
+	c.Must.Nil(err)
+
+	fs.SContentsEqual("file", "some stuff!")
 }
 
 func TestWriteError(t *testing.T) {
 	c := check.New(t)
 
 	err := cfs.Write("/this/is/not/allowed", []byte("some stuff!"))
-	c.Error(err)
+	c.NotNil(err)
 }
 
 func TestCopy(t *testing.T) {
 	c := check.New(t)
 
-	c.FS.SWriteFile("file", "crazy contents")
+	fs, clean := c.FS()
+	defer clean()
 
-	err := cfs.Copy(c.FS.Path("file"), c.FS.Path("copy"))
-	c.MustNotError(err)
+	fs.SWriteFile("file", "crazy contents")
 
-	c.FS.SContentsEqual("copy", "crazy contents")
+	err := cfs.Copy(fs.Path("file"), fs.Path("copy"))
+	c.Must.Nil(err)
+
+	fs.SContentsEqual("copy", "crazy contents")
 }
 
 func TestCopyErrors(t *testing.T) {
 	c := check.New(t)
 
-	c.FS.SWriteFile("file", "crazy contents")
+	fs, clean := c.FS()
+	defer clean()
 
-	err := cfs.Copy("/i/do/not/exist", c.FS.Path("copy"))
-	c.Error(err)
+	fs.SWriteFile("file", "crazy contents")
 
-	err = cfs.Copy(c.FS.Path("file"), "/this/is/not/allowed")
-	c.Error(err)
+	err := cfs.Copy("/i/do/not/exist", fs.Path("copy"))
+	c.NotNil(err)
 
-	c.FS.SWriteFile("dest", "crazy contents")
+	err = cfs.Copy(fs.Path("file"), "/this/is/not/allowed")
+	c.NotNil(err)
+
+	fs.SWriteFile("dest", "crazy contents")
 }

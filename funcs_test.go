@@ -15,7 +15,7 @@ func TestMust(t *testing.T) {
 		Must(fmt.Errorf("error"), "nope")
 	})
 
-	c.NotPanic(func() {
+	c.NotPanics(func() {
 		Must(nil, "nope")
 	})
 }
@@ -27,7 +27,7 @@ func TestAssert(t *testing.T) {
 		Assert(false, "nope")
 	})
 
-	c.NotPanic(func() {
+	c.NotPanics(func() {
 		Assert(true, "nope")
 	})
 }
@@ -39,7 +39,7 @@ func TestBytesMust(t *testing.T) {
 		BytesMust(json.Marshal(struct{ Ch chan struct{} }{}))
 	})
 
-	c.NotPanic(func() {
+	c.NotPanics(func() {
 		BytesMust(json.Marshal(struct{ S string }{}))
 	})
 }

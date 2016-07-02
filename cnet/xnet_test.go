@@ -10,7 +10,8 @@ import (
 )
 
 func newXTest(t *testing.T) (*check.C, XNet) {
-	return check.New(t), NewX(check.GetTestName())
+	c := check.New(t)
+	return c, NewX(c.Name())
 }
 
 func echoConn(c net.Conn) {
@@ -32,20 +33,20 @@ func TestXNetBasic(t *testing.T) {
 
 	x.SetOffline(true)
 
-	addr := "ch://" + check.GetTestName()
+	addr := "ch://" + c.Name()
 	_, err := x.Listen(addr)
-	c.MustNotError(err)
+	c.Must.Nil(err)
 
 	_, err = x.Dial(addr, time.Second)
-	c.MustError(err)
+	c.Must.NotNil(err)
 }
 
 func TestXNetConnGC(t *testing.T) {
 	c, x := newXTest(t)
 
-	addr := "ch://" + check.GetTestName()
+	addr := "ch://" + c.Name()
 	l, err := x.Listen(addr)
-	c.MustNotError(err)
+	c.Must.Nil(err)
 	defer l.Close()
 
 	go func() {
@@ -60,7 +61,7 @@ func TestXNetConnGC(t *testing.T) {
 	}()
 
 	conn, err := x.Dial(addr, time.Second)
-	c.MustNotError(err)
+	c.Must.Nil(err)
 
 	cc := conn.(*xConn).Conn.(*chConn)
 	c.Until(time.Second, func() bool {
@@ -71,12 +72,12 @@ func TestXNetConnGC(t *testing.T) {
 
 func TestXNetAcceptOffline(t *testing.T) {
 	c, x := newXTest(t)
-	x2 := NewX(check.GetTestName() + "2")
+	x2 := NewX(c.Name() + "2")
 
 	x.SetOffline(true)
 
 	l, err := x.Listen("127.0.0.1:0")
-	c.MustNotError(err)
+	c.Must.Nil(err)
 	defer l.Close()
 
 	go func() {
@@ -92,7 +93,7 @@ func TestXNetAcceptOffline(t *testing.T) {
 
 	// Connection should succeed but be immediately closed
 	conn, err := x2.Dial(l.Addr().String(), time.Second)
-	c.MustNotError(err)
+	c.Must.Nil(err)
 
 	buff := make([]byte, 4)
 	n := -1
@@ -104,9 +105,9 @@ func TestXNetAcceptOffline(t *testing.T) {
 func TestXNetCloseOnSetOffline(t *testing.T) {
 	c, x := newXTest(t)
 
-	addr := "ch://" + check.GetTestName()
+	addr := "ch://" + c.Name()
 	l, err := x.Listen(addr)
-	c.MustNotError(err)
+	c.Must.Nil(err)
 	defer l.Close()
 
 	go func() {
@@ -121,39 +122,39 @@ func TestXNetCloseOnSetOffline(t *testing.T) {
 	}()
 
 	conn, err := x.Dial(addr, time.Second)
-	c.MustNotError(err)
+	c.Must.Nil(err)
 
 	_, err = conn.Write([]byte("a"))
-	c.MustNotError(err)
+	c.Must.Nil(err)
 
 	buff := make([]byte, 4)
 	n, err := conn.Read(buff)
-	c.MustNotError(err)
+	c.Must.Nil(err)
 	c.Equal(1, n)
 
 	x.SetOffline(true)
 
 	_, err = conn.Write([]byte("a"))
-	c.MustError(err)
+	c.Must.NotNil(err)
 }
 
 func TestXNetPacket(t *testing.T) {
 	c, x := newXTest(t)
 
-	addr := "ch://" + check.GetTestName()
+	addr := "ch://" + c.Name()
 	l, err := x.ListenPacket(addr)
-	c.MustNotError(err)
+	c.Must.Nil(err)
 
-	to := chAddr(check.GetTestName())
+	to := chAddr(c.Name())
 	n, err := l.WriteTo([]byte("Test"), to)
 	c.Equal(4, n)
-	c.MustNotError(err)
+	c.Must.Nil(err)
 
 	buff := make([]byte, 4)
 	n, from, err := l.ReadFrom(buff)
 	c.Equal(4, n)
 	c.Equal(to, from)
-	c.NotError(err)
+	c.Nil(err)
 }
 
 func TestXNetPacketOffline(t *testing.T) {
@@ -161,13 +162,13 @@ func TestXNetPacketOffline(t *testing.T) {
 
 	x.SetOffline(true)
 
-	addr := "ch://" + check.GetTestName()
+	addr := "ch://" + c.Name()
 	l, err := x.ListenPacket(addr)
-	c.MustNotError(err)
+	c.Must.Nil(err)
 
-	n, err := l.WriteTo([]byte("Test"), chAddr(check.GetTestName()))
+	n, err := l.WriteTo([]byte("Test"), chAddr(c.Name()))
 	c.Equal(4, n)
-	c.MustNotError(err)
+	c.Must.Nil(err)
 
 	buff := make([]byte, 4)
 	l.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
@@ -182,7 +183,7 @@ func TestXNetOfflineErrors(t *testing.T) {
 
 	c.True(x.HostExists("localhost"))
 	_, err := x.Resolve("tcp", "localhost:123")
-	c.NotError(err)
+	c.Nil(err)
 
 	x.SetOffline(true)
 

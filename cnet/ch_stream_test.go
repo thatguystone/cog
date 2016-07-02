@@ -13,7 +13,8 @@ import (
 )
 
 func newChTest(t *testing.T) (string, *check.C, *ch) {
-	return check.GetTestName(), check.New(t), newCh()
+	c := check.New(t)
+	return c.Name(), c, newCh()
 }
 
 func testChStreamListener(t *testing.T) (
@@ -27,7 +28,7 @@ func testChStreamListener(t *testing.T) (
 	addr, c, nc := newChTest(t)
 
 	l, err := nc.listen(addr)
-	c.MustNotError(err, "failed to listen")
+	c.Must.Nil(err, "failed to listen")
 
 	accepts := make(chan net.Conn)
 	closeCh := make(chan struct{})
@@ -58,7 +59,7 @@ func netChConnPair(c *check.C, nc *ch, addr string, accepts chan net.Conn) (
 	net.Conn) {
 
 	cs, err := nc.dial("test", addr, time.Second)
-	c.MustNotError(err, "failed to dial")
+	c.Must.Nil(err, "failed to dial")
 
 	cr := <-accepts
 
@@ -67,17 +68,17 @@ func netChConnPair(c *check.C, nc *ch, addr string, accepts chan net.Conn) (
 
 func TestChStreamStreamBasic(t *testing.T) {
 	c := check.New(t)
-	n := New(check.GetTestName())
+	n := New(c.Name())
 
-	addr := "ch://" + check.GetTestName()
+	addr := "ch://" + c.Name()
 	l, err := n.Listen(addr)
-	c.MustNotError(err)
+	c.Must.Nil(err)
 	defer l.Close()
 
-	c.Equal(check.GetTestName(), l.Addr().String())
+	c.Equal(c.Name(), l.Addr().String())
 
 	_, err = n.Dial(addr, time.Millisecond)
-	c.MustError(err)
+	c.Must.NotNil(err)
 	c.True(err.(ChError).Timeout())
 	c.True(!err.(ChError).Temporary())
 
@@ -93,17 +94,17 @@ func TestChStreamStreamBasic(t *testing.T) {
 	}()
 
 	conn, err := n.Dial(addr, time.Second)
-	c.MustNotError(err)
+	c.Must.Nil(err)
 	defer conn.Close()
 
 	payload := []byte("Test")
 	sent, err := conn.Write(payload)
-	c.MustNotError(err)
+	c.Must.Nil(err)
 	c.Equal(4, sent)
 
 	buff := make([]byte, 128)
 	got, err := conn.Read(buff)
-	c.MustNotError(err)
+	c.Must.Nil(err)
 	c.Equal(4, sent)
 	c.Equal(payload, buff[0:got])
 }
@@ -114,7 +115,7 @@ func TestChStreamStreamGCListen(t *testing.T) {
 
 	addr := "ch://one"
 	_, err := nc.listen(addr)
-	c.MustNotError(err)
+	c.Must.Nil(err)
 
 	c.Until(time.Second, func() bool {
 		runtime.GC()
@@ -128,7 +129,7 @@ func TestChStreamStreamGCConn(t *testing.T) {
 
 	addr := "one"
 	l, err := nc.listen(addr)
-	c.MustNotError(err)
+	c.Must.Nil(err)
 	defer l.Close()
 
 	accepts := make(chan net.Conn)
@@ -144,7 +145,7 @@ func TestChStreamStreamGCConn(t *testing.T) {
 	}()
 
 	conn, err := nc.dial("one", addr, time.Second)
-	c.MustNotError(err)
+	c.Must.Nil(err)
 
 	<-accepts
 	c.Until(time.Second, func() bool {
@@ -153,7 +154,7 @@ func TestChStreamStreamGCConn(t *testing.T) {
 	})
 
 	_, err = nc.dial("one", addr, time.Second)
-	c.MustNotError(err)
+	c.Must.Nil(err)
 
 	conn = <-accepts
 	c.Until(time.Second, func() bool {
@@ -167,11 +168,11 @@ func TestChStreamListenAddressInUse(t *testing.T) {
 	nc := newCh()
 
 	l, err := nc.listen("one")
-	c.MustNotError(err)
+	c.Must.Nil(err)
 	defer l.Close()
 
 	_, err = nc.listen("one")
-	c.MustError(err)
+	c.Must.NotNil(err)
 	c.True(!err.(ChError).Timeout())
 	c.True(!err.(ChError).Temporary())
 }
@@ -181,7 +182,7 @@ func TestChStreamDialConnRefused(t *testing.T) {
 	nc := newCh()
 
 	_, err := nc.dial("something", "one", time.Second)
-	c.MustError(err)
+	c.Must.NotNil(err)
 	c.True(!err.(ChError).Timeout())
 	c.True(!err.(ChError).Temporary())
 }
@@ -196,16 +197,16 @@ func TestChStreamReadWriteClosed(t *testing.T) {
 
 	b := [8]byte{}
 	_, err := cs.Read(b[:])
-	c.Error(err, "read should fail when closed")
+	c.NotNil(err, "read should fail when closed")
 
 	_, err = cr.Read(b[:])
-	c.Error(err, "read should fail when closed")
+	c.NotNil(err, "read should fail when closed")
 
 	_, err = cs.Write(b[:])
-	c.Error(err, "write should fail when closed")
+	c.NotNil(err, "write should fail when closed")
 
 	_, err = cr.Write(b[:])
-	c.Error(err, "write should fail when closed")
+	c.NotNil(err, "write should fail when closed")
 }
 
 func TestChStreamReadClosed(t *testing.T) {
@@ -216,19 +217,19 @@ func TestChStreamReadClosed(t *testing.T) {
 
 	b := []byte("after close")
 	_, err := cs.Write(b)
-	c.MustNotError(err)
+	c.Must.Nil(err)
 	cs.Close()
 
 	buff := make([]byte, 1)
 	for _, b := range b {
 		n, err := cr.Read(buff)
-		c.MustEqual(n, 1)
-		c.MustNotError(err)
-		c.MustEqual(buff[0], b)
+		c.Must.Equal(n, 1)
+		c.Must.Nil(err)
+		c.Must.Equal(buff[0], b)
 	}
 
 	n, err := cr.Read(buff)
-	c.MustEqual(n, 0)
+	c.Must.Equal(n, 0)
 	c.Equal(err, io.EOF)
 }
 
@@ -302,14 +303,14 @@ func TestChStreamConnNotification(t *testing.T) {
 		b := [4]byte{}
 		for i := 0; i < 5; i++ {
 			_, err := cr.Read(b[:])
-			c.MustNotError(err, "read should not fail")
+			c.Must.Nil(err, "read should not fail")
 			gotRead <- struct{}{}
 		}
 	}()
 
 	for i := 0; i < 5; i++ {
 		_, err := cs.Write([]byte("test"))
-		c.MustNotError(err, "write should not fail")
+		c.Must.Nil(err, "write should not fail")
 		<-gotRead
 	}
 }
@@ -344,7 +345,7 @@ func TestChStreamConnDeadlines(t *testing.T) {
 
 	b := [8]byte{}
 	_, err := cs.Read(b[:])
-	c.MustError(err, "should get error")
+	c.Must.NotNil(err, "should get error")
 	c.True(err.(net.Error).Timeout(), "should time out")
 }
 
@@ -352,18 +353,18 @@ func TestChStreamDialInvalidAddress(t *testing.T) {
 	_, c, nc := newChTest(t)
 
 	_, err := nc.dial("test", "ch://this does not exist", time.Nanosecond)
-	c.MustError(err, "dial didn't fail")
+	c.Must.NotNil(err, "dial didn't fail")
 }
 
 func TestChStreamDialTimeout(t *testing.T) {
 	addr, c, nc := newChTest(t)
 
 	l, err := nc.listen(addr)
-	c.MustNotError(err, "failed to listen")
+	c.Must.Nil(err, "failed to listen")
 	defer l.Close()
 
 	_, err = nc.dial("test", addr, time.Nanosecond)
-	c.MustError(err, "dial didn't fail")
+	c.Must.NotNil(err, "dial didn't fail")
 	c.True(err.(net.Error).Timeout(), "should fail with timeout")
 }
 
@@ -371,7 +372,7 @@ func TestChStreamListenerClose(t *testing.T) {
 	addr, c, nc := newChTest(t)
 
 	l, err := nc.listen(addr)
-	c.MustNotError(err, "failed to listen")
+	c.Must.Nil(err, "failed to listen")
 	defer l.Close()
 
 	go func() {
@@ -381,11 +382,11 @@ func TestChStreamListenerClose(t *testing.T) {
 		l.Close()
 
 		_, err := l.Accept()
-		c.Error(err, "should error after when closed")
+		c.NotNil(err, "should error after when closed")
 	}()
 
 	_, err = nc.dial("test", addr, time.Second)
-	c.MustError(err, "dial didn't fail")
+	c.Must.NotNil(err, "dial didn't fail")
 	c.False(err.(net.Error).Timeout(),
 		"should fail with conn refused, not timeout")
 }

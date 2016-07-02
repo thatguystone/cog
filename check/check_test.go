@@ -2,12 +2,20 @@ package check
 
 import "testing"
 
-func TestMain(m *testing.M) {
-	Main(m)
-}
-
 func TestCheckT(t *testing.T) {
 	New(t).T()
+
+	t.Run("A", func(t *testing.T) {
+		New(t)
+	})
+
+	t.Run("A", func(t *testing.T) {
+		New(t)
+	})
+
+	t.Run("A", func(t *testing.T) {
+		New(t)
+	})
 }
 
 func TestCheckB(t *testing.T) {
@@ -15,25 +23,32 @@ func TestCheckB(t *testing.T) {
 	New(&testing.B{}).B()
 }
 
-func TestCheckMultipleNew(t *testing.T) {
-	for i := 0; i < 5; i++ {
-		New(t)
-	}
-}
-
-func TestCheckNewError(t *testing.T) {
+func TestRunCoverage(t *testing.T) {
 	c := New(t)
 
 	c.Panics(func() {
-		New(new(testing.T))
+		c := C{}
+		c.Run("", nil)
+	})
+
+}
+
+func TestGetTestNameCoverage(t *testing.T) {
+	c := New(t)
+
+	c.Panics(func() {
+		getTestName(nil)
 	})
 }
 
-func TestGetTestName(t *testing.T) {
-	c := New(t)
-	c.Equal("TestGetTestName", GetTestName())
+func BenchmarkTest(b *testing.B) {
+	New(b)
 
-	func() {
-		c.Equal("TestGetTestName", GetTestName())
-	}()
+	b.Run("A", func(b *testing.B) {
+		New(b)
+	})
+
+	b.Run("A", func(b *testing.B) {
+		New(b)
+	})
 }

@@ -22,7 +22,7 @@ func TestLimitedWriter(t *testing.T) {
 	}
 
 	_, err = l.Write([]byte("testing"))
-	c.Error(err)
+	c.NotNil(err)
 
 	c.Equal(0, l.N)
 	c.Equal(128, l.W.(*bytes.Buffer).Len())
@@ -42,5 +42,5 @@ func TestLimitedWriterWriteError(t *testing.T) {
 	}
 
 	_, err := fmt.Fprintf(&inner, "some long string")
-	c.Error(err)
+	c.NotNil(err)
 }

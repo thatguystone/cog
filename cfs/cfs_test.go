@@ -10,43 +10,39 @@ import (
 	"github.com/thatguystone/cog/check"
 )
 
-func TestMain(m *testing.M) {
-	check.Main(m)
-}
-
 func TestFindInParents(t *testing.T) {
 	c := check.New(t)
 
 	_, err := cfs.FindInParents("idontexist")
-	c.Error(err)
+	c.NotNil(err)
 
 	_, err = cfs.FindInParents("README.md")
-	c.NotError(err)
+	c.Nil(err)
 }
 
 func TestFindDirInParents(t *testing.T) {
 	c := check.New(t)
 
 	_, err := cfs.FindDirInParents("idontexist")
-	c.Error(err)
+	c.NotNil(err)
 
 	_, err = cfs.FindDirInParents("cog")
-	c.NotError(err)
+	c.Nil(err)
 }
 
 func TestFileExists(t *testing.T) {
 	c := check.New(t)
 
 	fs, err := filepath.Glob("*")
-	c.MustNotError(err)
-	c.MustTrue(len(fs) > 0)
+	c.Must.Nil(err)
+	c.Must.True(len(fs) > 0)
 
 	ex, err := cfs.FileExists(fs[0])
-	c.MustNotError(err)
+	c.Must.Nil(err)
 	c.True(ex, "%s does not exist", fs[0])
 
 	ex, err = cfs.FileExists("/i/dont/exist")
-	c.MustNotError(err)
+	c.Must.Nil(err)
 	c.False(ex)
 }
 
@@ -54,14 +50,14 @@ func TestDirExists(t *testing.T) {
 	c := check.New(t)
 
 	dir, err := os.Getwd()
-	c.MustNotError(err)
+	c.Must.Nil(err)
 
 	ex, err := cfs.DirExists(dir)
-	c.MustNotError(err)
+	c.Must.Nil(err)
 	c.True(ex, "%s does not exist", dir)
 
 	ex, err = cfs.DirExists("/i/dont/exist/")
-	c.MustNotError(err)
+	c.Must.Nil(err)
 	c.False(ex)
 }
 
@@ -69,7 +65,7 @@ func TestTempFile(t *testing.T) {
 	c := check.New(t)
 
 	f, err := cfs.TempFile("tmp-", "aac")
-	c.MustNotError(err)
+	c.Must.Nil(err)
 
 	defer func() {
 		f.Close()
@@ -84,10 +80,10 @@ func TestImportPath(t *testing.T) {
 	c := check.New(t)
 
 	_, err := cfs.ImportPath("does not exist", false)
-	c.MustError(err)
+	c.Must.NotNil(err)
 
 	_, filename, _, _ := runtime.Caller(0)
 	path, err := cfs.ImportPath(filename, false)
-	c.MustNotError(err, "filename=%s", filename)
+	c.Must.Nil(err, "filename=%s", filename)
 	c.Equal(path, "github.com/thatguystone/cog/cfs")
 }

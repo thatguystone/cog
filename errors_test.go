@@ -12,7 +12,7 @@ func TestErrorsBasic(t *testing.T) {
 
 	es := Errors{}
 	c.True(es.Empty())
-	c.NotError(es.Error())
+	c.Nil(es.Error())
 }
 
 func TestErrorsAddAndReset(t *testing.T) {
@@ -21,11 +21,11 @@ func TestErrorsAddAndReset(t *testing.T) {
 	es := Errors{}
 	es.Add(fmt.Errorf("one"))
 	c.False(es.Empty())
-	c.Error(es.Error())
+	c.NotNil(es.Error())
 
 	es.Reset()
 	c.True(es.Empty())
-	c.NotError(es.Error())
+	c.Nil(es.Error())
 }
 
 func TestErrorsAddf(t *testing.T) {
@@ -35,7 +35,7 @@ func TestErrorsAddf(t *testing.T) {
 	es.Addf(fmt.Errorf("one"), "some %s stuff", "cool")
 
 	err := es.Error()
-	c.MustError(err)
+	c.Must.NotNil(err)
 	c.Contains(err.Error(), "some cool stuff: one")
 }
 
@@ -61,7 +61,7 @@ func TestErrorsPrefix(t *testing.T) {
 	pes.Add(fmt.Errorf("two"))
 
 	err := es.Error()
-	c.MustError(err)
+	c.Must.NotNil(err)
 	c.Contains(err.Error(), "test: two")
 }
 

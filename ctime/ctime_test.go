@@ -24,7 +24,7 @@ func TestUntilPeriod(t *testing.T) {
 
 	for i, test := range tests {
 		in, err := time.ParseDuration(test)
-		c.MustNotError(err, "error at %d", i)
+		c.Must.Nil(err, "error at %d", i)
 
 		res := UntilPeriod(when, in)
 		at := when.Add(res)
