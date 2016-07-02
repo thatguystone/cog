@@ -1,16 +1,4 @@
 language: go
 
 go:
-  - 1.5.3
-
-sudo: required
-dist: trusty
-
-before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y gradle
-  - ./misc/kafka/run.sh travis
-
-script:
-  - go generate ./...
-  - go test ./...
+  - 1.6.2
