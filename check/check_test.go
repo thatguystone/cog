@@ -59,3 +59,12 @@ func BenchmarkTest(b *testing.B) {
 		New(b)
 	})
 }
+
+func TestGetCallerPath(t *testing.T) {
+	c := New(t)
+
+	func() {
+		path := getCallerPath("herp derp")
+		c.Contains(path, "cog/check")
+	}()
+}

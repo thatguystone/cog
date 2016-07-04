@@ -33,8 +33,8 @@ func Example_check() {
 
 	rel, _ := filepath.Rel(wd, fs.Path("test_file"))
 
-	// The test data directory is wiped out when all tests pass, so go ahead
-	// and make things messy.
+	// The test data directory is wiped out when the test succeeds, so go
+	// ahead and make things messy.
 	fmt.Println("test-specific file:", rel)
 
 	// Output:

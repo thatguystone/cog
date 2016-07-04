@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"strings"
 	"sync"
 	"testing"
 )
@@ -26,7 +27,7 @@ const unknownFunc = "???:1"
 // New creates a new C and marks this test as parallel
 func New(tb testing.TB) *C {
 	c := c{
-		path: getCallerPath(),
+		path: getCallerPath(getTestName(tb)),
 	}
 
 	return c.newChild(tb)
@@ -138,9 +139,29 @@ func getTestName(tb testing.TB) string {
 	}
 }
 
-func getCallerPath() string {
+func getCallerPath(tName string) string {
+	ok := tName != ""
+	tName = "." + tName
+
+	for i := 0; ok; i++ {
+		var pc uintptr
+
+		pc, _, _, ok = runtime.Caller(i)
+		if ok {
+			fn := runtime.FuncForPC(pc)
+			file, _ := fn.FileLine(pc)
+			fnName := filepath.Ext(fn.Name())
+
+			if strings.Contains(fnName, tName) {
+				return filepath.Dir(file)
+			}
+		}
+	}
+
+	// If couldn't find the right function, fall back to New()'s caller.
 	pc, _, _, _ := runtime.Caller(2)
 	fn := runtime.FuncForPC(pc)
 	file, _ := fn.FileLine(pc)
+
 	return filepath.Dir(file)
 }
