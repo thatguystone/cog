@@ -37,6 +37,11 @@ func (c *C) Name() string {
 	return c.name
 }
 
+// Path gets the path to the dir that contains the test
+func (c *C) Path() string {
+	return c.path
+}
+
 // T provides access to the underlying *testing.T. If C was not instantiated
 // with a *testing.T, this panics.
 func (c *C) T() *testing.T {

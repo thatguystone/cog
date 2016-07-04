@@ -18,6 +18,13 @@ func TestCheckT(t *testing.T) {
 	})
 }
 
+func TestCheckNamePath(t *testing.T) {
+	c := New(t)
+
+	c.Equal("TestCheckNamePath", c.Name())
+	c.Contains(c.Path(), "cog/check")
+}
+
 func TestCheckB(t *testing.T) {
 	New(t)
 	New(&testing.B{}).B()
