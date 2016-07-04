@@ -40,6 +40,20 @@ func TestFSRefs(t *testing.T) {
 	fs.NotDirExists("dir")
 }
 
+func TestFSRefsError(t *testing.T) {
+	c := New(t)
+
+	_, clean := c.FS()
+
+	c.NotPanics(func() {
+		clean()
+	})
+
+	c.Panics(func() {
+		clean()
+	})
+}
+
 func TestNewFS(t *testing.T) {
 	c := New(t)
 

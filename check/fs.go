@@ -60,6 +60,10 @@ func (f *FS) unref() {
 	defer f.mtx.Unlock()
 
 	f.refs--
+	if f.refs < 0 {
+		panic("fs: refcount < 0; did you call cleanup too many times?")
+	}
+
 	if f.refs > 0 {
 		return
 	}
