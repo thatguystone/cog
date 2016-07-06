@@ -1,9 +1,10 @@
-package stringc
+package stringc_test
 
 import (
 	"testing"
 
 	"github.com/thatguystone/cog/check"
+	"github.com/thatguystone/cog/stringc"
 )
 
 func TestTrimLinesBasic(t *testing.T) {
@@ -36,7 +37,7 @@ func TestTrimLinesBasic(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		out := TrimLines(test.in)
+		out := stringc.TrimLines(test.in)
 		c.Equal(test.out, out, "failed at %d", i)
 	}
 }

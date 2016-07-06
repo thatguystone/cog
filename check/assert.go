@@ -7,11 +7,13 @@ import (
 	"path"
 	"reflect"
 	"runtime"
+	"runtime/debug"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/thatguystone/cog/stack"
+	"github.com/thatguystone/cog/stringc"
 )
 
 // Can't really get 100% coverage on this file: doing so causes the tests to
@@ -499,9 +501,10 @@ func (a assert) NotPanics(fn func(), msg ...interface{}) (ok bool) {
 	defer func() {
 		if r := recover(); r != nil {
 			a.fail("%s\n"+
-				"Expected fn not to panic; got panic with: %+v",
+				"Expected fn not to panic; got: %+v\n%s",
 				format(msg...),
-				r)
+				r,
+				stringc.Indent(string(debug.Stack()), "\t"))
 		} else {
 			ok = true
 		}
