@@ -1,6 +1,6 @@
 package statc
 
-import "github.com/thatguystone/cog/clog"
+import "github.com/iheartradio/cog/clog"
 
 type logStats struct {
 	n Name

@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/tchap/go-patricia/patricia"
-	"github.com/thatguystone/cog"
-	"github.com/thatguystone/cog/cio/eio"
+	"github.com/iheartradio/cog"
+	"github.com/iheartradio/cog/cio/eio"
 )
 
 // Ctx provides access to the logging facilities

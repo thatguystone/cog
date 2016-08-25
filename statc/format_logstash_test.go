@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/thatguystone/cog/check"
-	"github.com/thatguystone/cog/clog"
+	"github.com/iheartradio/cog/check"
+	"github.com/iheartradio/cog/clog"
 )
 
 func TestLogstashFormatBasic(t *testing.T) {

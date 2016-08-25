@@ -3,7 +3,7 @@ package cnet
 import (
 	"testing"
 
-	"github.com/thatguystone/cog/check"
+	"github.com/iheartradio/cog/check"
 )
 
 func TestRemoveDefaultPort(t *testing.T) {

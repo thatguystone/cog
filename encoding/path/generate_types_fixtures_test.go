@@ -5,7 +5,7 @@ const fixtureBasic = `package test
 import (
 	"time"
 
-	"github.com/thatguystone/cog/encoding/path"
+	"github.com/iheartradio/cog/encoding/path"
 	"%s"
 )
 
@@ -59,7 +59,7 @@ type embeded struct {
 
 const fixtureEndToEnd = `package integrationtest
 
-import "github.com/thatguystone/cog/encoding/path"
+import "github.com/iheartradio/cog/encoding/path"
 
 type Handmade struct{}
 func (h Handmade) MarshalPath(s path.Encoder) path.Encoder { return s }
@@ -161,8 +161,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/thatguystone/cog/check"
-	"github.com/thatguystone/cog/encoding/path"
+	"github.com/iheartradio/cog/check"
+	"github.com/iheartradio/cog/encoding/path"
 )
 
 func TestBasic(t *testing.T) {
@@ -235,7 +235,7 @@ func TestMashup(t *testing.T) {
 const fixtureSubpkg = `package subpkg
 
 import (
-	"github.com/thatguystone/cog/encoding/path"
+	"github.com/iheartradio/cog/encoding/path"
 	"%s"
 )
 

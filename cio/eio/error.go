@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/thatguystone/cog"
+	"github.com/iheartradio/cog"
 )
 
 // An ErrorProducer only ever returns errors. It's useful for testing error

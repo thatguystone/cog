@@ -3,7 +3,7 @@ package stringc
 import (
 	"testing"
 
-	"github.com/thatguystone/cog/check"
+	"github.com/iheartradio/cog/check"
 )
 
 func TestTrimLinesBasic(t *testing.T) {

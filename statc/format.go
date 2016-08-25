@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/thatguystone/cog/cio/eio"
+	"github.com/iheartradio/cog/cio/eio"
 )
 
 // A Formatter formats a snapshot

@@ -109,7 +109,7 @@ func TempFileIn(dir, prefix, ext string) (f *os.File, err error) {
 }
 
 // ImportPath takes the given absolute path and returns the package that
-// contains the file, in "github.com/thatguystone/cog" form. If !isDir, then the
+// contains the file, in "github.com/iheartradio/cog" form. If !isDir, then the
 // final path element is assumed to be a file and is stripped from the package
 // name.
 func ImportPath(absPath string, isDir bool) (string, error) {

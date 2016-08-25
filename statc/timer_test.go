@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/thatguystone/cog/check"
+	"github.com/iheartradio/cog/check"
 )
 
 func TestTimerValidate(t *testing.T) {

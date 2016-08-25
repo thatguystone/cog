@@ -3,7 +3,7 @@ package statc
 import (
 	"sort"
 
-	"github.com/thatguystone/cog"
+	"github.com/iheartradio/cog"
 )
 
 // A Snapshot is a slice of stats sorted by name.

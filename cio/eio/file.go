@@ -5,7 +5,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/thatguystone/cog"
+	"github.com/iheartradio/cog"
 )
 
 // FileProducer writes each message as a single line to the given file

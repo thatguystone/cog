@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/tchap/go-patricia/patricia"
-	"github.com/thatguystone/cog/stack"
+	"github.com/iheartradio/cog/stack"
 )
 
 // Log provides a shared log.

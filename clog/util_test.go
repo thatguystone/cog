@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/tchap/go-patricia/patricia"
-	"github.com/thatguystone/cog/check"
+	"github.com/iheartradio/cog/check"
 )
 
 func TestModulePrefix(t *testing.T) {

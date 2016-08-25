@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/thatguystone/cog"
+	"github.com/iheartradio/cog"
 )
 
 // Marshaler is the interface implemented by objects that can marshal themselves

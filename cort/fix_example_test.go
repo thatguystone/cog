@@ -3,7 +3,7 @@ package cort_test
 import (
 	"fmt"
 
-	"github.com/thatguystone/cog/cort"
+	"github.com/iheartradio/cog/cort"
 )
 
 type IntSlice []int

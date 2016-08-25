@@ -5,8 +5,8 @@ package kafka
 
 import (
 	"github.com/Shopify/sarama"
-	"github.com/thatguystone/cog"
-	"github.com/thatguystone/cog/cio/eio"
+	"github.com/iheartradio/cog"
+	"github.com/iheartradio/cog/cio/eio"
 )
 
 // Producer implements a kafka producer

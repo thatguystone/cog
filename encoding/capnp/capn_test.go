@@ -5,7 +5,7 @@ import (
 
 	// TODO(astone): upgrade to github.com/zombiezen/go-capnproto2
 	capnproto "github.com/glycerine/go-capnproto"
-	"github.com/thatguystone/cog/check"
+	"github.com/iheartradio/cog/check"
 )
 
 func TestProto(t *testing.T) {

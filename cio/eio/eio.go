@@ -5,7 +5,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/thatguystone/cog"
+	"github.com/iheartradio/cog"
 )
 
 // MakeProducer creates a new Producer

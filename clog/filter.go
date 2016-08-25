@@ -5,8 +5,8 @@ import (
 	"io"
 	"strings"
 
-	"github.com/thatguystone/cog"
-	"github.com/thatguystone/cog/cio/eio"
+	"github.com/iheartradio/cog"
+	"github.com/iheartradio/cog/cio/eio"
 )
 
 // A Filter determines which log entries are allowed through

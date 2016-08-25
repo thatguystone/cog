@@ -5,7 +5,7 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/thatguystone/cog/cio/eio"
+	"github.com/iheartradio/cog/cio/eio"
 )
 
 type privOutput struct {

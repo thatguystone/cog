@@ -13,7 +13,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/thatguystone/cog/cfs"
+	"github.com/iheartradio/cog/cfs"
 
 	"golang.org/x/tools/go/loader"
 	"golang.org/x/tools/imports"
@@ -27,7 +27,7 @@ package %s
 
 //gocovr:skip-file
 
-import "github.com/thatguystone/cog/encoding/path"
+import "github.com/iheartradio/cog/encoding/path"
 
 `
 
@@ -139,7 +139,7 @@ func newProgram(fileOrDir string) (*genProgram, error) {
 		}
 	}
 
-	conf.Import("github.com/thatguystone/cog/encoding/path")
+	conf.Import("github.com/iheartradio/cog/encoding/path")
 
 	if err != nil {
 		return nil, err
@@ -306,7 +306,7 @@ func (p *genProgram) visitStruct(name string, t *types.Struct) (err error) {
 	for i := 0; err == nil && i < n; i++ {
 		f := t.Field(i)
 
-		if f.Type().String() == "github.com/thatguystone/cog/encoding/path.Static" {
+		if f.Type().String() == "github.com/iheartradio/cog/encoding/path.Static" {
 			path := reflect.StructTag(t.Tag(i)).Get("path")
 			p.staticPath(path)
 			continue

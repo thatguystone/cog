@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/thatguystone/cog/check"
+	"github.com/iheartradio/cog/check"
 )
 
 func TestFileBasic(t *testing.T) {

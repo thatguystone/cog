@@ -3,9 +3,9 @@ package statc
 import (
 	"fmt"
 
-	"github.com/thatguystone/cog"
-	"github.com/thatguystone/cog/cio/eio"
-	"github.com/thatguystone/cog/clog"
+	"github.com/iheartradio/cog"
+	"github.com/iheartradio/cog/cio/eio"
+	"github.com/iheartradio/cog/clog"
 )
 
 type output struct {

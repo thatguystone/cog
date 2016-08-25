@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"errors"
 
-	"github.com/thatguystone/cog"
-	"github.com/thatguystone/cog/stack"
+	"github.com/iheartradio/cog"
+	"github.com/iheartradio/cog/stack"
 )
 
 // TestLogProducer writes each to the test log. This producer MUST receive a

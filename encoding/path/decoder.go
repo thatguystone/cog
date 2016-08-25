@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"unsafe"
 
-	"github.com/thatguystone/cog"
+	"github.com/iheartradio/cog"
 )
 
 // Unmarshaler is the interface implemented by objects that can unmarshal

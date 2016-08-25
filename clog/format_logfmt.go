@@ -4,7 +4,7 @@ import (
 	"bytes"
 
 	"github.com/go-logfmt/logfmt"
-	"github.com/thatguystone/cog/cio/eio"
+	"github.com/iheartradio/cog/cio/eio"
 )
 
 // LogFmtFormat formats messages in heroku's LogFmt

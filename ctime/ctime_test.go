@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/thatguystone/cog/check"
+	"github.com/iheartradio/cog/check"
 )
 
 func TestUntilPeriod(t *testing.T) {

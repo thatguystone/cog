@@ -2,7 +2,7 @@
 //
 // Usage is really simple:
 //
-//    import "github.com/thatguystone/cog/check/chlog"
+//    import "github.com/iheartradio/cog/check/chlog"
 //    func TestStuff(t *testing.T) {
 //        log := chlog.New(t)
 //    }
@@ -11,9 +11,9 @@ package chlog
 import (
 	"testing"
 
-	"github.com/thatguystone/cog/check"
-	"github.com/thatguystone/cog/cio/eio"
-	"github.com/thatguystone/cog/clog"
+	"github.com/iheartradio/cog/check"
+	"github.com/iheartradio/cog/cio/eio"
+	"github.com/iheartradio/cog/clog"
 )
 
 // New creates a new TestLog that outputs all log messages to the given TB. This

@@ -1,6 +1,6 @@
 package clog
 
-import "github.com/thatguystone/cog/cio/eio"
+import "github.com/iheartradio/cog/cio/eio"
 
 // LevelFilter is the filter used by the required "Level" argument for both
 // Modules and Outputs and is typically not used directly.

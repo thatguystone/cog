@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/thatguystone/cog/clog"
+	"github.com/iheartradio/cog/clog"
 )
 
 // HTTPMuxer is a wrapper around httprouter.Router. It intercepts all requests

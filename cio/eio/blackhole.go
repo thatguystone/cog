@@ -1,6 +1,6 @@
 package eio
 
-import "github.com/thatguystone/cog"
+import "github.com/iheartradio/cog"
 
 // Blackhole drops everything and returns nil slices
 type Blackhole struct{}

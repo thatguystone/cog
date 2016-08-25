@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/thatguystone/cog"
+	"github.com/iheartradio/cog"
 )
 
 // LocalProducer is a channel-backed producer that works locally

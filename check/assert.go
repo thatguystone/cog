@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/thatguystone/cog/stack"
+	"github.com/iheartradio/cog/stack"
 )
 
 // Can't really get 100% coverage on this file: doing so causes the tests to

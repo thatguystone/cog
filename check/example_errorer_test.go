@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/thatguystone/cog/check"
+	"github.com/iheartradio/cog/check"
 )
 
 type MockWriter struct {

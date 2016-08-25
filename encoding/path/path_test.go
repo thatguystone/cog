@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/thatguystone/cog/check"
+	"github.com/iheartradio/cog/check"
 )
 
 type Empty struct{}

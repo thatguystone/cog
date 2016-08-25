@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/thatguystone/cog/encoding/path"
+	"github.com/iheartradio/cog/encoding/path"
 )
 
 func main() {

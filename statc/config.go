@@ -1,8 +1,8 @@
 package statc
 
 import (
-	"github.com/thatguystone/cog/cio/eio"
-	"github.com/thatguystone/cog/ctime"
+	"github.com/iheartradio/cog/cio/eio"
+	"github.com/iheartradio/cog/ctime"
 )
 
 // Config sets up stats. It can be read in from a config file to allow for

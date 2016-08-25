@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/thatguystone/cog/check"
-	"github.com/thatguystone/cog/cio/eio"
+	"github.com/iheartradio/cog/check"
+	"github.com/iheartradio/cog/cio/eio"
 )
 
 func TestHumanFormatNew(t *testing.T) {

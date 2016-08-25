@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/thatguystone/cog/cfs"
-	"github.com/thatguystone/cog/check"
+	"github.com/iheartradio/cog/cfs"
+	"github.com/iheartradio/cog/check"
 )
 
 func TestMain(m *testing.M) {

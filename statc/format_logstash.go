@@ -3,8 +3,8 @@ package statc
 import (
 	"time"
 
-	"github.com/thatguystone/cog/cio/eio"
-	"github.com/thatguystone/cog/clog"
+	"github.com/iheartradio/cog/cio/eio"
+	"github.com/iheartradio/cog/clog"
 )
 
 // LogstashFormat formats snapshots as JSON, ready for shipping to logstash

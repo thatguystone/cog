@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/thatguystone/cog/cfs"
+	"github.com/iheartradio/cog/cfs"
 )
 
 // FS provides access to a test's directory

@@ -131,7 +131,7 @@
 // Producers
 //
 // A full list of Producers can be found at:
-// https://godoc.org/github.com/thatguystone/cog/cio/eio
+// https://godoc.org/github.com/iheartradio/cog/cio/eio
 //
 // Filters
 //
@@ -151,5 +151,5 @@
 // Testing
 //
 // If you want log output to go to a test's log, check out:
-// https://godoc.org/github.com/thatguystone/cog/check/chlog
+// https://godoc.org/github.com/iheartradio/cog/check/chlog
 package clog

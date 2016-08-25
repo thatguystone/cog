@@ -4,12 +4,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/thatguystone/cog"
-	"github.com/thatguystone/cog/check"
-	"github.com/thatguystone/cog/check/chlog"
-	"github.com/thatguystone/cog/cio/eio"
-	"github.com/thatguystone/cog/clog"
-	"github.com/thatguystone/cog/ctime"
+	"github.com/iheartradio/cog"
+	"github.com/iheartradio/cog/check"
+	"github.com/iheartradio/cog/check/chlog"
+	"github.com/iheartradio/cog/cio/eio"
+	"github.com/iheartradio/cog/clog"
+	"github.com/iheartradio/cog/ctime"
 )
 
 type sTest struct {

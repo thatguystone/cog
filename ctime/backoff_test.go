@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/thatguystone/cog"
-	"github.com/thatguystone/cog/check"
+	"github.com/iheartradio/cog"
+	"github.com/iheartradio/cog/check"
 )
 
 func TestBackoffBasic(t *testing.T) {

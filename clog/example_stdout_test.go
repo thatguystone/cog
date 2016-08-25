@@ -3,8 +3,8 @@ package clog_test
 import (
 	"strings"
 
-	"github.com/thatguystone/cog/cio/eio"
-	"github.com/thatguystone/cog/clog"
+	"github.com/iheartradio/cog/cio/eio"
+	"github.com/iheartradio/cog/clog"
 )
 
 // Rejects any messages that might be insulting

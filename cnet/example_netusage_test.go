@@ -5,7 +5,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/thatguystone/cog/cnet"
+	"github.com/iheartradio/cog/cnet"
 )
 
 func echoServer(c net.Conn) {

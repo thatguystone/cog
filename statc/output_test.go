@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/thatguystone/cog/clog"
-	"github.com/thatguystone/cog/ctime"
+	"github.com/iheartradio/cog/clog"
+	"github.com/iheartradio/cog/ctime"
 )
 
 func TestOutputBasic(t *testing.T) {

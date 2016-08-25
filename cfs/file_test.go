@@ -3,8 +3,8 @@ package cfs_test
 import (
 	"testing"
 
-	"github.com/thatguystone/cog/cfs"
-	"github.com/thatguystone/cog/check"
+	"github.com/iheartradio/cog/cfs"
+	"github.com/iheartradio/cog/check"
 )
 
 func TestCreate(t *testing.T) {

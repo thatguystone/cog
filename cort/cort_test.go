@@ -7,7 +7,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/thatguystone/cog/check"
+	"github.com/iheartradio/cog/check"
 )
 
 type intSlice []int

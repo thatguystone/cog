@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/thatguystone/cog/clog"
+	"github.com/iheartradio/cog/clog"
 )
 
 func Example_file() {

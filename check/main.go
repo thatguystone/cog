@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/thatguystone/cog/cfs"
+	"github.com/iheartradio/cog/cfs"
 )
 
 //gocovr:skip-file

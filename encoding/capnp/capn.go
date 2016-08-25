@@ -5,7 +5,7 @@ import (
 	"bytes"
 
 	capnproto "github.com/glycerine/go-capnproto"
-	"github.com/thatguystone/cog"
+	"github.com/iheartradio/cog"
 )
 
 // TODO(astone): upgrade to github.com/zombiezen/go-capnproto2

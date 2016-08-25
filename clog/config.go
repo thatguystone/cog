@@ -1,6 +1,6 @@
 package clog
 
-import "github.com/thatguystone/cog/cio/eio"
+import "github.com/iheartradio/cog/cio/eio"
 
 const (
 	defaultConfigFileOutputName = "__default_config_file__"
@@ -36,7 +36,7 @@ type OutputConfig struct {
 	// Which Producer to use. This value is case-insensitive.
 	//
 	// The full list of Producers can be found at:
-	// https://godoc.org/github.com/thatguystone/cog/cio/eio
+	// https://godoc.org/github.com/iheartradio/cog/cio/eio
 	Prod     string
 	ProdArgs eio.Args // Args to pass to the Producer
 

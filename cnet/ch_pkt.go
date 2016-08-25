@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/thatguystone/cog/bytec"
+	"github.com/iheartradio/cog/bytec"
 )
 
 type chPacketConn struct {

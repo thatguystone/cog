@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/thatguystone/cog/cio/eio"
+	"github.com/iheartradio/cog/cio/eio"
 )
 
 // LogstashFormat formats messages as JSON, with special fields for logstash

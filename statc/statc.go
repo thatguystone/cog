@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/thatguystone/cog"
-	"github.com/thatguystone/cog/clog"
+	"github.com/iheartradio/cog"
+	"github.com/iheartradio/cog/clog"
 )
 
 // S is a stats aggregator.

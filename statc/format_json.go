@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/pquerna/ffjson/fflib/v1"
-	"github.com/thatguystone/cog/cio/eio"
-	"github.com/thatguystone/cog/unsafec"
+	"github.com/iheartradio/cog/cio/eio"
+	"github.com/iheartradio/cog/unsafec"
 )
 
 // JSONFormat formats snapshots as JSON

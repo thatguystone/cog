@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/thatguystone/cog/check"
+	"github.com/iheartradio/cog/check"
 )
 
 func newXTest(t *testing.T) (*check.C, XNet) {

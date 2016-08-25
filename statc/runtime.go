@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/thatguystone/cog"
-	"github.com/thatguystone/cog/ctime"
+	"github.com/iheartradio/cog"
+	"github.com/iheartradio/cog/ctime"
 )
 
 type cgoCalls struct{}

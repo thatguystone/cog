@@ -3,7 +3,7 @@ package ctime
 import (
 	"time"
 
-	"github.com/thatguystone/cog"
+	"github.com/iheartradio/cog"
 )
 
 // Backoff is used to limit retries

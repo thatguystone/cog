@@ -3,7 +3,7 @@ package clog
 import (
 	"encoding/json"
 
-	"github.com/thatguystone/cog/cio/eio"
+	"github.com/iheartradio/cog/cio/eio"
 )
 
 // JSONFormat formats messages as JSON

@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/thatguystone/cog/cfs"
+	"github.com/iheartradio/cog/cfs"
 )
 
 var (

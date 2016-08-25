@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/thatguystone/cog"
-	"github.com/thatguystone/cog/bytec"
-	"github.com/thatguystone/cog/ctime"
+	"github.com/iheartradio/cog"
+	"github.com/iheartradio/cog/bytec"
+	"github.com/iheartradio/cog/ctime"
 )
 
 // HTTPProducer implements batched POSTing. It allows for load balancing amongst a

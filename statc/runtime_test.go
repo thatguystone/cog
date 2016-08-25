@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/thatguystone/cog/ctime"
+	"github.com/iheartradio/cog/ctime"
 )
 
 func TestRuntimeBasic(t *testing.T) {

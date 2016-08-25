@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/thatguystone/cog/check"
+	"github.com/iheartradio/cog/check"
 )
 
 func TestLogCoverage(t *testing.T) {

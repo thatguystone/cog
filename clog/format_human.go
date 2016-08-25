@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/thatguystone/cog/cio/eio"
+	"github.com/iheartradio/cog/cio/eio"
 )
 
 // HumanFormat formats log entries so that a human can quickly decipher them

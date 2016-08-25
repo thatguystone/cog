@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/thatguystone/cog/cnet"
+	"github.com/iheartradio/cog/cnet"
 )
 
 func Example_xNetUsage() {

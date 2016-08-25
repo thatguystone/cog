@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/thatguystone/cog/check"
+	"github.com/iheartradio/cog/check"
 )
 
 const statusKey = "test-key"

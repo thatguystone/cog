@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"os"
 
-	"github.com/thatguystone/cog"
+	"github.com/iheartradio/cog"
 )
 
 // OutProducer writes to either stdout or stderr, depending on if you create a

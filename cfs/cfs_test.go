@@ -6,8 +6,8 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/thatguystone/cog/cfs"
-	"github.com/thatguystone/cog/check"
+	"github.com/iheartradio/cog/cfs"
+	"github.com/iheartradio/cog/check"
 )
 
 func TestMain(m *testing.M) {
@@ -89,5 +89,5 @@ func TestImportPath(t *testing.T) {
 	_, filename, _, _ := runtime.Caller(0)
 	path, err := cfs.ImportPath(filename, false)
 	c.MustNotError(err, "filename=%s", filename)
-	c.Equal(path, "github.com/thatguystone/cog/cfs")
+	c.Equal(path, "github.com/iheartradio/cog/cfs")
 }

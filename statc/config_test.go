@@ -3,8 +3,8 @@ package statc
 import (
 	"testing"
 
-	"github.com/thatguystone/cog/check"
-	"github.com/thatguystone/cog/ctime"
+	"github.com/iheartradio/cog/check"
+	"github.com/iheartradio/cog/ctime"
 )
 
 func TestConfigSetDefaults(t *testing.T) {
