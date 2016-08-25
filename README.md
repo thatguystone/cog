@@ -1,4 +1,4 @@
-## Cog [![Build Status](https://travis-ci.org/thatguystone/cog.svg)](https://travis-ci.org/thatguystone/cog)
+## Cog [![Build Status](https://travis-ci.org/iheartradio/cog.svg)](https://travis-ci.org/iheartradio/cog)
 
 Cog is a collection of utils for golang that I tend to use across many of my projects. Rather than building new cogs everywhere, I've just consolidated them all here. Cogs for everyone!
 
@@ -26,40 +26,40 @@ Cog consists of the following modules:
 | stringc       | [![GoDoc][stringc-status]][stringc]             | extra strings utils
 | unsafec       | [![GoDoc][unsafec-status]][unsafec]             | making things more unsafe
 
-[root]: https://godoc.org/github.com/thatguystone/cog
-[root-status]: https://godoc.org/github.com/thatguystone/cog?status.svg
-[bytec]: https://godoc.org/github.com/thatguystone/cog/bytec
-[bytec-status]: https://godoc.org/github.com/thatguystone/cog/bytec?status.svg
-[cfs]: https://godoc.org/github.com/thatguystone/cog/cfs
-[cfs-status]: https://godoc.org/github.com/thatguystone/cog/cfs?status.svg
-[check]: https://godoc.org/github.com/thatguystone/cog/check
-[check-status]: https://godoc.org/github.com/thatguystone/cog/check?status.svg
-[cio]: https://godoc.org/github.com/thatguystone/cog/cio
-[cio-status]: https://godoc.org/github.com/thatguystone/cog/cio?status.svg
-[clog]: https://godoc.org/github.com/thatguystone/cog/clog
-[clog-status]: https://godoc.org/github.com/thatguystone/cog/clog?status.svg
-[cnet]: https://godoc.org/github.com/thatguystone/cog/cnet
-[cnet-status]: https://godoc.org/github.com/thatguystone/cog/cnet?status.svg
-[cort]: https://godoc.org/github.com/thatguystone/cog/cort
-[cort-status]: https://godoc.org/github.com/thatguystone/cog/cort?status.svg
-[ctime]: https://godoc.org/github.com/thatguystone/cog/ctime
-[ctime-status]: https://godoc.org/github.com/thatguystone/cog/ctime?status.svg
-[cync]: https://godoc.org/github.com/thatguystone/cog/cync
-[cync-status]: https://godoc.org/github.com/thatguystone/cog/cync?status.svg
-[encoding-capn]: https://godoc.org/github.com/thatguystone/cog/encoding/capn
-[encoding-capn-status]: https://godoc.org/github.com/thatguystone/cog/encoding/capn?status.svg
-[encoding-path]: https://godoc.org/github.com/thatguystone/cog/encoding/path
-[encoding-path-status]: https://godoc.org/github.com/thatguystone/cog/encoding/path?status.svg
-[node]: https://godoc.org/github.com/thatguystone/cog/node
-[node-status]: https://godoc.org/github.com/thatguystone/cog/node?status.svg
-[stack]: https://godoc.org/github.com/thatguystone/cog/stack
-[stack-status]: https://godoc.org/github.com/thatguystone/cog/stack?status.svg
-[statc]: https://godoc.org/github.com/thatguystone/cog/statc
-[statc-status]: https://godoc.org/github.com/thatguystone/cog/statc?status.svg
-[stringc]: https://godoc.org/github.com/thatguystone/cog/stringc
-[stringc-status]: https://godoc.org/github.com/thatguystone/cog/stringc?status.svg
-[unsafec]: https://godoc.org/github.com/thatguystone/cog/unsafec
-[unsafec-status]: https://godoc.org/github.com/thatguystone/cog/unsafec?status.svg
+[root]: https://godoc.org/github.com/iheartradio/cog
+[root-status]: https://godoc.org/github.com/iheartradio/cog?status.svg
+[bytec]: https://godoc.org/github.com/iheartradio/cog/bytec
+[bytec-status]: https://godoc.org/github.com/iheartradio/cog/bytec?status.svg
+[cfs]: https://godoc.org/github.com/iheartradio/cog/cfs
+[cfs-status]: https://godoc.org/github.com/iheartradio/cog/cfs?status.svg
+[check]: https://godoc.org/github.com/iheartradio/cog/check
+[check-status]: https://godoc.org/github.com/iheartradio/cog/check?status.svg
+[cio]: https://godoc.org/github.com/iheartradio/cog/cio
+[cio-status]: https://godoc.org/github.com/iheartradio/cog/cio?status.svg
+[clog]: https://godoc.org/github.com/iheartradio/cog/clog
+[clog-status]: https://godoc.org/github.com/iheartradio/cog/clog?status.svg
+[cnet]: https://godoc.org/github.com/iheartradio/cog/cnet
+[cnet-status]: https://godoc.org/github.com/iheartradio/cog/cnet?status.svg
+[cort]: https://godoc.org/github.com/iheartradio/cog/cort
+[cort-status]: https://godoc.org/github.com/iheartradio/cog/cort?status.svg
+[ctime]: https://godoc.org/github.com/iheartradio/cog/ctime
+[ctime-status]: https://godoc.org/github.com/iheartradio/cog/ctime?status.svg
+[cync]: https://godoc.org/github.com/iheartradio/cog/cync
+[cync-status]: https://godoc.org/github.com/iheartradio/cog/cync?status.svg
+[encoding-capn]: https://godoc.org/github.com/iheartradio/cog/encoding/capn
+[encoding-capn-status]: https://godoc.org/github.com/iheartradio/cog/encoding/capn?status.svg
+[encoding-path]: https://godoc.org/github.com/iheartradio/cog/encoding/path
+[encoding-path-status]: https://godoc.org/github.com/iheartradio/cog/encoding/path?status.svg
+[node]: https://godoc.org/github.com/iheartradio/cog/node
+[node-status]: https://godoc.org/github.com/iheartradio/cog/node?status.svg
+[stack]: https://godoc.org/github.com/iheartradio/cog/stack
+[stack-status]: https://godoc.org/github.com/iheartradio/cog/stack?status.svg
+[statc]: https://godoc.org/github.com/iheartradio/cog/statc
+[statc-status]: https://godoc.org/github.com/iheartradio/cog/statc?status.svg
+[stringc]: https://godoc.org/github.com/iheartradio/cog/stringc
+[stringc-status]: https://godoc.org/github.com/iheartradio/cog/stringc?status.svg
+[unsafec]: https://godoc.org/github.com/iheartradio/cog/unsafec
+[unsafec-status]: https://godoc.org/github.com/iheartradio/cog/unsafec?status.svg
 
 Each module contains full documentation over on godoc, including tons of examples.
 
