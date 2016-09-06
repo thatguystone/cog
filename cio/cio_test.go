@@ -44,3 +44,12 @@ func TestLimitedWriterWriteError(t *testing.T) {
 	_, err := fmt.Fprintf(&inner, "some long string")
 	c.NotNil(err)
 }
+
+func TestNopWriteCloser(t *testing.T) {
+	check.New(t)
+
+	b := &bytes.Buffer{}
+
+	wc := NopWriteCloser(b)
+	wc.Close()
+}
