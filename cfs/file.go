@@ -17,8 +17,8 @@ func Create(path string) (*os.File, error) {
 	return os.Create(path)
 }
 
-// Write creates the file at the given path (using Create()), then writes the
-// given contents to the file.
+// Write creates the file at the given path, creating parent directories as
+// necessary.
 func Write(path string, c []byte) error {
 	err := CreateParents(path)
 	if err != nil {
