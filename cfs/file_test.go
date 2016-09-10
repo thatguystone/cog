@@ -1,11 +1,33 @@
 package cfs_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/thatguystone/cog/cfs"
 	"github.com/thatguystone/cog/check"
 )
+
+func TestOpenFile(t *testing.T) {
+	c := check.New(t)
+
+	fs, clean := c.FS()
+	defer clean()
+
+	path := fs.Path("really/long/path/with/parents/file")
+	f, err := cfs.OpenFile(path, os.O_CREATE|os.O_RDONLY, 0666)
+	c.Must.Nil(err)
+	f.Close()
+}
+
+func TestOpenFileError(t *testing.T) {
+	c := check.New(t)
+
+	_, err := cfs.OpenFile("/does-not-exist/file",
+		os.O_CREATE|os.O_RDONLY,
+		0666)
+	c.NotNil(err)
+}
 
 func TestCreate(t *testing.T) {
 	c := check.New(t)
