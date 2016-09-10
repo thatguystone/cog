@@ -219,11 +219,11 @@ func (f *fs) DumpTree(path string) {
 	rootPath := f.Path(path)
 	filepath.Walk(rootPath,
 		func(path string, info os.FileInfo, err error) error {
+			f.c.Must.Nil(err)
+
 			if info.IsDir() {
 				return nil
 			}
-
-			f.c.Must.Nil(err)
 
 			rel, err := filepath.Rel(rootPath, path)
 			f.c.Must.Nil(err)
