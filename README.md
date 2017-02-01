@@ -17,6 +17,7 @@ Cog consists of the following modules:
 | cort          | [![GoDoc][cort-status]][cort]                   | extra sorting utilities
 | ctime         | [![GoDoc][ctime-status]][ctime]                 | time utils
 | cync          | [![GoDoc][cync-status]][cync]                   | some extra sync utils
+| randc         | [![GoDoc][randc-status]][randc]                 | rand utils
 | stack         | [![GoDoc][stack-status]][stack]                 | runtime call stack utils
 | stringc       | [![GoDoc][stringc-status]][stringc]             | extra strings utils
 | unsafec       | [![GoDoc][unsafec-status]][unsafec]             | making things more unsafe
@@ -41,6 +42,8 @@ Cog consists of the following modules:
 [ctime-status]: https://godoc.org/github.com/thatguystone/cog/ctime?status.svg
 [cync]: https://godoc.org/github.com/thatguystone/cog/cync
 [cync-status]: https://godoc.org/github.com/thatguystone/cog/cync?status.svg
+[randc]: https://godoc.org/github.com/thatguystone/cog/randc
+[randc-status]: https://godoc.org/github.com/thatguystone/cog/randc?status.svg
 [stack]: https://godoc.org/github.com/thatguystone/cog/stack
 [stack-status]: https://godoc.org/github.com/thatguystone/cog/stack?status.svg
 [stringc]: https://godoc.org/github.com/thatguystone/cog/stringc
