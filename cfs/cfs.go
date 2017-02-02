@@ -24,14 +24,13 @@ func FindDirInParents(dir string) (path string, err error) {
 }
 
 func findInParents(f string, wantsFile bool) (path string, err error) {
-	path, err = os.Getwd()
+	dir, err := os.Getwd()
 
 	if err == nil {
-		for path != "/" {
-			path = filepath.Join(path, f)
+		for dir != "/" {
+			path = filepath.Join(dir, f)
 
 			exists := false
-
 			if wantsFile {
 				exists, err = FileExists(path)
 			} else {
@@ -42,11 +41,11 @@ func findInParents(f string, wantsFile bool) (path string, err error) {
 				break
 			}
 
-			path = filepath.Join(path, "../..")
+			dir = filepath.Join(dir, "..")
 		}
 	}
 
-	if err == nil && path == "/" {
+	if err == nil && dir == "/" {
 		err = fmt.Errorf("could not find %s in parents", f)
 	}
 

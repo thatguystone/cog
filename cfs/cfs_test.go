@@ -18,6 +18,9 @@ func TestFindInParents(t *testing.T) {
 
 	_, err = cfs.FindInParents("README.md")
 	c.Nil(err)
+
+	_, err = cfs.FindInParents("cfs/cfs.go")
+	c.Nil(err)
 }
 
 func TestFindDirInParents(t *testing.T) {
@@ -27,6 +30,9 @@ func TestFindDirInParents(t *testing.T) {
 	c.NotNil(err)
 
 	_, err = cfs.FindDirInParents("cog")
+	c.Nil(err)
+
+	_, err = cfs.FindDirInParents("cog/cfs")
 	c.Nil(err)
 }
 
