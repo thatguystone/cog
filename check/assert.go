@@ -321,12 +321,18 @@ func (a assert) False(cond bool, msg ...interface{}) bool {
 
 func (a assert) Equal(e, g interface{}, msg ...interface{}) bool {
 	if !a.equal(e, g) {
+		diff := diff(e, g)
+
+		if diff != "" {
+			diff = "\n\nDiff:\n" + stringc.Indent(diff, spewConfig.Indent)
+		}
+
+		e, g := fmtVals(e, g)
 		a.fail("%s\n"+
 			"Expected: `%+v`\n"+
-			"       == `%+v`",
+			"       == `%+v`%s",
 			format(msg...),
-			e,
-			g)
+			e, g, diff)
 		return false
 	}
 
@@ -336,11 +342,10 @@ func (a assert) Equal(e, g interface{}, msg ...interface{}) bool {
 func (a assert) NotEqual(e, g interface{}, msg ...interface{}) bool {
 	if a.equal(e, g) {
 		a.fail("%s\n"+
-			"Expected `%+v`\n"+
-			"      != `%+v`",
+			"Expected: `%+v`\n"+
+			"       != `%+v`%s",
 			format(msg...),
-			e,
-			g)
+			e, g)
 		return false
 	}
 
