@@ -47,7 +47,7 @@ type Asserter interface {
 	Len(v interface{}, l int, msg ...interface{}) bool
 
 	// NotLen is the opposite of Len.
-	LenNot(v interface{}, l int, msg ...interface{}) bool
+	NotLen(v interface{}, l int, msg ...interface{}) bool
 
 	// Contains checks that iter contains v.
 	//
@@ -368,7 +368,7 @@ func (a assert) Len(v interface{}, l int, msg ...interface{}) (eq bool) {
 	return
 }
 
-func (a assert) LenNot(v interface{}, l int, msg ...interface{}) (eq bool) {
+func (a assert) NotLen(v interface{}, l int, msg ...interface{}) (eq bool) {
 	defer func() {
 		if e := recover(); e != nil {
 			eq = false

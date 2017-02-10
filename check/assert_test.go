@@ -271,8 +271,8 @@ func TestLen(t *testing.T) {
 	c.Len([]int{1, 2}, 2, "expect length")
 	c.Must.Len([]int{1, 2}, 2, "expect length")
 
-	c.LenNot([]int{1, 2}, 1, "expect no length")
-	c.Must.LenNot([]int{1, 2}, 1, "expect no length")
+	c.NotLen([]int{1, 2}, 1, "expect no length")
+	c.Must.NotLen([]int{1, 2}, 1, "expect no length")
 }
 
 func TestIs(t *testing.T) {
