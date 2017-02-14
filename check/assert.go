@@ -519,9 +519,10 @@ func (a assert) NotPanics(fn func(), msg ...interface{}) (ok bool) {
 	return
 }
 
-func (a assert) Until(wait time.Duration, fn func() bool, msg ...interface{}) {
-	sleep := wait / 1000
-	for i := 0; i < 1000; i++ {
+func (a assert) Until(timeout time.Duration, fn func() bool, msg ...interface{}) {
+	deadline := time.Now().Add(timeout)
+	sleep := timeout / 1000
+	for time.Now().Before(deadline) {
 		if fn() {
 			return
 		}
