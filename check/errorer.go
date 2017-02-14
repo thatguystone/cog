@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 )
 
 // Errorer is useful for mocking out things that return errors. It will return
@@ -95,4 +96,20 @@ func (er *Errorer) Err() (err error) {
 	}
 
 	return
+}
+
+// UntilNil is a helper func used to exhaust error pathways when using an
+// Errorer.
+func UntilNil(timeout time.Duration, fn func() error) {
+	var err error
+
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		err = fn()
+		if err == nil {
+			return
+		}
+	}
+
+	panic(fmt.Errorf("func never succeeded, last err: %v", err))
 }
