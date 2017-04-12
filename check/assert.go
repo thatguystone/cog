@@ -344,7 +344,7 @@ func (a assert) NotEqual(e, g interface{}, msg ...interface{}) bool {
 	if a.equal(e, g) {
 		a.fail("%s\n"+
 			"Expected: `%+v`\n"+
-			"       != `%+v`%s",
+			"       != `%+v`",
 			format(msg...),
 			e, g)
 		return false
