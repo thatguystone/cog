@@ -3,7 +3,6 @@ package check
 import (
 	"errors"
 	"testing"
-	"time"
 )
 
 func TestErrorerBasic(t *testing.T) {
@@ -60,12 +59,12 @@ func TestErrorerSameCodePath(t *testing.T) {
 func TestUntilNil(t *testing.T) {
 	c := New(t)
 
-	UntilNil(time.Millisecond, func() error {
+	UntilNil(100, func() error {
 		return nil
 	})
 
 	c.Panics(func() {
-		UntilNil(time.Millisecond, func() error {
+		UntilNil(100, func() error {
 			return errors.New("merp")
 		})
 	})
