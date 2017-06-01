@@ -81,6 +81,12 @@ func TestDedentPrefix(t *testing.T) {
 			out: "   test\n   something\n   lines",
 			n:   0,
 		},
+		{
+			p:   "",
+			in:  "\n\n\n\n   test\n   something\n   lines",
+			out: "test\nsomething\nlines",
+			n:   1,
+		},
 	}
 
 	for i, t := range tests {

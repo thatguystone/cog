@@ -25,17 +25,24 @@ func Dedent(s string, n int) string {
 
 // DedentPrefix is the opposite of indent: it removes the given prefix n
 // number of times from each line.
-func DedentPrefix(s, prefix string, n int) (out string) {
+func DedentPrefix(s, prefix string, n int) string {
 	if n <= 0 {
 		return s
 	}
 
-	b := bytes.NewBufferString(s)
+	in := bytes.NewBufferString(s)
 
-	for i := 0; b.Len() > 0; i++ {
-		l, _ := b.ReadString('\n')
+	var out bytes.Buffer
+	out.Grow(len(s))
 
-		if i == 0 && prefix == "" {
+	for i := 0; in.Len() > 0; i++ {
+		l, _ := in.ReadString('\n')
+
+		if l == "\n" && prefix == "" {
+			continue
+		}
+
+		if prefix == "" {
 			tl := strings.TrimLeftFunc(l, unicode.IsSpace)
 			prefix = l[:len(l)-len(tl)]
 		}
@@ -44,8 +51,8 @@ func DedentPrefix(s, prefix string, n int) (out string) {
 			l = l[len(prefix):]
 		}
 
-		out += l
+		out.WriteString(l)
 	}
 
-	return
+	return out.String()
 }
