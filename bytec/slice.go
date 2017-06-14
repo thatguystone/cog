@@ -71,13 +71,11 @@ func Make(n uint64) (s *S) {
 	return sPools[poolN(n, false)].Get().(*S)
 }
 
-// Put returns the slice to the pool and sets S to nil.
-func Put(s **S) {
-	if *s != nil {
-		n := poolN(uint64(cap(**s)), true)
-		**s = (**s)[:0]
+// Free returns the slice to the pool and sets S to nil.
+func (s *S) Free() {
+	n := poolN(uint64(cap(*s)), true)
+	*s = (*s)[:0]
 
-		sPools[n].Put(*s)
-		*s = nil
-	}
+	sPools[n].Put(s)
+	s = nil
 }

@@ -10,7 +10,7 @@ func TestSlice(t *testing.T) {
 	n := testing.AllocsPerRun(5000, func() {
 		s := Make(123)
 		*s = append(*s, "1234"...)
-		Put(&s)
+		s.Free()
 	})
 
 	c := check.New(t)
@@ -66,7 +66,7 @@ func BenchmarkSlice(b *testing.B) {
 		size := sPoolsStart
 		for i := 0; i < sPoolsN; i++ {
 			s := Make(size)
-			Put(&s)
+			s.Free()
 
 			size *= 2
 		}
