@@ -10,12 +10,12 @@ import (
 
 // From: https://github.com/stretchr/testify/blob/master/assert/assertions.go
 
-func fmtVals(e, g interface{}) (string, string) {
+func fmtVals(g, e interface{}) (string, string) {
 	if reflect.TypeOf(e) != reflect.TypeOf(g) {
-		return fmt.Sprintf("%T(%#v)", e, e), fmt.Sprintf("%T(%#v)", g, g)
+		return fmt.Sprintf("%T(%#v)", g, g), fmt.Sprintf("%T(%#v)", e, e)
 	}
 
-	return fmt.Sprintf("%#v", e), fmt.Sprintf("%#v", g)
+	return fmt.Sprintf("%#v", g), fmt.Sprintf("%#v", e)
 }
 
 func typeAndKind(v interface{}) (reflect.Type, reflect.Kind) {
@@ -29,13 +29,13 @@ func typeAndKind(v interface{}) (reflect.Type, reflect.Kind) {
 	return t, k
 }
 
-func diff(expected interface{}, actual interface{}) string {
-	if expected == nil || actual == nil {
+func diff(g, e interface{}) string {
+	if e == nil || g == nil {
 		return ""
 	}
 
-	et, ek := typeAndKind(expected)
-	at, _ := typeAndKind(actual)
+	et, ek := typeAndKind(e)
+	at, _ := typeAndKind(g)
 
 	if et != at {
 		return ""
@@ -45,13 +45,13 @@ func diff(expected interface{}, actual interface{}) string {
 		return ""
 	}
 
-	e := spewConfig.Sdump(expected)
-	a := spewConfig.Sdump(actual)
+	de := spewConfig.Sdump(e)
+	dg := spewConfig.Sdump(g)
 
 	diff, _ := difflib.GetUnifiedDiffString(difflib.UnifiedDiff{
-		A:        difflib.SplitLines(e),
-		B:        difflib.SplitLines(a),
+		A:        difflib.SplitLines(de),
 		FromFile: "Expected",
+		B:        difflib.SplitLines(dg),
 		ToFile:   "Got",
 		Context:  1,
 	})

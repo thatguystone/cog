@@ -38,10 +38,10 @@ type Asserter interface {
 	// If `e` is nil, `g` will be checked for nil, and if it's an interface,
 	// its value will be checked for nil. Keep in mind that, for interfaces,
 	// this is _not_ a strict `g == nil` comparison.
-	Equal(e, g interface{}, msg ...interface{}) bool
+	Equal(g, e interface{}, msg ...interface{}) bool
 
 	// NotEqual is the opposite of Equal.
-	NotEqual(e, g interface{}, msg ...interface{}) bool
+	NotEqual(g, e interface{}, msg ...interface{}) bool
 
 	// Len checks that the length of the given v is l.
 	Len(v interface{}, l int, msg ...interface{}) bool
@@ -64,10 +64,10 @@ type Asserter interface {
 	NotContains(iter, v interface{}, msg ...interface{}) bool
 
 	// Is ensures that g is the same type as e.
-	Is(e, g interface{}, msg ...interface{}) bool
+	Is(g, e interface{}, msg ...interface{}) bool
 
 	// NotIs is the exact opposite of Is.
-	NotIs(e, g interface{}, msg ...interface{}) bool
+	NotIs(g, e interface{}, msg ...interface{}) bool
 
 	// Nil ensures that g is nil. This is a strict equality check.
 	Nil(g interface{}, msg ...interface{}) bool
@@ -175,7 +175,7 @@ func (a assert) getInt(e interface{}) (*big.Int, bool) {
 	return i, true
 }
 
-func (a assert) intEqual(e, g interface{}) bool {
+func (a assert) intEqual(g, e interface{}) bool {
 	ex, ok1 := a.getInt(e)
 	gx, ok2 := a.getInt(g)
 	if !ok1 || !ok2 {
@@ -185,7 +185,7 @@ func (a assert) intEqual(e, g interface{}) bool {
 	return ex.Cmp(gx) == 0
 }
 
-func (a assert) floatingEqual(e, g interface{}) bool {
+func (a assert) floatingEqual(g, e interface{}) bool {
 	fe, ok := e.(float64)
 	if !ok {
 		return false
@@ -202,7 +202,7 @@ func (a assert) floatingEqual(e, g interface{}) bool {
 	return math.Nextafter(min, max) == max
 }
 
-func (a assert) equal(e, g interface{}) bool {
+func (a assert) equal(g, e interface{}) bool {
 	if e == nil {
 		if e == g {
 			return true
@@ -217,15 +217,15 @@ func (a assert) equal(e, g interface{}) bool {
 		return false
 	}
 
-	if reflect.DeepEqual(e, g) {
+	if reflect.DeepEqual(g, e) {
 		return true
 	}
 
-	if a.intEqual(e, g) {
+	if a.intEqual(g, e) {
 		return true
 	}
 
-	if a.floatingEqual(e, g) {
+	if a.floatingEqual(g, e) {
 		return true
 	}
 
@@ -320,33 +320,33 @@ func (a assert) False(cond bool, msg ...interface{}) bool {
 	return !cond
 }
 
-func (a assert) Equal(e, g interface{}, msg ...interface{}) bool {
-	if !a.equal(e, g) {
-		diff := diff(e, g)
+func (a assert) Equal(g, e interface{}, msg ...interface{}) bool {
+	if !a.equal(g, e) {
+		diff := diff(g, e)
 
 		if diff != "" {
 			diff = "\n\nDiff:\n" + stringc.Indent(diff, spewConfig.Indent)
 		}
 
-		e, g := fmtVals(e, g)
+		g, e := fmtVals(g, e)
 		a.fail("%s\n"+
 			"Expected: `%+v`\n"+
 			"       == `%+v`%s",
 			format(msg...),
-			e, g, diff)
+			g, e, diff)
 		return false
 	}
 
 	return true
 }
 
-func (a assert) NotEqual(e, g interface{}, msg ...interface{}) bool {
-	if a.equal(e, g) {
+func (a assert) NotEqual(g, e interface{}, msg ...interface{}) bool {
+	if a.equal(g, e) {
 		a.fail("%s\n"+
 			"Expected: `%+v`\n"+
 			"       != `%+v`",
 			format(msg...),
-			e, g)
+			g, e)
 		return false
 	}
 
@@ -431,7 +431,7 @@ func (a assert) NotContains(iter, v interface{}, msg ...interface{}) bool {
 	return true
 }
 
-func (a assert) Is(e, g interface{}, msg ...interface{}) bool {
+func (a assert) Is(g, e interface{}, msg ...interface{}) bool {
 	te := reflect.TypeOf(e)
 	tg := reflect.TypeOf(g)
 
@@ -448,7 +448,7 @@ func (a assert) Is(e, g interface{}, msg ...interface{}) bool {
 	return true
 }
 
-func (a assert) NotIs(e, g interface{}, msg ...interface{}) bool {
+func (a assert) NotIs(g, e interface{}, msg ...interface{}) bool {
 	te := reflect.TypeOf(e)
 	tg := reflect.TypeOf(g)
 

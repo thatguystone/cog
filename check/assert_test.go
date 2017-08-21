@@ -116,9 +116,9 @@ func TestEqual(t *testing.T) {
 				var ok bool
 
 				if test.equal {
-					ok = c.Equal(test.e, test.g)
+					ok = c.Equal(test.g, test.e)
 				} else {
-					ok = c.NotEqual(test.e, test.g)
+					ok = c.NotEqual(test.g, test.e)
 				}
 
 				c.True(ok)
