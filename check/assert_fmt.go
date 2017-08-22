@@ -11,7 +11,7 @@ import (
 // From: https://github.com/stretchr/testify/blob/master/assert/assertions.go
 
 func fmtVals(g, e interface{}) (string, string) {
-	if reflect.TypeOf(e) != reflect.TypeOf(g) {
+	if reflect.TypeOf(g) != reflect.TypeOf(e) {
 		return fmt.Sprintf("%T(%#v)", g, g), fmt.Sprintf("%T(%#v)", e, e)
 	}
 
@@ -30,14 +30,14 @@ func typeAndKind(v interface{}) (reflect.Type, reflect.Kind) {
 }
 
 func diff(g, e interface{}) string {
-	if e == nil || g == nil {
+	if g == nil || e == nil {
 		return ""
 	}
 
+	gt, _ := typeAndKind(g)
 	et, ek := typeAndKind(e)
-	at, _ := typeAndKind(g)
 
-	if et != at {
+	if gt != et {
 		return ""
 	}
 
@@ -45,8 +45,8 @@ func diff(g, e interface{}) string {
 		return ""
 	}
 
-	de := spewConfig.Sdump(e)
 	dg := spewConfig.Sdump(g)
+	de := spewConfig.Sdump(e)
 
 	diff, _ := difflib.GetUnifiedDiffString(difflib.UnifiedDiff{
 		A:        difflib.SplitLines(de),
