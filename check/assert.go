@@ -398,7 +398,7 @@ func (a assert) Contains(iter, v interface{}, msg ...interface{}) bool {
 
 	if !found {
 		a.fail("%s\n"+
-			"%+v does not contain %+v",
+			"%#v does not contain %#v",
 			format(msg...),
 			iter,
 			v)
@@ -421,7 +421,7 @@ func (a assert) NotContains(iter, v interface{}, msg ...interface{}) bool {
 
 	if found {
 		a.fail("%s\n"+
-			"%+v contains %+v",
+			"%#v contains %#v",
 			format(msg...),
 			iter,
 			v)
