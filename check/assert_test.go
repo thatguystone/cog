@@ -67,7 +67,7 @@ func TestEqual(t *testing.T) {
 		table{
 			e:     nil,
 			g:     []byte(nil),
-			equal: true,
+			equal: false,
 		},
 		table{
 			e:     []byte(nil),

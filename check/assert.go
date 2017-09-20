@@ -34,10 +34,6 @@ type Asserter interface {
 	//
 	// Equal takes special care of floating point numbers, ensuring that any
 	// precision loss doesn't affect their equality.
-	//
-	// If `e` is nil, `g` will be checked for nil, and if it's an interface,
-	// its value will be checked for nil. Keep in mind that, for interfaces,
-	// this is _not_ a strict `g == nil` comparison.
 	Equal(g, e interface{}, msg ...interface{}) bool
 
 	// NotEqual is the opposite of Equal.
@@ -203,20 +199,6 @@ func (a assert) floatingEqual(g, e interface{}) bool {
 }
 
 func (a assert) equal(g, e interface{}) bool {
-	if e == nil {
-		if e == g {
-			return true
-		}
-
-		v := reflect.ValueOf(g)
-		k := v.Kind()
-		if k >= reflect.Chan && k <= reflect.Slice && v.IsNil() {
-			return true
-		}
-
-		return false
-	}
-
 	if reflect.DeepEqual(g, e) {
 		return true
 	}
