@@ -347,7 +347,7 @@ func (a assert) Len(v interface{}, l int, msg ...interface{}) (eq bool) {
 	}()
 
 	vv := reflect.ValueOf(v)
-	eq = a.Equal(l, vv.Len(), msg...)
+	eq = a.Equal(vv.Len(), l, msg...)
 	return
 }
 
