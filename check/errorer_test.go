@@ -1,7 +1,6 @@
 package check
 
 import (
-	"errors"
 	"testing"
 )
 
@@ -54,18 +53,4 @@ func TestErrorerSameCodePath(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		testErrorerSameCodePath(c, &er, i == 0)
 	}
-}
-
-func TestUntilNil(t *testing.T) {
-	c := New(t)
-
-	UntilNil(100, func() error {
-		return nil
-	})
-
-	c.Panics(func() {
-		UntilNil(100, func() error {
-			return errors.New("merp")
-		})
-	})
 }

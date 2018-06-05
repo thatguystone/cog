@@ -18,13 +18,6 @@ func TestCheckT(t *testing.T) {
 	})
 }
 
-func TestCheckNamePath(t *testing.T) {
-	c := New(t)
-
-	c.Equal("TestCheckNamePath", c.Name())
-	c.Contains(c.Path(), "cog/check")
-}
-
 func TestCheckB(t *testing.T) {
 	New(t)
 	New(&testing.B{}).B()
@@ -40,14 +33,6 @@ func TestRunCoverage(t *testing.T) {
 
 }
 
-func TestGetTestNameCoverage(t *testing.T) {
-	c := New(t)
-
-	c.Panics(func() {
-		getTestName(nil)
-	})
-}
-
 func BenchmarkTest(b *testing.B) {
 	New(b)
 
@@ -58,13 +43,4 @@ func BenchmarkTest(b *testing.B) {
 	b.Run("A", func(b *testing.B) {
 		New(b)
 	})
-}
-
-func TestGetCallerPath(t *testing.T) {
-	c := New(t)
-
-	func() {
-		path := getCallerPath("herp derp")
-		c.Contains(path, "cog/check")
-	}()
 }

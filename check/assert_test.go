@@ -316,3 +316,22 @@ func TestUntil(t *testing.T) {
 	i := 0
 	c.Until(time.Second, func() bool { i++; return i > 10 }, "failed")
 }
+
+func TestUntilNil(t *testing.T) {
+	c := New(t)
+
+	c.UntilNil(100, func() error {
+		return nil
+	})
+
+	i := 0
+	c.UntilNil(100, func() error {
+		i++
+
+		if i < 50 {
+			return errors.New("merp")
+		}
+
+		return nil
+	})
+}

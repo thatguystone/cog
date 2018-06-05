@@ -96,18 +96,3 @@ func (er *Errorer) Err() (err error) {
 
 	return
 }
-
-// UntilNil is a helper func used to exhaust error pathways when using an
-// Errorer.
-func UntilNil(iters int, fn func() error) {
-	var err error
-
-	for i := 0; i < iters; i++ {
-		err = fn()
-		if err == nil {
-			return
-		}
-	}
-
-	panic(fmt.Errorf("func didn't succeed after %d tries, last err: %v", iters, err))
-}

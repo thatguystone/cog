@@ -12,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/thatguystone/cog/stack"
 	"github.com/thatguystone/cog/stringc"
 )
 
@@ -80,6 +79,11 @@ type Asserter interface {
 	// Until polls for the given function for the given amount of time. If in
 	// that time the function did not return true, the test fails immediately.
 	Until(wait time.Duration, fn func() bool, msg ...interface{})
+
+	// UntilNil polls the given function for iters or until it doesn't return an
+	// error. This is mainly a helper used to exhaust error pathways when using
+	// an Errorer.
+	UntilNil(iters int, fn func() error, msg ...interface{})
 }
 
 type assert struct {
@@ -275,26 +279,27 @@ func (a assert) contains(iter, v interface{}) (found, ok bool) {
 	return
 }
 
-func (a assert) fail(msg ...interface{}) {
-	a.Errorf("%s\t%s: %s",
-		stack.ClearTestCaller(),
-		callerInfo(),
-		format(msg...))
+func (a assert) errorf(format string, args ...interface{}) {
+	a.Helper()
+	a.Errorf(format, args...)
 	a.onFail()
 }
 
 func (a assert) True(cond bool, msg ...interface{}) bool {
 	if !cond {
-		a.fail("%s\n"+
+		a.Helper()
+		a.errorf("%s\n"+
 			"Bool check failed: expected true",
 			format(msg...))
 	}
 
 	return cond
 }
+
 func (a assert) False(cond bool, msg ...interface{}) bool {
 	if cond {
-		a.fail("%s\n"+
+		a.Helper()
+		a.errorf("%s\n"+
 			"Bool check failed: expected false",
 			format(msg...))
 	}
@@ -311,7 +316,9 @@ func (a assert) Equal(g, e interface{}, msg ...interface{}) bool {
 		}
 
 		g, e := fmtVals(g, e)
-		a.fail("%s\n"+
+
+		a.Helper()
+		a.errorf("%s\n"+
 			"Expected: `%+v`\n"+
 			"       == `%+v`%s",
 			format(msg...),
@@ -324,7 +331,8 @@ func (a assert) Equal(g, e interface{}, msg ...interface{}) bool {
 
 func (a assert) NotEqual(g, e interface{}, msg ...interface{}) bool {
 	if a.equal(g, e) {
-		a.fail("%s\n"+
+		a.Helper()
+		a.errorf("%s\n"+
 			"Expected: `%+v`\n"+
 			"       != `%+v`",
 			format(msg...),
@@ -335,43 +343,58 @@ func (a assert) NotEqual(g, e interface{}, msg ...interface{}) bool {
 	return true
 }
 
-func (a assert) Len(v interface{}, l int, msg ...interface{}) (eq bool) {
-	defer func() {
-		if e := recover(); e != nil {
-			eq = false
-			a.fail("%s\n"+
-				"%+v is not iterable, cannot check length",
-				format(msg...),
-				v)
-		}
-	}()
+func getLen(v interface{}) (n int, ok bool) {
+	defer func() { recover() }()
 
-	vv := reflect.ValueOf(v)
-	eq = a.Equal(vv.Len(), l, msg...)
+	n = reflect.ValueOf(v).Len()
+	ok = true
 	return
 }
 
-func (a assert) NotLen(v interface{}, l int, msg ...interface{}) (eq bool) {
-	defer func() {
-		if e := recover(); e != nil {
-			eq = false
-			a.fail("%s\n"+
-				"%+v is not iterable, cannot check length",
-				format(msg...),
-				v)
-		}
-	}()
+func (a assert) Len(v interface{}, l int, msg ...interface{}) (eq bool) {
+	n, ok := getLen(v)
+	if !ok {
+		a.Helper()
+		a.errorf("%s\n"+
+			"%+v is not iterable, cannot check length",
+			format(msg...),
+			v)
+		return false
+	}
 
-	vv := reflect.ValueOf(v)
-	eq = a.NotEqual(vv.Len(), l, msg...)
-	return
+	if !a.Equal(n, l, msg...) {
+		a.Helper()
+		return false
+	}
+
+	return true
+}
+
+func (a assert) NotLen(v interface{}, l int, msg ...interface{}) (eq bool) {
+	n, ok := getLen(v)
+	if !ok {
+		a.Helper()
+		a.errorf("%s\n"+
+			"%+v is not iterable, cannot check length",
+			format(msg...),
+			v)
+		return false
+	}
+
+	if !a.NotEqual(n, l, msg...) {
+		a.Helper()
+		return false
+	}
+
+	return true
 }
 
 func (a assert) Contains(iter, v interface{}, msg ...interface{}) bool {
 	found, ok := a.contains(iter, v)
 
 	if !ok {
-		a.fail("%s\n"+
+		a.Helper()
+		a.errorf("%s\n"+
 			"%+v is not iterable; contain check failed",
 			format(msg...),
 			v)
@@ -379,7 +402,8 @@ func (a assert) Contains(iter, v interface{}, msg ...interface{}) bool {
 	}
 
 	if !found {
-		a.fail("%s\n"+
+		a.Helper()
+		a.errorf("%s\n"+
 			"%#v does not contain %#v",
 			format(msg...),
 			iter,
@@ -394,7 +418,8 @@ func (a assert) NotContains(iter, v interface{}, msg ...interface{}) bool {
 	found, ok := a.contains(iter, v)
 
 	if !ok {
-		a.fail("%s\n"+
+		a.Helper()
+		a.Errorf("%s\n"+
 			"%+v is not iterable; contain check failed",
 			format(msg...),
 			v)
@@ -402,7 +427,8 @@ func (a assert) NotContains(iter, v interface{}, msg ...interface{}) bool {
 	}
 
 	if found {
-		a.fail("%s\n"+
+		a.Helper()
+		a.Errorf("%s\n"+
 			"%#v contains %#v",
 			format(msg...),
 			iter,
@@ -418,7 +444,8 @@ func (a assert) Is(g, e interface{}, msg ...interface{}) bool {
 	tg := reflect.TypeOf(g)
 
 	if !a.equal(te, tg) {
-		a.fail("%s\n"+
+		a.Helper()
+		a.Errorf("%s\n"+
 			"Expected type: %s.%s\n"+
 			"            == %s.%s",
 			format(msg...),
@@ -435,7 +462,8 @@ func (a assert) NotIs(g, e interface{}, msg ...interface{}) bool {
 	tg := reflect.TypeOf(g)
 
 	if a.equal(te, tg) {
-		a.fail("%s\n"+
+		a.Helper()
+		a.errorf("%s\n"+
 			"Expected type: %s.%s\n"+
 			"            != %s.%s",
 			format(msg...),
@@ -449,7 +477,8 @@ func (a assert) NotIs(g, e interface{}, msg ...interface{}) bool {
 
 func (a assert) Nil(g interface{}, msg ...interface{}) bool {
 	if g != nil {
-		a.fail("%s\n"+
+		a.Helper()
+		a.errorf("%s\n"+
 			"Expected nil, got: `%+v`",
 			format(msg...),
 			g)
@@ -461,7 +490,8 @@ func (a assert) Nil(g interface{}, msg ...interface{}) bool {
 
 func (a assert) NotNil(g interface{}, msg ...interface{}) bool {
 	if g == nil {
-		a.fail("%s\n"+
+		a.Helper()
+		a.errorf("%s\n"+
 			"Expected something, got nil",
 			format(msg...))
 		return false
@@ -471,35 +501,47 @@ func (a assert) NotNil(g interface{}, msg ...interface{}) bool {
 }
 
 func (a assert) Panics(fn func(), msg ...interface{}) (ok bool) {
-	defer func() {
-		if r := recover(); r == nil {
-			a.fail("%s\n"+
-				"Expected fn to panic; it did not.",
-				format(msg...))
-		} else {
-			ok = true
-		}
-	}()
-
+	defer func() { recover() }() // Can't just defer recover(), apparently
+	ok = true
 	fn()
+
+	ok = false
+	a.Helper()
+	a.errorf("%s\n"+
+		"Expected fn to panic; it did not.",
+		format(msg...))
+
 	return
 }
 
 func (a assert) NotPanics(fn func(), msg ...interface{}) (ok bool) {
-	defer func() {
-		if r := recover(); r != nil {
-			a.fail("%s\n"+
-				"Expected fn not to panic; got: %+v\n%s",
-				format(msg...),
-				r,
-				stringc.Indent(string(debug.Stack()), "\t"))
-		} else {
-			ok = true
-		}
+	var r interface{}
+	var stack string
+
+	// Need to do the check in a different function, otherwise a.Helper()
+	// doesn't work (it reports that the callsite is in some .s file)
+	func() {
+		defer func() {
+			if !ok {
+				r = recover()
+				stack = string(debug.Stack())
+			}
+		}()
+
+		fn()
+		ok = true
 	}()
 
-	fn()
-	return
+	if !ok {
+		a.Helper()
+		a.errorf("%s\n"+
+			"Expected fn not to panic; got: %+v\n%s",
+			format(msg...),
+			r,
+			stringc.Indent(stack, "\t"))
+	}
+
+	return ok
 }
 
 func (a assert) Until(timeout time.Duration, fn func() bool, msg ...interface{}) {
@@ -513,8 +555,25 @@ func (a assert) Until(timeout time.Duration, fn func() bool, msg ...interface{})
 		time.Sleep(sleep)
 	}
 
-	a.fail("%s\n"+
+	a.errorf("%s\n"+
 		"Waiting for condition failed",
 		format(msg...))
 	a.FailNow()
+}
+
+func (a assert) UntilNil(iters int, fn func() error, msg ...interface{}) {
+	var err error
+
+	for i := 0; i < iters; i++ {
+		err = fn()
+		if err == nil {
+			return
+		}
+	}
+
+	a.Helper()
+	a.errorf("%s\n"+
+		"Func didn't succeed after %d tries, last err: %v",
+		format(msg...),
+		iters, err)
 }

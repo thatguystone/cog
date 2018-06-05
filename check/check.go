@@ -48,6 +48,11 @@ func (c *C) Run(name string, fn func(*C)) bool {
 			fn(New(t))
 		})
 
+	case *testing.B:
+		return tb.Run(name, func(b *testing.B) {
+			fn(New(b))
+		})
+
 	default:
 		panic(fmt.Errorf("unsupported testing.TB: %T", tb))
 	}
