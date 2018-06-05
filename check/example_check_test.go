@@ -1,9 +1,6 @@
 package check_test
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/thatguystone/cog/check"
@@ -23,20 +20,4 @@ func Example_check() {
 		panic("i get nervous sometimes")
 	}
 	c.Panics(panics, "this should always panic")
-
-	// Make absolute path relative for example output checking
-	wd, _ := os.Getwd()
-
-	// Get a clean directory that is isolated to this test
-	fs, cleanup := c.FS()
-	defer cleanup() // Be sure to cleanup when done
-
-	rel, _ := filepath.Rel(wd, fs.Path("test_file"))
-
-	// The test data directory is wiped out when the test succeeds, so go
-	// ahead and make things messy.
-	fmt.Println("test-specific file:", rel)
-
-	// Output:
-	// test-specific file: ../test_data/check/test_file
 }
