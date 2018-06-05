@@ -13,11 +13,11 @@ func TestErrorerBasic(t *testing.T) {
 	c.True(er.Fail())
 }
 
-func TestErrorerIgnoreTestFns(t *testing.T) {
+func TestErrorerIgnoreTests(t *testing.T) {
 	c := New(t)
 
 	er := Errorer{
-		IgnoreTestFns: true,
+		IgnoreTests: true,
 	}
 
 	c.Nil(er.Err())

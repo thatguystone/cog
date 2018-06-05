@@ -15,8 +15,8 @@ import (
 // succeeds. By doing this, you can test that all your error pathways function
 // correctly.
 type Errorer struct {
-	// If test functions should not be considered when comparing stack traces
-	IgnoreTestFns bool
+	// If *_test.go files should not be considered when comparing stack traces
+	IgnoreTests bool
 
 	// Only functions with these names should be considered for errors
 	OnlyIn []string
@@ -38,7 +38,7 @@ func (er *Errorer) fail() bool {
 
 		// Only worry about actual code paths, not where functions are called
 		// from testing
-		if er.IgnoreTestFns && strings.HasSuffix(file, "_test.go") {
+		if er.IgnoreTests && strings.HasSuffix(file, "_test.go") {
 			break
 		}
 
@@ -81,7 +81,7 @@ func (er *Errorer) fail() bool {
 }
 
 // Fail determines if the operation should fail with an error. This also marks
-// the current stack as hit, so any future calls will return falser.
+// the current stack as hit, so any future calls will return false.
 func (er *Errorer) Fail() bool {
 	// Just bounce over to fail(): fail assumes a depth of 2, so can't just put
 	// that logic here.
