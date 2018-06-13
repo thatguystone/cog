@@ -11,7 +11,7 @@ Cog consists of the following modules:
 | Module        | Docs                                 | Description |
 | ------------- | ------------------------------------ | ----------- |
 | cfs           | [![GoDoc][cfs-status]][cfs]          | filesystem utils
-| check         | [![GoDoc][check-status]][check]      | test assertions and isolated FS utils
+| check         | [![GoDoc][check-status]][check]      | test assertions
 | cio           | [![GoDoc][cio-status]][cio]          | extra io utils
 | ctime         | [![GoDoc][ctime-status]][ctime]      | time utils
 | stack         | [![GoDoc][stack-status]][stack]      | runtime call stack utils
