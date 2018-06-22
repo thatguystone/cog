@@ -362,12 +362,8 @@ func (a assert) Len(v interface{}, l int, msg ...interface{}) (eq bool) {
 		return false
 	}
 
-	if !a.Equal(n, l, msg...) {
-		a.Helper()
-		return false
-	}
-
-	return true
+	a.Helper()
+	return a.Equal(n, l, msg...)
 }
 
 func (a assert) NotLen(v interface{}, l int, msg ...interface{}) (eq bool) {
@@ -381,12 +377,8 @@ func (a assert) NotLen(v interface{}, l int, msg ...interface{}) (eq bool) {
 		return false
 	}
 
-	if !a.NotEqual(n, l, msg...) {
-		a.Helper()
-		return false
-	}
-
-	return true
+	a.Helper()
+	return a.NotEqual(n, l, msg...)
 }
 
 func (a assert) Contains(iter, v interface{}, msg ...interface{}) bool {
