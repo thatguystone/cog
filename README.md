@@ -14,7 +14,6 @@ Cog consists of the following modules:
 | check         | [![GoDoc][check-status]][check]      | test assertions
 | cio           | [![GoDoc][cio-status]][cio]          | extra io utils
 | ctime         | [![GoDoc][ctime-status]][ctime]      | time utils
-| stack         | [![GoDoc][stack-status]][stack]      | runtime call stack utils
 | stringc       | [![GoDoc][stringc-status]][stringc]  | extra strings utils
 
 [cfs]: https://godoc.org/github.com/thatguystone/cog/cfs
@@ -25,8 +24,6 @@ Cog consists of the following modules:
 [cio-status]: https://godoc.org/github.com/thatguystone/cog/cio?status.svg
 [ctime]: https://godoc.org/github.com/thatguystone/cog/ctime
 [ctime-status]: https://godoc.org/github.com/thatguystone/cog/ctime?status.svg
-[stack]: https://godoc.org/github.com/thatguystone/cog/stack
-[stack-status]: https://godoc.org/github.com/thatguystone/cog/stack?status.svg
 [stringc]: https://godoc.org/github.com/thatguystone/cog/stringc
 [stringc-status]: https://godoc.org/github.com/thatguystone/cog/stringc?status.svg
 
