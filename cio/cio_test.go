@@ -24,7 +24,7 @@ func TestLimitedWriter(t *testing.T) {
 	_, err = l.Write([]byte("testing"))
 	c.NotNil(err)
 
-	c.Equal(0, l.N)
+	c.Equal(int64(0), l.N)
 	c.Equal(128, l.W.(*bytes.Buffer).Len())
 }
 

@@ -33,7 +33,7 @@ func TestIndent(t *testing.T) {
 	}
 
 	for i, t := range tests {
-		c.Equal(t.out, stringc.Indent(t.in, t.p), "failed at %d", i)
+		c.Equalf(t.out, stringc.Indent(t.in, t.p), "failed at %d", i)
 	}
 }
 
@@ -90,7 +90,7 @@ func TestDedentPrefix(t *testing.T) {
 	}
 
 	for i, t := range tests {
-		c.Equal(t.out, stringc.DedentPrefix(t.in, t.p, t.n), "failed at %d", i)
+		c.Equalf(t.out, stringc.DedentPrefix(t.in, t.p, t.n), "failed at %d", i)
 	}
 }
 

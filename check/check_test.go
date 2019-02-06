@@ -19,28 +19,27 @@ func TestCheckT(t *testing.T) {
 }
 
 func TestCheckB(t *testing.T) {
-	New(t)
-	New(&testing.B{}).B()
+	New(new(testing.B)).B()
 }
 
-func TestRunCoverage(t *testing.T) {
+func TestCheckRun(t *testing.T) {
+	c := New(t)
+
+	c.Run("derp", func(c *C) {
+		c.Equal(1, 1)
+	})
+}
+
+func TestCheckRunCoverage(t *testing.T) {
 	c := New(t)
 
 	c.Panics(func() {
 		c := C{}
 		c.Run("", nil)
 	})
-
 }
 
 func BenchmarkTest(b *testing.B) {
-	New(b)
-
-	b.Run("A", func(b *testing.B) {
-		New(b)
-	})
-
-	b.Run("A", func(b *testing.B) {
-		New(b)
-	})
+	c := New(b)
+	c.Run("A", func(c *C) {})
 }

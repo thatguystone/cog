@@ -1,331 +1,337 @@
 package check
 
 import (
+	"bytes"
 	"errors"
-	"fmt"
+	"io"
 	"testing"
-	"time"
 )
 
-func TestFormat(t *testing.T) {
-	c := New(t)
-
-	c.Equal("", format())
-	c.Equal("test", format("test"))
-	c.Equal("test 1", format("test %d", 1))
+type testC struct {
+	*C
+	next chan bool
 }
 
-func TestCallerInfo(t *testing.T) {
+func newTest(t *testing.T) testC {
 	c := New(t)
 
-	c.Contains(callerInfo(), "assert_test.go")
-	func() {
-		c.Contains(callerInfo(), "assert_test.go")
-	}()
+	next := make(chan bool, 1)
+	c.assert.onFail = func(msgArgs ...interface{}) {
+		next <- false
+	}
+
+	c.Must.onFail = func(msgArgs ...interface{}) {
+		next <- false
+	}
+
+	return testC{
+		C:    c,
+		next: next,
+	}
+}
+
+func (c testC) expectOK(res bool) {
+	if !res {
+		c.Helper()
+		c.Error("expected test to return true")
+	}
+
+	select {
+	case <-c.next:
+		c.Helper()
+		c.Error("expected previous test to be OK")
+
+	default:
+	}
+}
+
+func (c testC) expectFail(res bool) {
+	if res {
+		c.Helper()
+		c.Error("expected test to return false")
+	}
+
+	select {
+	case <-c.next:
+
+	default:
+		c.Helper()
+		c.Error("expected previous test to fail")
+	}
 }
 
 func TestBool(t *testing.T) {
-	c := New(t)
+	c := newTest(t)
 
-	c.True(true, "expect true")
-	c.Must.True(true, "expect true")
+	c.expectOK(c.True(true, "expect true"))
+	c.expectOK(c.Truef(true, "expect %s", "true"))
+	c.expectFail(c.True(false, "expect false"))
+	c.expectFail(c.Truef(false, "expect %s", "false"))
 
-	c.False(false, "expect false")
-	c.Must.False(false, "expect false")
+	c.expectOK(c.False(false, "expect false"))
+	c.expectOK(c.Falsef(false, "expect %s", "false"))
+	c.expectFail(c.False(true, "expect false"))
+	c.expectFail(c.Falsef(true, "expect %s", "false"))
 }
 
 func TestEqual(t *testing.T) {
-	c := New(t)
+	c := newTest(t)
 
-	type table struct {
+	tests := []struct {
 		e     interface{}
 		g     interface{}
 		equal bool
-	}
-
-	tests := []table{
-		table{
+	}{
+		{
 			e:     1,
 			g:     1,
 			equal: true,
 		},
-		table{
+		{
+			e:     int(1),
+			g:     int64(1),
+			equal: false,
+		},
+		{
+			e:     1.0,
+			g:     int64(1),
+			equal: false,
+		},
+		{
 			e:     1,
 			g:     2,
 			equal: false,
 		},
-		table{
+		{
 			e:     "some long string",
 			g:     "another long string",
 			equal: false,
 		},
-		table{
+		{
+			e:     map[string]string{"a": "a", "b": "b"},
+			g:     map[string]string{"a": "a", "b": "b"},
+			equal: true,
+		},
+		{
+			e:     map[string]string{"a": "a", "b": "b"},
+			g:     map[string]string{"a": "a"},
+			equal: false,
+		},
+		{
 			e:     1.0,
 			g:     2,
 			equal: false,
 		},
-		table{
+		{
 			e:     nil,
 			g:     []byte(nil),
 			equal: false,
 		},
-		table{
+		{
 			e:     []byte(nil),
 			g:     []byte(nil),
 			equal: true,
 		},
-		table{
+		{
 			e:     []byte(nil),
 			g:     nil,
 			equal: false,
 		},
-		table{
+		{
 			e:     nil,
 			g:     nil,
 			equal: true,
 		},
-		table{
+		{
+			e:     (io.Reader)((*bytes.Buffer)(nil)),
+			g:     nil,
+			equal: false,
+		},
+		{
 			e:     nil,
 			g:     1,
 			equal: false,
 		},
 	}
 
-	f := 0.1
-	sum := 0.0
-	for i := 0; i < 10; i++ {
-		sum += f
-	}
-
-	tests = append(tests, table{
-		e:     float32(1.0),
-		g:     float32(sum),
-		equal: true,
-	})
-
-	tests = append(tests, table{
-		e:     float64(1.0),
-		g:     float64(sum),
-		equal: true,
-	})
-
 	for i, test := range tests {
-		test := test // Capture test
-		c.Run(fmt.Sprintf("%d", i),
-			func(c *C) {
-				var ok bool
-
-				if test.equal {
-					ok = c.Equal(test.g, test.e)
-				} else {
-					ok = c.NotEqual(test.g, test.e)
-				}
-
-				c.True(ok)
-			})
+		if test.equal {
+			c.expectOK(c.Equalf(test.g, test.e, "%d", i))
+			c.expectOK(c.Must.Equalf(test.g, test.e, "%d", i))
+			c.expectOK(c.Equalf(test.e, test.g, "%d", i))
+			c.expectOK(c.Must.Equalf(test.e, test.g, "%d", i))
+			c.expectFail(c.NotEqualf(test.g, test.e, "%d", i))
+			c.expectFail(c.Must.NotEqualf(test.g, test.e, "%d", i))
+			c.expectFail(c.NotEqualf(test.e, test.g, "%d", i))
+			c.expectFail(c.Must.NotEqualf(test.e, test.g, "%d", i))
+		} else {
+			c.expectOK(c.NotEqualf(test.g, test.e, "%d", i))
+			c.expectOK(c.Must.NotEqualf(test.g, test.e, "%d", i))
+			c.expectOK(c.NotEqualf(test.e, test.g, "%d", i))
+			c.expectOK(c.Must.NotEqualf(test.e, test.g, "%d", i))
+			c.expectFail(c.Equalf(test.g, test.e, "%d", i))
+			c.expectFail(c.Must.Equalf(test.g, test.e, "%d", i))
+			c.expectFail(c.Equalf(test.e, test.g, "%d", i))
+			c.expectFail(c.Must.Equalf(test.e, test.g, "%d", i))
+		}
 	}
 }
 
 func TestEqualExtras(t *testing.T) {
-	c := New(t)
+	c := newTest(t)
 
-	c.Equal(1, 1, "expect equal")
-	c.Must.Equal(1, 1, "expect equal")
-
-	c.NotEqual(1, 2, "expect not equal")
-	c.Must.NotEqual(1, 2, "expect not equal")
+	c.expectOK(c.Equal(1, 1))
+	c.expectOK(c.NotEqual(1, 2))
 
 	// Interface ints vs untyped ints don't compare nicely
-	v := uint64(1)
-	c.Must.Equal(1, v, "expect equal")
+	// v := uint64(1)
+	// c.expectOK(c.Equal(1, v))
 }
 
 func TestContains(t *testing.T) {
-	c := New(t)
+	c := newTest(t)
 
-	type table struct {
-		c     interface{}
-		v     interface{}
-		found bool
-		ok    bool
-	}
-
-	tests := []table{
-		table{
-			c:  1,
-			ok: false,
+	tests := []struct {
+		iter     interface{}
+		el       interface{}
+		contains bool
+	}{
+		{
+			iter:     "some string",
+			el:       "me st",
+			contains: true,
 		},
-		table{
-			c:  map[string]int{"test": 1, "test2": 2},
-			ok: true,
+		{
+			iter:     map[string]int{"test": 1, "test2": 2},
+			el:       nil,
+			contains: false,
 		},
-		table{
-			c:     map[string]int{"test": 1, "test2": 2},
-			v:     "test",
-			ok:    true,
-			found: true,
+		{
+			iter:     map[string]int{"test": 1, "test2": 2},
+			el:       "test",
+			contains: true,
 		},
-		table{
-			c:     map[string]int{"test": 1, "test2": 2},
-			v:     "test123",
-			ok:    true,
-			found: false,
+		{
+			iter:     map[string]int{"test": 1, "test2": 2},
+			el:       "test123",
+			contains: false,
 		},
-		table{
-			c:     "some string",
-			v:     "me st",
-			ok:    true,
-			found: true,
+		{
+			iter:     []int{1, 2},
+			el:       1,
+			contains: true,
 		},
-		table{
-			c:     []byte("some string"),
-			v:     []byte("me st"),
-			ok:    true,
-			found: true,
+		{
+			iter:     []int{1, 2},
+			el:       3,
+			contains: false,
 		},
-		table{
-			c:     []byte("some string"),
-			v:     []byte("some string"),
-			ok:    true,
-			found: true,
+		{
+			iter:     []string{"test", "test2"},
+			el:       "test2",
+			contains: true,
 		},
-		table{
-			c:     []byte("some string"),
-			v:     []byte("some stringy stuff"),
-			ok:    true,
-			found: false,
-		},
-		table{
-			c:     []byte("some string"),
-			v:     []byte("no way"),
-			ok:    true,
-			found: false,
-		},
-		table{
-			c:     []int{1, 2},
-			v:     1,
-			ok:    true,
-			found: true,
-		},
-		table{
-			c:     []int{1, 2},
-			v:     3,
-			ok:    true,
-			found: false,
-		},
-		table{
-			c:     []string{"test", "test2"},
-			v:     "test2",
-			ok:    true,
-			found: true,
-		},
-		table{
-			c:     []string{"test", "test2"},
-			v:     "test3",
-			ok:    true,
-			found: false,
+		{
+			iter:     []string{"test", "test2"},
+			el:       "test3",
+			contains: false,
 		},
 	}
 
 	for i, test := range tests {
-		c.Run(fmt.Sprintf("%d", i),
-			func(c *C) {
-				a := newNoopAssert(c.TB)
-
-				found, ok := a.contains(test.c, test.v)
-
-				if ok != test.ok {
-					negate := ""
-					if !test.ok {
-						negate = "not "
-					}
-
-					c.Errorf("expected %#v to %sbe iterable", test.c, negate)
-				} else if found != test.found {
-					in := "in"
-					if !test.found {
-						in = "not in"
-					}
-
-					c.Errorf("expected %#v %s %#v", test.v, in, test.c)
-				}
-			})
+		if test.contains {
+			c.expectOK(c.Containsf(test.iter, test.el, "%d", i))
+			c.expectFail(c.NotContainsf(test.iter, test.el, "%d", i))
+		} else {
+			c.expectFail(c.Containsf(test.iter, test.el, "%d", i))
+			c.expectOK(c.NotContainsf(test.iter, test.el, "%d", i))
+		}
 	}
-}
 
-func TestContainsExtra(t *testing.T) {
-	c := New(t)
-
-	c.Contains("test", "es", "expect to contain")
-	c.Contains([]int{1, 2}, 1, "expect to contain")
-	c.Must.Contains("test", "es", "expect to contain")
-
-	c.NotContains("hi", "es", "expect to contain")
-	c.NotContains([]int{1, 2}, 3, "expect to contain")
-	c.Must.NotContains("hi", "es", "expect to contain")
+	c.expectFail(c.Contains(nil, 1))
+	c.expectFail(c.Contains(123, 1))
+	c.expectFail(c.NotContains(nil, 1))
+	c.expectFail(c.NotContains(123, 1))
 }
 
 func TestLen(t *testing.T) {
-	c := New(t)
+	c := newTest(t)
 
-	c.Len([]int{1, 2}, 2, "expect length")
-	c.Must.Len([]int{1, 2}, 2, "expect length")
+	tests := []struct {
+		iter interface{}
+		n    int
+	}{
+		{
+			iter: "",
+			n:    0,
+		},
+		{
+			iter: "test",
+			n:    4,
+		},
+		{
+			iter: []int{},
+			n:    0,
+		},
+		{
+			iter: []int{1, 2},
+			n:    2,
+		},
+		{
+			iter: map[int]int{1: 1, 2: 2},
+			n:    2,
+		},
+	}
 
-	c.NotLen([]int{1, 2}, 1, "expect no length")
-	c.Must.NotLen([]int{1, 2}, 1, "expect no length")
-}
+	for i, test := range tests {
+		c.expectOK(c.Lenf(test.iter, test.n, "%d", i))
+		c.expectFail(c.NotLenf(test.iter, test.n, "%d", i))
+	}
 
-func TestIs(t *testing.T) {
-	c := New(t)
-
-	c.Is(1, 2, "expect same types")
-	c.Must.Is(1, 2, "expect same types")
-
-	c.NotIs(1, c, "expect different types")
-	c.NotIs(1, 2.0, "expect different types")
-	c.Must.NotIs(1, c, "expect different types")
+	c.expectFail(c.Len(nil, 1))
+	c.expectFail(c.Len(123, 1))
+	c.expectFail(c.NotLen(nil, 1))
+	c.expectFail(c.NotLen(123, 1))
 }
 
 func TestNil(t *testing.T) {
-	c := New(t)
+	c := newTest(t)
 
-	c.NotNil(errors.New("test"), "expect not nil")
-	c.Must.NotNil(errors.New("test"), "expect not nil")
+	c.expectOK(c.Nilf(nil, "%s", "nil"))
+	c.expectFail(c.Nilf(errors.New("test"), "not %s", "nil"))
 
-	c.Nil(nil, "expect nil")
-	c.Must.Nil(nil, "expect nil")
+	c.expectOK(c.NotNilf(errors.New("test"), "not %s", "nil"))
+	c.expectFail(c.NotNilf(nil, "%s", "nil"))
 }
 
 func TestPanic(t *testing.T) {
-	c := New(t)
+	c := newTest(t)
 
-	panics := func() {
-		panic("oh noez!")
-	}
+	panics := func() { panic("oh noez!") }
+	noop := func() {}
 
-	c.Panics(panics, "expect panic")
-	c.Must.Panics(panics, "expect panic")
+	c.expectOK(c.Panicsf(panics, "%s", "panics"))
+	c.expectFail(c.Panicsf(noop, "not %s", "panics"))
 
-	c.NotPanics(func() {}, "expect no panic")
-	c.Must.NotPanics(func() {}, "expect no panic")
+	c.expectOK(c.NotPanicsf(noop, "not %s", "panics"))
+	c.expectFail(c.NotPanicsf(panics, "%s", "panics"))
 }
 
 func TestUntil(t *testing.T) {
-	c := New(t)
+	c := newTest(t)
 
 	i := 0
-	c.Until(time.Second, func() bool { i++; return i > 10 }, "failed")
+	c.expectOK(c.Untilf(1000, func() bool { i++; return i > 10 }, "%s", "ok"))
+	c.expectFail(c.Untilf(1000, func() bool { return false }, "not %s", "ok"))
 }
 
 func TestUntilNil(t *testing.T) {
-	c := New(t)
+	c := newTest(t)
 
-	c.UntilNil(100, func() error {
-		return nil
-	})
+	c.expectOK(c.UntilNilf(100, func() error { return nil }, "%s", "ok"))
 
 	i := 0
-	c.UntilNil(100, func() error {
+	c.expectOK(c.UntilNilf(100, func() error {
 		i++
 
 		if i < 50 {
@@ -333,5 +339,10 @@ func TestUntilNil(t *testing.T) {
 		}
 
 		return nil
-	})
+	}, "%s", "ok"))
+
+	c.expectFail(c.UntilNilf(
+		100,
+		func() error { return errors.New("merp") },
+		"not %s", "ok"))
 }

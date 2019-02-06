@@ -18,7 +18,7 @@ func TestFileExists(t *testing.T) {
 
 	ex, err := cfs.FileExists(fs[0])
 	c.Must.Nil(err)
-	c.True(ex, "%s does not exist", fs[0])
+	c.Truef(ex, "%s does not exist", fs[0])
 
 	ex, err = cfs.FileExists("/i/dont/exist")
 	c.Must.Nil(err)
@@ -33,7 +33,7 @@ func TestDirExists(t *testing.T) {
 
 	ex, err := cfs.DirExists(dir)
 	c.Must.Nil(err)
-	c.True(ex, "%s does not exist", dir)
+	c.Truef(ex, "%s does not exist", dir)
 
 	ex, err = cfs.DirExists("/i/dont/exist/")
 	c.Must.Nil(err)

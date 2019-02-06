@@ -3,7 +3,6 @@ package ctime
 import (
 	"encoding/json"
 	"testing"
-	"time"
 
 	"github.com/thatguystone/cog/check"
 )
@@ -19,7 +18,7 @@ func TestHumanDuration(t *testing.T) {
 
 	err := json.Unmarshal(b, &v)
 	c.Nil(err)
-	c.Equal(v.A, time.Second*10)
+	c.Equal(v.A, Second*10)
 
 	res, err := json.Marshal(v)
 	c.Nil(err)
@@ -35,7 +34,7 @@ func TestHumanDurationFallback(t *testing.T) {
 
 	err := json.Unmarshal([]byte(`{"A":10000000000}`), &v)
 	c.Nil(err)
-	c.Equal(v.A, time.Second*10)
+	c.Equal(v.A, Second*10)
 
 	res, err := json.Marshal(v)
 	c.Nil(err)

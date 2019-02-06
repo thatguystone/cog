@@ -11,8 +11,8 @@ import (
 // C is like *testing.T/*testing.B, but with more fun
 type C struct {
 	testing.TB
-	Asserter
-	Must Asserter
+	assert
+	Must assert
 }
 
 // New creates a new C and marks this test as parallel
@@ -22,9 +22,15 @@ func New(tb testing.TB) *C {
 	}
 
 	return &C{
-		TB:       tb,
-		Asserter: newNoopAssert(tb),
-		Must:     newMustAssert(tb),
+		TB: tb,
+		assert: assert{
+			TB:     tb,
+			onFail: tb.Error,
+		},
+		Must: assert{
+			TB:     tb,
+			onFail: tb.Fatal,
+		},
 	}
 }
 

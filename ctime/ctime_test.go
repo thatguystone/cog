@@ -24,13 +24,13 @@ func TestUntilPeriod(t *testing.T) {
 
 	for i, test := range tests {
 		in, err := time.ParseDuration(test)
-		c.Must.Nil(err, "error at %d", i)
+		c.Must.Nilf(err, "error at %d", i)
 
 		res := UntilPeriod(when, in)
 		at := when.Add(res)
 		remain := at.UnixNano() % int64(in)
 
-		c.Equal(0, remain,
+		c.Equalf(int64(0), remain,
 			"mismatch at %d, time would be %v (%v)",
 			i,
 			at,
