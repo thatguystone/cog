@@ -1,8 +1,6 @@
 # cog [![Build Status](https://github.com/thatguystone/cog/workflows/test/badge.svg)](https://github.com/thatguystone/cog/actions)
 
-Cog is a collection of utils for golang that I tend to use across many of my
-projects. Rather than building new cogs everywhere, I've just consolidated
-them all here. Cogs for everyone!
+Cog is a collection of utils for golang that I tend to use across many of my projects.
 
 ### Modules
 
@@ -10,25 +8,10 @@ Cog consists of the following modules:
 
 | Module        | Docs                                 | Description |
 | ------------- | ------------------------------------ | ----------- |
-| cfs           | [![GoDoc][cfs-status]][cfs]          | filesystem utils
-| check         | [![GoDoc][check-status]][check]      | test assertions
-| cio           | [![GoDoc][cio-status]][cio]          | extra io utils
-| ctime         | [![GoDoc][ctime-status]][ctime]      | time utils
-| stringc       | [![GoDoc][stringc-status]][stringc]  | extra strings utils
+| check         | [![GoDoc][check-ref]][check]         | test assertions
+| textwrap      | [![GoDoc][textwrap-ref]][textwrap]   | python-style textwrap
 
-[cfs]: https://godoc.org/github.com/thatguystone/cog/cfs
-[cfs-status]: https://godoc.org/github.com/thatguystone/cog/cfs?status.svg
-[check]: https://godoc.org/github.com/thatguystone/cog/check
-[check-status]: https://godoc.org/github.com/thatguystone/cog/check?status.svg
-[cio]: https://godoc.org/github.com/thatguystone/cog/cio
-[cio-status]: https://godoc.org/github.com/thatguystone/cog/cio?status.svg
-[ctime]: https://godoc.org/github.com/thatguystone/cog/ctime
-[ctime-status]: https://godoc.org/github.com/thatguystone/cog/ctime?status.svg
-[stringc]: https://godoc.org/github.com/thatguystone/cog/stringc
-[stringc-status]: https://godoc.org/github.com/thatguystone/cog/stringc?status.svg
-
-Each module contains full documentation over on godoc, including tons of examples.
-
-As you might have noticed, the modules have weirdly spelled names; this is so
-that you can, for example, import both "strings" and "stringc" into the same
-file, since "stringc" only supplements "strings".
+[check]: https://pkg.go.dev/github.com/thatguystone/cog/check
+[check-ref]: https://pkg.go.dev/badge/github.com/thatguystone/cog/check.svg
+[textwrap]: https://godoc.org/github.com/thatguystone/cog/textwrap
+[textwrap-ref]: https://pkg.go.dev/badge/github.com/thatguystone/cog/textwrap.svg
