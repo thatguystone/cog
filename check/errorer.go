@@ -18,9 +18,6 @@ type Errorer struct {
 	// If *_test.go files should not be considered when comparing stack traces
 	IgnoreTests bool
 
-	// Only functions with these names should be considered for errors
-	OnlyIn []string
-
 	mtx    sync.Mutex
 	stacks map[[sha256.Size]byte]struct{}
 }
@@ -42,19 +39,7 @@ func (er *Errorer) fail() bool {
 			break
 		}
 
-		if len(er.OnlyIn) == 0 {
-			fail = true
-		} else if !fail {
-			name := runtime.FuncForPC(pc).Name()
-
-			for _, fn := range er.OnlyIn {
-				fail = strings.Contains(name, fn)
-				if fail {
-					break
-				}
-			}
-		}
-
+		fail = true
 		hash.Write([]byte(fmt.Sprintf("%d-%s:%d", pc, file, line)))
 	}
 

@@ -1,11 +1,9 @@
 package check
 
-import (
-	"testing"
-)
+import "testing"
 
 func TestErrorerBasic(t *testing.T) {
-	c := New(t)
+	c := NewT(t)
 
 	er := Errorer{}
 	c.NotNil(er.Err())
@@ -13,7 +11,7 @@ func TestErrorerBasic(t *testing.T) {
 }
 
 func TestErrorerIgnoreTests(t *testing.T) {
-	c := New(t)
+	c := NewT(t)
 
 	er := Errorer{
 		IgnoreTests: true,
@@ -23,31 +21,12 @@ func TestErrorerIgnoreTests(t *testing.T) {
 	c.False(er.Fail())
 }
 
-func testErrorerOnlyInHere(c *C, er *Errorer) {
-	c.NotNil(er.Err())
-}
-
-func testErrorerOnlyInNotHere(c *C, er *Errorer) {
-	c.Nil(er.Err())
-}
-
-func TestErrorerOnlyIn(t *testing.T) {
-	c := New(t)
-
-	er := Errorer{
-		OnlyIn: []string{"testErrorerOnlyInHere"},
-	}
-
-	testErrorerOnlyInHere(c, &er)
-	testErrorerOnlyInNotHere(c, &er)
-}
-
-func testErrorerSameCodePath(c *C, er *Errorer, fail bool) {
+func testErrorerSameCodePath(c *T, er *Errorer, fail bool) {
 	c.Equal(fail, er.Fail())
 }
 
 func TestErrorerSameCodePath(t *testing.T) {
-	c := New(t)
+	c := NewT(t)
 
 	er := Errorer{}
 	for i := 0; i < 5; i++ {

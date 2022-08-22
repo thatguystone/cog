@@ -10,7 +10,7 @@ import (
 
 // From: https://github.com/stretchr/testify/blob/master/assert/assertions.go
 
-func fmtVals(g, e interface{}) (string, string) {
+func fmtVals(g, e any) (string, string) {
 	if reflect.TypeOf(g) != reflect.TypeOf(e) {
 		return fmt.Sprintf("%T(%#v)", g, g), fmt.Sprintf("%T(%#v)", e, e)
 	}
@@ -18,7 +18,7 @@ func fmtVals(g, e interface{}) (string, string) {
 	return fmt.Sprintf("%#v", g), fmt.Sprintf("%#v", e)
 }
 
-func typeAndKind(v interface{}) (reflect.Type, reflect.Kind) {
+func typeAndKind(v any) (reflect.Type, reflect.Kind) {
 	t := reflect.TypeOf(v)
 	k := t.Kind()
 	if k == reflect.Ptr {
@@ -29,7 +29,7 @@ func typeAndKind(v interface{}) (reflect.Type, reflect.Kind) {
 	return t, k
 }
 
-func diff(g, e interface{}) string {
+func diff(g, e any) string {
 	if g == nil || e == nil {
 		return ""
 	}

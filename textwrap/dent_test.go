@@ -8,7 +8,7 @@ import (
 )
 
 func TestIndentBasic(t *testing.T) {
-	c := check.New(t)
+	c := check.NewT(t)
 
 	tests := []struct {
 		p   string
@@ -93,7 +93,7 @@ func TestIndentBasic(t *testing.T) {
 }
 
 func TestDedentBasic(t *testing.T) {
-	c := check.New(t)
+	c := check.NewT(t)
 
 	tests := []struct {
 		in  string

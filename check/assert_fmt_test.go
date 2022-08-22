@@ -2,8 +2,8 @@ package check
 
 import "testing"
 
-func TestFmtVals(t *testing.T) {
-	c := New(t)
+func TestAssertFmtVals(t *testing.T) {
+	c := NewT(t)
 
 	a, b := fmtVals(1, 1.0)
 	c.Equal(a, "int(1)")
@@ -14,8 +14,8 @@ func TestFmtVals(t *testing.T) {
 	c.Equal(b, "1")
 }
 
-func TestDiffCoverage(t *testing.T) {
-	c := New(t)
+func TestAssertFmtDiffCoverage(t *testing.T) {
+	c := NewT(t)
 
 	c.Equal(diff(nil, nil), "")
 	c.Equal(diff(1, 1.0), "")

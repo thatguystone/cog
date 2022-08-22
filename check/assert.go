@@ -4,366 +4,379 @@ import (
 	"fmt"
 	"reflect"
 	"runtime/debug"
-	"strings"
-	"testing"
 
-	"github.com/thatguystone/cog/stringc"
+	"github.com/thatguystone/cog/textwrap"
 )
 
 type assert struct {
-	testing.TB
-	onFail func(msgArgs ...interface{})
+	helper func()
+	fail   func(msgArgs ...any)
 }
 
-func (a assert) errorf(format string, args ...interface{}) {
-	a.Helper()
-	a.onFail(fmt.Sprintf(format, args...))
+func newAssert(helper func(), fail func(msgArgs ...any)) assert {
+	return assert{
+		helper: helper,
+		fail:   fail,
+	}
+}
+
+func (a assert) error(userMessage, failReason string) {
+	a.helper()
+	a.fail(userMessage + "\n" + failReason)
 }
 
 // True checks that the given bool is true.
-func (a assert) True(cond bool, msgArgs ...interface{}) bool {
+func (a assert) True(cond bool) bool {
+	a.helper()
+	return a.Truef(cond, "")
+}
+
+// Truef checks that the given bool is true.
+func (a assert) Truef(cond bool, format string, args ...any) bool {
 	if !cond {
-		a.Helper()
-		a.errorf("%s\n"+
+		a.helper()
+		a.error(
+			fmt.Sprintf(format, args...),
 			"Bool check failed: expected true",
-			fmt.Sprint(msgArgs...))
+		)
 	}
 
 	return cond
 }
 
-// Truef checks that the given bool is true.
-func (a assert) Truef(cond bool, format string, args ...interface{}) bool {
-	a.Helper()
-	return a.True(cond, fmt.Sprintf(format, args...))
+// False checks that the given bool is false.
+func (a assert) False(cond bool) bool {
+	a.helper()
+	return a.Falsef(cond, "")
 }
 
-// False checks that the given bool is false.
-func (a assert) False(cond bool, msgArgs ...interface{}) bool {
+// Falsef checks that the given bool is false.
+func (a assert) Falsef(cond bool, format string, args ...any) bool {
 	if cond {
-		a.Helper()
-		a.errorf("%s\n"+
+		a.helper()
+		a.error(
+			fmt.Sprintf(format, args...),
 			"Bool check failed: expected false",
-			fmt.Sprint(msgArgs...))
+		)
 	}
 
 	return !cond
 }
 
-// Falsef checks that the given bool is false.
-func (a assert) Falsef(cond bool, format string, args ...interface{}) bool {
-	a.Helper()
-	return a.False(cond, fmt.Sprintf(format, args...))
-}
-
-func (a assert) equal(g, e interface{}) bool {
+func (a assert) equal(g, e any) bool {
 	return reflect.DeepEqual(g, e)
 }
 
 // Equal compares two things, ensuring that they are equal to each other. `e` is
 // the expected value; `g` is the value you got somewhere else.
-func (a assert) Equal(g, e interface{}, msgArgs ...interface{}) bool {
-	if !a.equal(g, e) {
-		diff := diff(g, e)
-
-		if diff != "" {
-			diff = "\n\nDiff:\n" + stringc.Indent(diff, spewConfig.Indent)
-		}
-
-		g, e := fmtVals(g, e)
-
-		a.Helper()
-		a.errorf("%s\n"+
-			"Expected: `%+v`\n"+
-			"       == `%+v`%s",
-			fmt.Sprint(msgArgs...),
-			g, e, diff)
-		return false
-	}
-
-	return true
+func (a assert) Equal(g, e any) bool {
+	a.helper()
+	return a.Equalf(g, e, "")
 }
 
 // Equal compares two things, ensuring that they are equal to each other. `e` is
 // the expected value; `g` is the value you got somewhere else.
-func (a assert) Equalf(g, e interface{}, format string, args ...interface{}) bool {
-	a.Helper()
-	return a.Equal(g, e, fmt.Sprintf(format, args...))
+func (a assert) Equalf(g, e any, format string, args ...any) bool {
+	if !a.equal(g, e) {
+		diff := diff(g, e)
+
+		if diff != "" {
+			diff = "\n\nDiff:\n" + textwrap.Indent(diff, spewConfig.Indent)
+		}
+
+		g, e := fmtVals(g, e)
+
+		a.helper()
+		a.error(
+			fmt.Sprintf(format, args...),
+			fmt.Sprintf(""+
+				"Expected: `%+v`\n"+
+				"       == `%+v`%s",
+				g,
+				e,
+				diff,
+			),
+		)
+		return false
+	}
+
+	return true
 }
 
 // NotEqual is the opposite of Equal.
-func (a assert) NotEqual(g, e interface{}, msgArgs ...interface{}) bool {
-	if a.equal(g, e) {
-		a.Helper()
-		a.errorf("%s\n"+
-			"Expected: `%+v`\n"+
-			"       != `%+v`",
-			fmt.Sprint(msgArgs...),
-			g, e)
-		return false
-	}
-
-	return true
+func (a assert) NotEqual(g, e any) bool {
+	a.helper()
+	return a.NotEqualf(g, e, "")
 }
 
 // NotEqualf is the opposite of Equalf.
-func (a assert) NotEqualf(
-	g, e interface{},
-	format string,
-	args ...interface{},
-) bool {
-	a.Helper()
-	return a.NotEqual(g, e, fmt.Sprintf(format, args...))
+func (a assert) NotEqualf(g, e any, format string, args ...any) bool {
+	if a.equal(g, e) {
+		a.helper()
+		a.error(
+			fmt.Sprintf(format, args...),
+			fmt.Sprintf(""+
+				"Expected: `%+v`\n"+
+				"       != `%+v`",
+				g,
+				e),
+		)
+		return false
+	}
+
+	return true
 }
 
-func getLen(v interface{}) (n int, ok bool) {
+func (a assert) hasKey(m, k any) (found, ok bool) {
 	defer func() { recover() }()
 
-	n = reflect.ValueOf(v).Len()
+	mi := reflect.ValueOf(m).MapRange()
+
+	for mi.Next() {
+		if a.equal(mi.Key().Interface(), k) {
+			found = true
+			break
+		}
+	}
+
 	ok = true
 	return
 }
 
-// Len checks that the length of the given v is l.
-func (a assert) Len(v interface{}, l int, msgArgs ...interface{}) (eq bool) {
-	n, ok := getLen(v)
+func (a assert) hasKeyf(
+	shouldContain bool,
+	m any,
+	k any,
+	format string,
+	args ...any,
+) bool {
+	found, ok := a.hasKey(m, k)
 	if !ok {
-		a.Helper()
-		a.errorf("%s\n"+
-			"%+v is not iterable, cannot check length",
-			fmt.Sprint(msgArgs...),
-			v)
+		a.helper()
+		a.error(
+			fmt.Sprintf(format, args...),
+			fmt.Sprintf("%+v is not a map, cannot check for key", k),
+		)
 		return false
 	}
 
-	a.Helper()
-	return a.Equal(n, l, msgArgs...)
-}
-
-// Lenf checks that the length of the given v is l.
-func (a assert) Lenf(
-	v interface{},
-	l int,
-	format string,
-	args ...interface{},
-) (eq bool) {
-	a.Helper()
-	return a.Len(v, l, fmt.Sprintf(format, args...))
-}
-
-// NotLen is the opposite of Len.
-func (a assert) NotLen(v interface{}, l int, msgArgs ...interface{}) (eq bool) {
-	n, ok := getLen(v)
-	if !ok {
-		a.Helper()
-		a.errorf("%s\n"+
-			"%+v is not iterable, cannot check length",
-			fmt.Sprint(msgArgs...),
-			v)
+	if shouldContain && !found {
+		a.helper()
+		a.error(
+			fmt.Sprintf(format, args...),
+			fmt.Sprintf("%#v does not contain key %#v", m, k),
+		)
 		return false
 	}
 
-	a.Helper()
-	return a.NotEqual(n, l, msgArgs...)
+	if !shouldContain && found {
+		a.helper()
+		a.error(
+			fmt.Sprintf(format, args...),
+			fmt.Sprintf("%#v unexpectedly contains key %#v", m, k),
+		)
+		return false
+	}
+
+	return true
 }
 
-// NotLenf is the opposite of Lenf.
-func (a assert) NotLenf(
-	v interface{},
-	l int,
-	format string,
-	args ...interface{},
-) (eq bool) {
-	a.Helper()
-	return a.NotLen(v, l, fmt.Sprintf(format, args...))
+// hasKey checks that map m contains k key
+func (a assert) HasKey(m, k any) bool {
+	a.helper()
+	return a.HasKeyf(m, k, "")
 }
 
-func (a assert) contains(iter, el interface{}) (found, ok bool) {
-	ok = true
+// HasKeyf checks that map m contains k key
+func (a assert) HasKeyf(m, k any, format string, args ...any) bool {
+	a.helper()
+	return a.hasKeyf(true, m, k, format, args...)
+}
+
+// NotHasKey checks that map m does not contain k key
+func (a assert) NotHasKey(m, k any) bool {
+	a.helper()
+	return a.NotHasKeyf(m, k, "")
+}
+
+// NotHasKeyf checks that map m does not contain k key
+func (a assert) NotHasKeyf(m, k any, format string, args ...any) bool {
+	a.helper()
+	return a.hasKeyf(false, m, k, format, args...)
+}
+
+func (a assert) hasVal(iter, el any) (found, ok bool) {
+	defer func() { recover() }()
 
 	iv := reflect.ValueOf(iter)
-	ev := reflect.ValueOf(el)
-	defer func() {
-		if err := recover(); err != nil {
-			ok = false
-		}
-	}()
 
-	if iv.Kind() == reflect.String {
-		found = strings.Contains(iv.String(), ev.String())
-		return
-	}
-
-	if iv.Kind() == reflect.Map {
-		for _, k := range iv.MapKeys() {
-			if a.equal(k.Interface(), el) {
+	switch iv.Kind() {
+	case reflect.Map:
+		mi := iv.MapRange()
+		for mi.Next() {
+			if a.equal(mi.Value().Interface(), el) {
 				found = true
-				return
+				break
 			}
 		}
 
+	case reflect.Array, reflect.Slice:
+		for i := 0; i < iv.Len(); i++ {
+			if a.equal(iv.Index(i).Interface(), el) {
+				found = true
+				break
+			}
+		}
+
+	default:
 		return
 	}
 
-	for i := 0; i < iv.Len(); i++ {
-		if a.equal(iv.Index(i).Interface(), el) {
-			found = true
-			return
-		}
-	}
-
+	ok = true
 	return
 }
 
-// Contains checks that iter contains v.
-//
-// The following checks are done:
-//    0) If iter is a string, falls back to strings.Contains.
-//    1) If a map, checks if the map contains key v.
-//    2) If iter is a slice/array, checks if any element in iter equals v.
-func (a assert) Contains(iter, v interface{}, msgArgs ...interface{}) bool {
-	found, ok := a.contains(iter, v)
-
+func (a assert) hasValf(
+	shouldContain bool,
+	iter any,
+	v any,
+	format string,
+	args ...any,
+) bool {
+	found, ok := a.hasVal(iter, v)
 	if !ok {
-		a.Helper()
-		a.errorf("%s\n"+
-			"%+v is not iterable; contain check failed",
-			fmt.Sprint(msgArgs...),
-			v)
+		a.helper()
+		a.error(
+			fmt.Sprintf(format, args...),
+			fmt.Sprintf("%+v is not iterable, cannot check for value", iter),
+		)
 		return false
 	}
 
-	if !found {
-		a.Helper()
-		a.errorf("%s\n"+
-			"%#v does not contain %#v",
-			fmt.Sprint(msgArgs...),
-			iter,
-			v)
+	if shouldContain && !found {
+		a.helper()
+		a.error(
+			fmt.Sprintf(format, args...),
+			fmt.Sprintf("%#v does not contain value %#v", iter, v),
+		)
+		return false
+	}
+
+	if !shouldContain && found {
+		a.helper()
+		a.error(
+			fmt.Sprintf(format, args...),
+			fmt.Sprintf("%#v unexpectedly contains value %#v", iter, v),
+		)
 		return false
 	}
 
 	return true
 }
 
-// Containsf checks that iter contains v.
+// HasVal checks that iter contains value v.
 //
-// The following checks are done:
-//    0) If iter is a string, falls back to strings.Contains.
-//    1) If a map, checks if the map contains key v.
-//    2) If iter is a slice/array, checks if any element in iter equals v.
-func (a assert) Containsf(
-	iter, v interface{},
-	format string,
-	args ...interface{},
-) bool {
-	a.Helper()
-	return a.Contains(iter, v, fmt.Sprintf(format, args...))
+// Iter must be one of: map, slice, or array
+func (a assert) HasVal(iter, v any) bool {
+	a.helper()
+	return a.HasValf(iter, v, "")
 }
 
-// NotContains is the opposite of Contains.
-func (a assert) NotContains(iter, v interface{}, msgArgs ...interface{}) bool {
-	found, ok := a.contains(iter, v)
-
-	if !ok {
-		a.Helper()
-		a.errorf("%s\n"+
-			"%+v is not iterable; contain check failed",
-			fmt.Sprint(msgArgs...),
-			v)
-		return false
-	}
-
-	if found {
-		a.Helper()
-		a.errorf("%s\n"+
-			"%#v contains %#v",
-			fmt.Sprint(msgArgs...),
-			iter,
-			v)
-		return false
-	}
-
-	return true
+// HasValf checks that iter contains value v.
+//
+// Iter must be one of: map, slice, or array
+func (a assert) HasValf(iter, v any, format string, args ...any) bool {
+	a.helper()
+	return a.hasValf(true, iter, v, format, args...)
 }
 
-// NotContainsf is the opposite of Containsf.
-func (a assert) NotContainsf(
-	iter, v interface{},
-	format string,
-	args ...interface{},
-) bool {
-	a.Helper()
-	return a.NotContains(iter, v, fmt.Sprintf(format, args...))
+// NotHasVal is the opposite of HasVal.
+func (a assert) NotHasVal(iter, v any) bool {
+	a.helper()
+	return a.NotHasValf(iter, v, "")
+}
+
+// NotHasValf is the opposite of HasValf.
+func (a assert) NotHasValf(iter, v any, format string, args ...any) bool {
+	a.helper()
+	return a.hasValf(false, iter, v, format, args...)
 }
 
 // Nil ensures that g is nil. This is a strict equality check.
-func (a assert) Nil(g interface{}, msgArgs ...interface{}) bool {
-	if g != nil {
-		a.Helper()
-		a.errorf("%s\n"+
-			"Expected nil, got: `%+v`",
-			fmt.Sprint(msgArgs...),
-			g)
-		return false
-	}
-
-	return true
+func (a assert) Nil(g any) bool {
+	a.helper()
+	return a.Nilf(g, "")
 }
 
 // Nilf ensures that g is nil. This is a strict equality check.
-func (a assert) Nilf(g interface{}, format string, args ...interface{}) bool {
-	a.Helper()
-	return a.Nil(g, fmt.Sprintf(format, args...))
-}
-
-// NotNil is the opposite of Nil.
-func (a assert) NotNil(g interface{}, msgArgs ...interface{}) bool {
-	if g == nil {
-		a.Helper()
-		a.errorf("%s\n"+
-			"Expected something, got nil",
-			fmt.Sprint(msgArgs...))
+func (a assert) Nilf(g any, format string, args ...any) bool {
+	if g != nil {
+		a.helper()
+		a.error(
+			fmt.Sprintf(format, args...),
+			fmt.Sprintf("Expected nil, got: `%+v`", g),
+		)
 		return false
 	}
 
 	return true
 }
 
+// NotNil is the opposite of Nil.
+func (a assert) NotNil(g any) bool {
+	a.helper()
+	return a.NotNilf(g, "")
+}
+
 // NotNilf is the opposite of Nilf.
-func (a assert) NotNilf(g interface{}, format string, args ...interface{}) bool {
-	a.Helper()
-	return a.NotNil(g, fmt.Sprintf(format, args...))
+func (a assert) NotNilf(g any, format string, args ...any) bool {
+	if g == nil {
+		a.helper()
+		a.error(
+			fmt.Sprintf(format, args...),
+			"Expected something, got nil",
+		)
+		return false
+	}
+
+	return true
 }
 
 // Panics ensures that the given function panics.
-func (a assert) Panics(fn func(), msgArgs ...interface{}) (ok bool) {
-	defer func() { recover() }() // Can't just defer recover(), apparently
+func (a assert) Panics(fn func()) bool {
+	a.helper()
+	return a.Panicsf(fn, "")
+}
+
+// Panicsf ensures that the given function panics.
+func (a assert) Panicsf(fn func(), format string, args ...any) (ok bool) {
+	defer func() { recover() }()
 	ok = true
 	fn()
 
 	ok = false
-	a.Helper()
-	a.errorf("%s\n"+
+	a.helper()
+	a.error(
+		fmt.Sprintf(format, args...),
 		"Expected fn to panic; it did not.",
-		fmt.Sprint(msgArgs...))
+	)
 
 	return
 }
 
-// Panicsf ensures that the given function panics.
-func (a assert) Panicsf(fn func(), format string, args ...interface{}) bool {
-	a.Helper()
-	return a.Panics(fn, fmt.Sprintf(format, args...))
+// NotPanics ensures that the given function does not panic.
+func (a assert) NotPanics(fn func()) bool {
+	a.helper()
+	return a.NotPanicsf(fn, "")
 }
 
-// NotPanics ensures that the given function does not panic.
-func (a assert) NotPanics(fn func(), msgArgs ...interface{}) (ok bool) {
-	var r interface{}
-	var stack string
+// NotPanicsf ensures that the given function does not panic.
+func (a assert) NotPanicsf(fn func(), format string, args ...any) (ok bool) {
+	var (
+		r     any
+		stack string
+	)
 
-	// Need to do the check in a different function, otherwise a.Helper()
-	// doesn't work (it reports that the callsite is in some .s file)
 	func() {
 		defer func() {
 			if !ok {
@@ -377,77 +390,56 @@ func (a assert) NotPanics(fn func(), msgArgs ...interface{}) (ok bool) {
 	}()
 
 	if !ok {
-		a.Helper()
-		a.errorf("%s\n"+
-			"Expected fn not to panic; got: %+v\n%s",
-			fmt.Sprint(msgArgs...),
-			r,
-			stringc.Indent(stack, "\t"))
+		a.helper()
+		a.error(
+			fmt.Sprintf(format, args...),
+			fmt.Sprintf(
+				"Expected fn not to panic; got: %+v\n%s",
+				r,
+				textwrap.Indent(stack, "\t"),
+			),
+		)
 	}
 
-	return ok
-}
-
-// NotPanicsf ensures that the given function does not panic.
-func (a assert) NotPanicsf(fn func(), format string, args ...interface{}) bool {
-	a.Helper()
-	return a.NotPanics(fn, fmt.Sprintf(format, args...))
+	return
 }
 
 // Until polls the given function, a max of `iters` times, until it returns
 // true.
-func (a assert) Until(
-	iters int,
-	fn func() bool,
-	msgArgs ...interface{},
-) bool {
-	for i := 0; i < iters; i++ {
-		if fn() {
-			return true
-		}
-	}
-
-	a.errorf("%s\n"+
-		"Polling for condition failed",
-		fmt.Sprint(msgArgs...))
-	return false
+func (a assert) Until(iters int, fn func(i int) bool) bool {
+	a.helper()
+	return a.Untilf(iters, fn, "")
 }
 
 // Untilf polls the given function, a max of `iters` times, until it returns
 // true.
 func (a assert) Untilf(
 	iters int,
-	fn func() bool,
+	fn func(i int) bool,
 	format string,
-	args ...interface{},
+	args ...any,
 ) bool {
-	a.Helper()
-	return a.Until(iters, fn, fmt.Sprintf(format, args...))
+	for i := 0; i < iters; i++ {
+		if fn(i) {
+			return true
+		}
+	}
+
+	a.helper()
+	a.error(
+		fmt.Sprintf(format, args...),
+		"Polling for condition failed",
+	)
+
+	return false
 }
 
 // UntilNil polls the given function, a max of `iters` times, until it doesn't
 // return an error. This is mainly a helper used to exhaust error pathways when
 // using an Errorer.
-func (a assert) UntilNil(
-	iters int,
-	fn func() error,
-	msgArgs ...interface{},
-) bool {
-	var err error
-
-	for i := 0; i < iters; i++ {
-		err = fn()
-		if err == nil {
-			return true
-		}
-	}
-
-	a.Helper()
-	a.errorf("%s\n"+
-		"Func didn't succeed after %d tries, last err: %v",
-		fmt.Sprint(msgArgs...),
-		iters, err)
-	return false
+func (a assert) UntilNil(iters int, fn func(i int) error) bool {
+	a.helper()
+	return a.UntilNilf(iters, fn, "")
 }
 
 // UntilNilf polls the given function, a max of `iters` times, until it doesn't
@@ -455,10 +447,28 @@ func (a assert) UntilNil(
 // using an Errorer.
 func (a assert) UntilNilf(
 	iters int,
-	fn func() error,
+	fn func(i int) error,
 	format string,
-	args ...interface{},
+	args ...any,
 ) bool {
-	a.Helper()
-	return a.UntilNil(iters, fn, fmt.Sprintf(format, args...))
+	var err error
+
+	for i := 0; i < iters; i++ {
+		err = fn(i)
+		if err == nil {
+			return true
+		}
+	}
+
+	a.helper()
+	a.error(
+		fmt.Sprintf(format, args...),
+		fmt.Sprintf(
+			"Func didn't succeed after %d tries, last err: %v",
+			iters,
+			err,
+		),
+	)
+
+	return false
 }
