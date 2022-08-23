@@ -25,7 +25,7 @@ func NewT(t *testing.T) *T {
 }
 
 // Run is the equivalent of [testing.T.Run]
-func (t *T) Run(name string, fn func(*T)) bool {
+func (t *T) Run(name string, fn func(c *T)) bool {
 	return t.T.Run(name, func(t *testing.T) {
 		fn(NewT(t))
 	})
@@ -48,7 +48,7 @@ func NewB(b *testing.B) *B {
 }
 
 // Run is the equivalent of [testing.B.Run]
-func (b *B) Run(name string, fn func(*B)) bool {
+func (b *B) Run(name string, fn func(c *B)) bool {
 	return b.B.Run(name, func(b *testing.B) {
 		fn(NewB(b))
 	})
