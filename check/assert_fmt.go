@@ -11,11 +11,14 @@ import (
 // From: https://github.com/stretchr/testify/blob/master/assert/assertions.go
 
 func fmtVals(g, e any) (string, string) {
+	gs := fmt.Sprintf("%+v", g)
+	es := fmt.Sprintf("%+v", e)
+
 	if reflect.TypeOf(g) != reflect.TypeOf(e) {
-		return fmt.Sprintf("%T(%#v)", g, g), fmt.Sprintf("%T(%#v)", e, e)
+		return fmt.Sprintf("%T(%s)", g, gs), fmt.Sprintf("%T(%s)", e, es)
 	}
 
-	return fmt.Sprintf("%#v", g), fmt.Sprintf("%#v", e)
+	return gs, es
 }
 
 func typeAndKind(v any) (reflect.Type, reflect.Kind) {
