@@ -84,16 +84,16 @@ func (a assert) Equalf(g, e any, format string, args ...any) bool {
 			diff = "\n\nDiff:\n" + textwrap.Indent(diff, spewConfig.Indent)
 		}
 
-		g, e := fmtVals(g, e)
+		gf, ef := fmtVals(g, e)
 
 		a.helper()
 		a.error(
 			fmt.Sprintf(format, args...),
 			fmt.Sprintf(""+
-				"Expected: `%+v`\n"+
-				"       == `%+v`%s",
-				g,
-				e,
+				"Expected: %s\n"+
+				"       == %s%s",
+				gf,
+				ef,
 				diff,
 			),
 		)
@@ -112,14 +112,17 @@ func (a assert) NotEqual(g, e any) bool {
 // NotEqualf is the opposite of Equalf.
 func (a assert) NotEqualf(g, e any, format string, args ...any) bool {
 	if a.equal(g, e) {
+		gf, ef := fmtVals(g, e)
+
 		a.helper()
 		a.error(
 			fmt.Sprintf(format, args...),
 			fmt.Sprintf(""+
-				"Expected: `%+v`\n"+
-				"       != `%+v`",
-				g,
-				e),
+				"Expected: %s\n"+
+				"       != %s",
+				gf,
+				ef,
+			),
 		)
 		return false
 	}
