@@ -19,6 +19,18 @@ func TestTrue(t *testing.T) {
 	})
 }
 
+func TestEqual(t *testing.T) {
+	c := check.NewT(t)
+
+	c.NotPanics(func() {
+		Equal(1, 1)
+	})
+
+	c.Panics(func() {
+		Equal(1, 2)
+	})
+}
+
 func TestNil(t *testing.T) {
 	c := check.NewT(t)
 
