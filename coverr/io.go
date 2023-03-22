@@ -3,20 +3,20 @@ package coverr
 import "io"
 
 type reader struct {
-	tr *Tracker
-	rd io.Reader
+	trk *Tracker
+	rd  io.Reader
 }
 
 // NewReader creates an [io.Reader] that wraps a [Tracker]
-func NewReader(tr *Tracker, rd io.Reader) io.Reader {
+func NewReader(trk *Tracker, rd io.Reader) io.Reader {
 	return &reader{
-		tr: tr,
-		rd: rd,
+		trk: trk,
+		rd:  rd,
 	}
 }
 
 func (rd *reader) Read(b []byte) (int, error) {
-	err := rd.tr.Err()
+	err := rd.trk.Err()
 	if err != nil {
 		return 0, err
 	}
@@ -25,20 +25,20 @@ func (rd *reader) Read(b []byte) (int, error) {
 }
 
 type writer struct {
-	tr *Tracker
-	wr io.Writer
+	trk *Tracker
+	wr  io.Writer
 }
 
 // NewWriter creates an [io.Writer] that wraps a [Tracker]
-func NewWriter(tr *Tracker, wr io.Writer) io.Writer {
+func NewWriter(trk *Tracker, wr io.Writer) io.Writer {
 	return &writer{
-		tr: tr,
-		wr: wr,
+		trk: trk,
+		wr:  wr,
 	}
 }
 
 func (wr *writer) Write(b []byte) (int, error) {
-	err := wr.tr.Err()
+	err := wr.trk.Err()
 	if err != nil {
 		return 0, err
 	}
