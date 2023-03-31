@@ -539,6 +539,35 @@ func TestAssertPanics(t *testing.T) {
 	)
 }
 
+func TestAssertPanicsWith(t *testing.T) {
+	ta := newTestAssert(t)
+
+	ta.check(
+		ta.PanicsWith(
+			"panic",
+			func() { panic("panic") },
+		),
+		true,
+	)
+	ta.check(
+		ta.PanicsWithf(
+			"panic",
+			func() { panic("panic") },
+			"fmt %d", 1,
+		),
+		true,
+	)
+
+	ta.check(
+		ta.PanicsWith("panic", func() {}),
+		false,
+	)
+	ta.check(
+		ta.PanicsWithf("panic", func() {}, "fmt %d", 1),
+		false,
+	)
+}
+
 func TestAssertNotPanics(t *testing.T) {
 	ta := newTestAssert(t)
 
