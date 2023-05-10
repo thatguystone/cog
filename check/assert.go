@@ -524,10 +524,18 @@ func (a assert) PanicsWith(recovers any, fn func()) bool {
 	if !p.didPanic {
 		a.helper()
 		a.failPanicsf("")
+		a.fail(p.stack)
 		return false
 	}
 
-	return a.Equal(p.recovered, recovers)
+	if !a.equal(p.recovered, recovers) {
+		a.helper()
+		a.failEqualf(p.recovered, recovers, "")
+		a.fail(p.stack)
+		return false
+	}
+
+	return true
 }
 
 // PanicsWithf ensures that the given function panics with the given value.
@@ -536,10 +544,18 @@ func (a assert) PanicsWithf(recovers any, fn func(), format string, args ...any)
 	if !p.didPanic {
 		a.helper()
 		a.failPanicsf(format, args...)
+		a.fail(p.stack)
 		return false
 	}
 
-	return a.Equalf(p.recovered, recovers, format, args...)
+	if !a.equal(p.recovered, recovers) {
+		a.helper()
+		a.failEqualf(p.recovered, recovers, format, args...)
+		a.fail(p.stack)
+		return false
+	}
+
+	return true
 }
 
 func (a assert) failNotPanicsf(p paniced, format string, args ...any) {
