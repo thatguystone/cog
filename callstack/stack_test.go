@@ -1,6 +1,8 @@
 package callstack
 
 import (
+	"errors"
+	"fmt"
 	"reflect"
 	"runtime"
 	"strings"
@@ -39,6 +41,37 @@ func TestGet(t *testing.T) {
 	}
 
 	fn(depth)
+}
+
+func TestFromError(t *testing.T) {
+	c := check.NewT(t)
+
+	type embed struct {
+		Stack
+		error
+	}
+
+	deep := embed{
+		Stack: Get(),
+		error: errors.New("test"),
+	}
+
+	err := fmt.Errorf("%s: %w", "wrap", deep)
+	for i := 0; i < 5; i++ {
+		st, found := FromError(err)
+		c.True(found)
+		c.Equal(deep.Stack, st)
+
+		err = fmt.Errorf("%s: %w", "wrap", deep)
+	}
+
+	_, found := FromError(errors.New("merp"))
+	c.False(found)
+}
+
+func TestString(t *testing.T) {
+	c := check.NewT(t)
+	c.Equal(Stack{}.String(), "")
 }
 
 func BenchmarkGetSkip(b *testing.B) {
