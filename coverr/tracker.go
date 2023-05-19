@@ -5,7 +5,6 @@ package coverr
 import (
 	"crypto/sha256"
 	"hash"
-	"runtime"
 	"strconv"
 	"sync"
 
@@ -28,7 +27,7 @@ func (trk *Tracker) Err() error {
 
 	h.h.Reset()
 
-	callstack.GetSkip(1).Iter(func(f runtime.Frame) {
+	callstack.GetSkip(1).Iter(func(f callstack.Frame) {
 		// Avoid allocations for speed
 		buf := strconv.AppendUint(h.buf, uint64(f.PC), 10)
 		buf = append(buf, '-')

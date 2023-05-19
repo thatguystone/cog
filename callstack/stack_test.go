@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"runtime"
 	"strings"
 	"testing"
 
@@ -92,7 +91,7 @@ func BenchmarkGetSkip(b *testing.B) {
 		c.ResetTimer()
 
 		for i := 0; i < c.N; i++ {
-			Get().Iter(func(f runtime.Frame) {})
+			Get().Iter(func(f Frame) {})
 		}
 	}
 
