@@ -524,7 +524,6 @@ func (a assert) PanicsWith(recovers any, fn func()) bool {
 	if !p.didPanic {
 		a.helper()
 		a.failPanicsf("")
-		a.fail(p.stack)
 		return false
 	}
 
@@ -544,7 +543,6 @@ func (a assert) PanicsWithf(recovers any, fn func(), format string, args ...any)
 	if !p.didPanic {
 		a.helper()
 		a.failPanicsf(format, args...)
-		a.fail(p.stack)
 		return false
 	}
 
