@@ -95,5 +95,5 @@ func (st Stack) String() string {
 		fmt.Fprintf(&b, "\t%s:%d\n", f.File, f.Line)
 	})
 
-	return b.String()
+	return strings.TrimSpace(b.String())
 }
