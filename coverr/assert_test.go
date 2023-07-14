@@ -7,13 +7,13 @@ import (
 	"github.com/thatguystone/cog/check"
 )
 
-type assert struct {
+type untilTester struct {
 	fatal bool
 }
 
-func (assert) Helper() {}
+func (untilTester) Helper() {}
 
-func (a *assert) Fatal(args ...any) {
+func (a *untilTester) Fatal(args ...any) {
 	a.fatal = true
 }
 
@@ -21,7 +21,7 @@ func TestUntilNil(t *testing.T) {
 	c := check.NewT(t)
 
 	c.Run("NoError", func(c *check.T) {
-		a := new(assert)
+		a := new(untilTester)
 		UntilNil(a, 5, func(i int) error {
 			return nil
 		})
@@ -30,13 +30,13 @@ func TestUntilNil(t *testing.T) {
 	})
 
 	c.Run("AlwaysErr", func(c *check.T) {
-		a := new(assert)
+		a := new(untilTester)
 		UntilNil(a, 5, func(i int) error { return Err })
 		c.True(a.fatal)
 	})
 
 	c.Run("NonCoverrErr", func(c *check.T) {
-		a := new(assert)
+		a := new(untilTester)
 		UntilNil(a, 5, func(i int) error {
 			if i == 0 {
 				return io.EOF

@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/thatguystone/cog/assert"
 	"github.com/thatguystone/cog/callstack"
 )
 
@@ -38,11 +39,7 @@ func (trk *Tracker) Err() error {
 
 		_, err := h.h.Write(buf)
 		h.buf = buf[:0]
-
-		if err != nil {
-			// Should never fail
-			panic(err)
-		}
+		assert.Nil(err)
 	})
 
 	h.h.Sum(h.sum[:0])
