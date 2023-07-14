@@ -60,13 +60,17 @@ func (st Stack) CallersFrames() *runtime.Frames {
 	return runtime.CallersFrames(st.s)
 }
 
-// Iter calls cb for each frame in the [Stack]
-func (st Stack) Iter(cb func(Frame)) {
+// Iter calls cb for each frame in the [Stack].
+//
+// Returning false from the callback stops iteration.
+func (st Stack) Iter(cb func(Frame) bool) {
 	frames := st.CallersFrames()
 	for {
 		frame, more := frames.Next()
 		if frame != (runtime.Frame{}) {
-			cb(Frame{frame})
+			if !cb(Frame{frame}) {
+				return
+			}
 		}
 
 		if !more {
@@ -79,8 +83,9 @@ func (st Stack) Iter(cb func(Frame)) {
 func (st Stack) MakeFrames() (ret []Frame) {
 	ret = make([]Frame, 0, len(st.s))
 
-	st.Iter(func(f Frame) {
+	st.Iter(func(f Frame) bool {
 		ret = append(ret, f)
+		return true
 	})
 
 	return
@@ -90,9 +95,10 @@ func (st Stack) MakeFrames() (ret []Frame) {
 func (st Stack) String() string {
 	var b strings.Builder
 
-	st.Iter(func(f Frame) {
+	st.Iter(func(f Frame) bool {
 		fmt.Fprintf(&b, "%s()\n", f.Function)
 		fmt.Fprintf(&b, "\t%s:%d\n", f.File, f.Line)
+		return true
 	})
 
 	return strings.TrimSpace(b.String())
