@@ -35,3 +35,17 @@ type testSelf struct{}
 func (testSelf) getFrame() Frame {
 	return Self()
 }
+
+func BenchmarkSelf(b *testing.B) {
+	c := check.NewB(b)
+
+	recurse(10, func() any {
+		c.ResetTimer()
+
+		for i := 0; i < c.N; i++ {
+			Self()
+		}
+
+		return nil
+	})
+}

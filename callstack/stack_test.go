@@ -14,12 +14,12 @@ type self struct{}
 
 var pkgName = reflect.TypeOf(self{}).PkgPath()
 
-func getAtDepth(n int) Stack {
-	if n != 1 {
-		return getAtDepth(n - 1)
+func recurse[T any](n int, cb func() T) T {
+	if n > 1 {
+		return recurse(n-1, cb)
 	}
 
-	return Get()
+	return cb()
 }
 
 func TestGet(t *testing.T) {
@@ -33,7 +33,7 @@ func TestGet(t *testing.T) {
 	const depth = 129
 	expectDepth := len(st.MakeFrames()) + depth
 
-	frames := getAtDepth(depth).MakeFrames()
+	frames := recurse(depth, Get).MakeFrames()
 	c.Equalf(len(frames), expectDepth, "%s", st)
 	c.Equal(frames[depth].Function, funcName)
 }
@@ -68,7 +68,7 @@ func TestStackIter(t *testing.T) {
 	c := check.NewT(t)
 
 	calls := 0
-	getAtDepth(10).Iter(func(f Frame) bool {
+	recurse(10, Get).Iter(func(f Frame) bool {
 		calls++
 		return calls <= 2
 	})
@@ -84,24 +84,13 @@ func TestStackString(t *testing.T) {
 func BenchmarkGetSkip(b *testing.B) {
 	c := check.NewB(b)
 
-	const depth = 32
-	expectDepth := len(Get().MakeFrames()) + depth
-
-	var fn func(n int)
-	fn = func(n int) {
-		if n != 1 {
-			fn(n - 1)
-			return
-		}
-
-		st := Get()
-		c.Must.Equalf(len(st.MakeFrames()), expectDepth, "%s", st)
+	recurse(32, func() any {
 		c.ResetTimer()
 
 		for i := 0; i < c.N; i++ {
 			Get().Iter(func(f Frame) bool { return true })
 		}
-	}
 
-	fn(depth)
+		return nil
+	})
 }
