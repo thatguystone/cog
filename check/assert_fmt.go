@@ -21,30 +21,40 @@ func fmtVals(g, e any) (string, string) {
 	return gs, es
 }
 
-func typeAndKind(v any) (reflect.Type, reflect.Kind) {
-	t := reflect.TypeOf(v)
-	k := t.Kind()
-	if k == reflect.Ptr {
-		t = t.Elem()
-		k = t.Kind()
+// If fmt.Sprintf("%+v") generally produces a reasonable value
+func isFormattable(v any) bool {
+	rt := reflect.TypeOf(v)
+	if rt == nil {
+		return true
 	}
 
-	return t, k
+	switch rt.Kind() {
+	case reflect.Bool:
+	case reflect.Int:
+	case reflect.Int8:
+	case reflect.Int16:
+	case reflect.Int32:
+	case reflect.Int64:
+	case reflect.Uint:
+	case reflect.Uint8:
+	case reflect.Uint16:
+	case reflect.Uint32:
+	case reflect.Uint64:
+	case reflect.Uintptr:
+	case reflect.Float32:
+	case reflect.Float64:
+	case reflect.Complex64:
+	case reflect.Complex128:
+	case reflect.String:
+	default:
+		return false
+	}
+
+	return true
 }
 
 func diff(g, e any) string {
-	if g == nil || e == nil {
-		return ""
-	}
-
-	gt, _ := typeAndKind(g)
-	et, ek := typeAndKind(e)
-
-	if gt != et {
-		return ""
-	}
-
-	if ek != reflect.Struct && ek != reflect.Map && ek != reflect.Slice && ek != reflect.Array {
+	if isFormattable(g) && isFormattable(e) {
 		return ""
 	}
 

@@ -22,7 +22,7 @@ func TestAssertFmtDiffCoverage(t *testing.T) {
 	c.Equal(diff(1, 1), "")
 
 	v := new(int)
-	c.Equal(diff(1, v), "")
+	c.NotEqual(diff(1, v), "")
 
 	c.NotEqual(diff([]string{"test"}, []string{"nope"}), "")
 }
