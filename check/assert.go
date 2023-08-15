@@ -410,7 +410,7 @@ func (a assert) failNilf(g any, format string, args ...any) {
 	a.helper()
 	a.error(
 		fmt.Sprintf(format, args...),
-		fmt.Sprintf("Expected nil, got: `%+v`", g),
+		fmt.Sprintf("Expected nil, got: %+v", g),
 	)
 }
 
