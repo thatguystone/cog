@@ -3,6 +3,7 @@ package check
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"testing"
 )
 
@@ -513,6 +514,28 @@ func TestAssertNotNil(t *testing.T) {
 	)
 	ta.check(
 		ta.NotNilf(nil, "fmt %d", 1),
+		false,
+	)
+}
+
+func TestAssertErrIs(t *testing.T) {
+	ta := newTestAssert(t)
+
+	ta.check(
+		ta.ErrIs(fs.ErrClosed, fs.ErrClosed),
+		true,
+	)
+	ta.check(
+		ta.ErrIsf(fs.ErrClosed, fs.ErrClosed, "fmt %d", 1),
+		true,
+	)
+
+	ta.check(
+		ta.ErrIs(errors.New("test"), fs.ErrClosed),
+		false,
+	)
+	ta.check(
+		ta.ErrIsf(errors.New("test"), fs.ErrClosed, "fmt %d", 1),
 		false,
 	)
 }

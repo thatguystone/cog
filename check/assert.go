@@ -1,6 +1,7 @@
 package check
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"runtime/debug"
@@ -460,6 +461,41 @@ func (a assert) NotNilf(g any, format string, args ...any) bool {
 	if g == nil {
 		a.helper()
 		a.failNotNilf(format, args...)
+		return false
+	}
+
+	return true
+}
+
+func (a assert) failErrIs(err, target error, format string, args ...any) {
+	a.helper()
+	a.error(
+		fmt.Sprintf(format, args...),
+		fmt.Sprintf(""+
+			"Expected error: %q\n"+
+			"           got: %s",
+			err,
+			target,
+		),
+	)
+}
+
+// ErrIs ensures that [errors.Is] returns true.
+func (a assert) ErrIs(err, target error) bool {
+	if !errors.Is(err, target) {
+		a.helper()
+		a.failErrIs(err, target, "")
+		return false
+	}
+
+	return true
+}
+
+// ErrIsf ensures that [errors.Is] returns true.
+func (a assert) ErrIsf(err, target error, format string, args ...any) bool {
+	if !errors.Is(err, target) {
+		a.helper()
+		a.failErrIs(err, target, format, args...)
 		return false
 	}
 
