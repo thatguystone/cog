@@ -110,8 +110,8 @@ func (a assert) failEqualf(g, e any, format string, args ...any) {
 	)
 }
 
-// Equal compares two things, ensuring that they are equal to each other. `e` is
-// the expected value; `g` is the value you got somewhere else.
+// Equal compares two things, ensuring that they are equal to each other. e is
+// the expected value; g is the value you got somewhere else.
 func (a assert) Equal(g, e any) bool {
 	if !a.equal(g, e) {
 		a.helper()
@@ -122,8 +122,8 @@ func (a assert) Equal(g, e any) bool {
 	return true
 }
 
-// Equal compares two things, ensuring that they are equal to each other. `e` is
-// the expected value; `g` is the value you got somewhere else.
+// Equal compares two things, ensuring that they are equal to each other. e is
+// the expected value; g is the value you got somewhere else.
 func (a assert) Equalf(g, e any, format string, args ...any) bool {
 	if !a.equal(g, e) {
 		a.helper()
@@ -613,7 +613,7 @@ func (a assert) failUntilf(iters int, format string, args ...any) {
 	)
 }
 
-// Until polls the given function, a max of `iters` times, until it returns
+// Until polls the given function, a max of iters times, until it returns
 // true.
 func (a assert) Until(iters int, fn func(i int) bool) bool {
 	if !a.until(iters, fn) {
@@ -625,7 +625,7 @@ func (a assert) Until(iters int, fn func(i int) bool) bool {
 	return true
 }
 
-// Untilf polls the given function, a max of `iters` times, until it returns
+// Untilf polls the given function, a max of iters times, until it returns
 // true.
 func (a assert) Untilf(
 	iters int,
@@ -665,7 +665,7 @@ func (a assert) failUntilNilf(iters int, err error, format string, args ...any) 
 	)
 }
 
-// UntilNil polls the given function, a max of `iters` times, until it doesn't
+// UntilNil polls the given function, a max of iters times, until it doesn't
 // return an error. This is mainly a helper used to exhaust error pathways when
 // using an Errorer.
 func (a assert) UntilNil(iters int, fn func(i int) error) bool {
@@ -679,7 +679,7 @@ func (a assert) UntilNil(iters int, fn func(i int) error) bool {
 	return true
 }
 
-// UntilNilf polls the given function, a max of `iters` times, until it doesn't
+// UntilNilf polls the given function, a max of iters times, until it doesn't
 // return an error. This is mainly a helper used to exhaust error pathways when
 // using an Errorer.
 func (a assert) UntilNilf(
