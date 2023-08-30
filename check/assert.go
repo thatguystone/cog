@@ -467,24 +467,11 @@ func (a assert) NotNilf(g any, format string, args ...any) bool {
 	return true
 }
 
-func (a assert) failErrIs(err, target error, format string, args ...any) {
-	a.helper()
-	a.error(
-		fmt.Sprintf(format, args...),
-		fmt.Sprintf(""+
-			"Expected error: %q\n"+
-			"           got: %s",
-			err,
-			target,
-		),
-	)
-}
-
 // ErrIs ensures that [errors.Is] returns true.
 func (a assert) ErrIs(err, target error) bool {
 	if !errors.Is(err, target) {
 		a.helper()
-		a.failErrIs(err, target, "")
+		a.failEqualf(err, target, "")
 		return false
 	}
 
@@ -495,7 +482,7 @@ func (a assert) ErrIs(err, target error) bool {
 func (a assert) ErrIsf(err, target error, format string, args ...any) bool {
 	if !errors.Is(err, target) {
 		a.helper()
-		a.failErrIs(err, target, format, args...)
+		a.failEqualf(err, target, format, args...)
 		return false
 	}
 
