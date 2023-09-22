@@ -23,3 +23,11 @@ func Nil(v any) {
 		panic(v)
 	}
 }
+
+// Must is a generic helper that wraps a call to a function returning (T, error)
+// and panics if the error is non-nil. It is intended for use in variable
+// initializations.
+func Must[T any](v T, err error) T {
+	Nil(err)
+	return v
+}

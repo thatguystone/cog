@@ -42,3 +42,21 @@ func TestNil(t *testing.T) {
 		Nil(errors.New("test"))
 	})
 }
+
+func TestMust(t *testing.T) {
+	c := check.NewT(t)
+
+	c.NotPanics(func() {
+		v := Must(func() (int, error) { return 1, nil }())
+		c.Equal(v, 1)
+	})
+
+	c.NotPanics(func() {
+		v := Must(1, nil)
+		c.Equal(v, 1)
+	})
+
+	c.Panics(func() {
+		Must(1, errors.New("hello"))
+	})
+}
