@@ -3,6 +3,7 @@ package callstack
 import (
 	"errors"
 	"fmt"
+	"iter"
 	"runtime"
 	"strings"
 )
@@ -60,46 +61,42 @@ func (st Stack) CallersFrames() *runtime.Frames {
 	return runtime.CallersFrames(st.s)
 }
 
-// Iter calls cb for each frame in the [Stack].
-//
-// Returning false from the callback stops iteration.
-func (st Stack) Iter(cb func(Frame) bool) {
-	frames := st.CallersFrames()
-	for {
-		frame, more := frames.Next()
-		if frame != (runtime.Frame{}) {
-			if !cb(Frame{frame}) {
+func (st Stack) Slice() []Frame {
+	ret := make([]Frame, 0, len(st.s))
+	for f := range st.All() {
+		ret = append(ret, f)
+	}
+
+	return ret
+}
+
+// All returns an iterator over every frame in the stack.
+func (st Stack) All() iter.Seq[Frame] {
+	return func(yield func(Frame) bool) {
+		frames := st.CallersFrames()
+		for {
+			frame, more := frames.Next()
+			if frame != (runtime.Frame{}) {
+				if !yield(Frame{frame}) {
+					return
+				}
+			}
+
+			if !more {
 				return
 			}
 		}
-
-		if !more {
-			return
-		}
 	}
-}
-
-// MakeFrames expands the stack into a slice of [runtime.Frame]
-func (st Stack) MakeFrames() (ret []Frame) {
-	ret = make([]Frame, 0, len(st.s))
-
-	st.Iter(func(f Frame) bool {
-		ret = append(ret, f)
-		return true
-	})
-
-	return
 }
 
 // String implements [fmt.Stringer]
 func (st Stack) String() string {
 	var b strings.Builder
 
-	st.Iter(func(f Frame) bool {
+	for f := range st.All() {
 		fmt.Fprintf(&b, "%s()\n", f.Function)
 		fmt.Fprintf(&b, "\t%s:%d\n", f.File, f.Line)
-		return true
-	})
+	}
 
 	return strings.TrimSpace(b.String())
 }

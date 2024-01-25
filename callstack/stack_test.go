@@ -27,13 +27,13 @@ func TestGet(t *testing.T) {
 	funcName := pkgName + ".TestGet"
 
 	st := Get()
-	c.Equal(st.MakeFrames()[0].Function, funcName)
+	c.Equal(st.Slice()[0].Function, funcName)
 	c.True(strings.Contains(st.String(), funcName))
 
 	const depth = 129
-	expectDepth := len(st.MakeFrames()) + depth
+	expectDepth := len(st.Slice()) + depth
 
-	frames := recurse(depth, Get).MakeFrames()
+	frames := recurse(depth, Get).Slice()
 	c.Equalf(len(frames), expectDepth, "%s", st)
 	c.Equal(frames[depth].Function, funcName)
 }
@@ -64,16 +64,14 @@ func TestFromError(t *testing.T) {
 	c.False(found)
 }
 
-func TestStackIter(t *testing.T) {
-	c := check.NewT(t)
+func TestStackIters(t *testing.T) {
+	recurse(10, func() any {
+		for _ = range Get().All() {
+			break
+		}
 
-	calls := 0
-	recurse(10, Get).Iter(func(f Frame) bool {
-		calls++
-		return calls <= 2
+		return nil
 	})
-
-	c.Equal(calls, 3)
 }
 
 func TestStackString(t *testing.T) {
@@ -81,14 +79,14 @@ func TestStackString(t *testing.T) {
 	c.Equal(Stack{}.String(), "")
 }
 
-func BenchmarkGetSkip(b *testing.B) {
+func BenchmarkGet(b *testing.B) {
 	c := check.NewB(b)
 
 	recurse(32, func() any {
 		c.ResetTimer()
 
 		for range b.N {
-			Get().Iter(func(f Frame) bool { return true })
+			Get()
 		}
 
 		return nil

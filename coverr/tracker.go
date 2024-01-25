@@ -28,7 +28,7 @@ func (trk *Tracker) Err() error {
 
 	h.h.Reset()
 
-	callstack.GetSkip(1).Iter(func(f callstack.Frame) bool {
+	for f := range callstack.GetSkip(1).All() {
 		// Avoid allocations for speed
 		buf := strconv.AppendUint(h.buf, uint64(f.PC), 10)
 		buf = append(buf, '-')
@@ -40,9 +40,7 @@ func (trk *Tracker) Err() error {
 		_, err := h.h.Write(buf)
 		h.buf = buf[:0]
 		assert.Nil(err)
-
-		return true
-	})
+	}
 
 	h.h.Sum(h.sum[:0])
 
