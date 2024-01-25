@@ -1,8 +1,6 @@
 package callstack
 
 import (
-	"errors"
-	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -36,32 +34,6 @@ func TestGet(t *testing.T) {
 	frames := recurse(depth, Get).Slice()
 	c.Equalf(len(frames), expectDepth, "%s", st)
 	c.Equal(frames[depth].Function, funcName)
-}
-
-func TestFromError(t *testing.T) {
-	c := check.NewT(t)
-
-	type embed struct {
-		Stack
-		error
-	}
-
-	deep := embed{
-		Stack: Get(),
-		error: errors.New("test"),
-	}
-
-	err := fmt.Errorf("%s: %w", "wrap", deep)
-	for range 5 {
-		st, found := FromError(err)
-		c.True(found)
-		c.Equal(deep.Stack, st)
-
-		err = fmt.Errorf("%s: %w", "wrap", deep)
-	}
-
-	_, found := FromError(errors.New("merp"))
-	c.False(found)
 }
 
 func TestStackIters(t *testing.T) {

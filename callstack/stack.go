@@ -1,7 +1,6 @@
 package callstack
 
 import (
-	"errors"
 	"fmt"
 	"iter"
 	"runtime"
@@ -34,26 +33,6 @@ func GetSkip(skip int) Stack {
 
 		pcs = append(pcs, make([]uintptr, len(pcs))...)
 	}
-}
-
-// FromError attempts to get a [Stack] that's embedded into an error. It returns
-// the first [Stack] found.
-func FromError(err error) (st Stack, found bool) {
-	for err != nil {
-		if getter, ok := err.(interface{ get() Stack }); ok {
-			st = getter.get()
-			found = true
-			return
-		}
-
-		err = errors.Unwrap(err)
-	}
-
-	return
-}
-
-func (st Stack) get() Stack {
-	return st
 }
 
 // A shallow wrapper around [runtime.CallersFrames]
