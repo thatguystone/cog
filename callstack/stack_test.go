@@ -52,7 +52,7 @@ func TestFromError(t *testing.T) {
 	}
 
 	err := fmt.Errorf("%s: %w", "wrap", deep)
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		st, found := FromError(err)
 		c.True(found)
 		c.Equal(deep.Stack, st)
@@ -87,7 +87,7 @@ func BenchmarkGetSkip(b *testing.B) {
 	recurse(32, func() any {
 		c.ResetTimer()
 
-		for i := 0; i < c.N; i++ {
+		for range b.N {
 			Get().Iter(func(f Frame) bool { return true })
 		}
 

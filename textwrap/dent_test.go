@@ -192,13 +192,13 @@ func TestDedentBasic(t *testing.T) {
 }
 
 func BenchmarkIndent(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		textwrap.Indent("test\nsomething\nlines", "\t")
 	}
 }
 
 func BenchmarkDedent(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		textwrap.Dedent("\t\t\ttest\n\t\t\tsomething\n\t\t\tlines")
 	}
 }

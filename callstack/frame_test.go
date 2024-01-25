@@ -42,7 +42,7 @@ func BenchmarkSelf(b *testing.B) {
 	recurse(10, func() any {
 		c.ResetTimer()
 
-		for i := 0; i < c.N; i++ {
+		for range b.N {
 			Self()
 		}
 

@@ -22,7 +22,7 @@ func TestErrCoverage(t *testing.T) {
 
 func BenchmarkTracker(b *testing.B) {
 	var tr Tracker
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		tr.Err()
 	}
 }

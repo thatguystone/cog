@@ -296,7 +296,7 @@ func (a assert) hasVal(iter, el any) (found, ok bool) {
 		}
 
 	case reflect.Array, reflect.Slice:
-		for i := 0; i < iv.Len(); i++ {
+		for i := range iv.Len() {
 			if a.equal(iv.Index(i).Interface(), el) {
 				found = true
 				break
@@ -616,7 +616,7 @@ func (a assert) NotPanicsf(fn func(), format string, args ...any) (ok bool) {
 }
 
 func (a assert) until(iters int, fn func(i int) bool) bool {
-	for i := 0; i < iters; i++ {
+	for i := range iters {
 		if fn(i) {
 			return true
 		}
@@ -666,7 +666,7 @@ func (a assert) Untilf(
 }
 
 func (a assert) untilNil(iters int, fn func(i int) error) (err error) {
-	for i := 0; i < iters; i++ {
+	for i := range iters {
 		err = fn(i)
 		if err == nil {
 			return

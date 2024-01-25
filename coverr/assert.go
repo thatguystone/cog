@@ -16,7 +16,7 @@ type Tester interface {
 func UntilNil(t Tester, iters int, fn func(i int) error) bool {
 	var err error
 
-	for i := 0; i < iters; i++ {
+	for i := range iters {
 		err = fn(i)
 		if err == nil {
 			return true
