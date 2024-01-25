@@ -48,7 +48,10 @@ func TestStackIters(t *testing.T) {
 
 func TestStackString(t *testing.T) {
 	c := check.NewT(t)
-	c.Equal(Stack{}.String(), "")
+
+	var stack Stack
+	c.True(stack.IsZero())
+	c.Equal(stack.String(), "")
 }
 
 func BenchmarkGet(b *testing.B) {

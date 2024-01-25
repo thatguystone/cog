@@ -35,6 +35,11 @@ func GetSkip(skip int) Stack {
 	}
 }
 
+// IsZero determines if this stack is a zero-value
+func (st Stack) IsZero() bool {
+	return len(st.s) == 0
+}
+
 // A shallow wrapper around [runtime.CallersFrames]
 func (st Stack) CallersFrames() *runtime.Frames {
 	return runtime.CallersFrames(st.s)
