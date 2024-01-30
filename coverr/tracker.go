@@ -30,11 +30,11 @@ func (trk *Tracker) Err() error {
 
 	for f := range callstack.GetSkip(1).All() {
 		// Avoid allocations for speed
-		buf := strconv.AppendUint(h.buf, uint64(f.PC), 10)
+		buf := strconv.AppendUint(h.buf, uint64(f.PC()), 10)
 		buf = append(buf, '-')
-		buf = append(buf, f.File...)
+		buf = append(buf, f.File()...)
 		buf = append(buf, ':')
-		buf = strconv.AppendInt(buf, int64(f.Line), 10)
+		buf = strconv.AppendInt(buf, int64(f.Line()), 10)
 		buf = append(buf, '\n')
 
 		_, err := h.h.Write(buf)

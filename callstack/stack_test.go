@@ -25,7 +25,7 @@ func TestGet(t *testing.T) {
 	funcName := pkgName + ".TestGet"
 
 	st := Get()
-	c.Equal(st.Slice()[0].Function, funcName)
+	c.Equal(st.Slice()[0].Func(), funcName)
 	c.True(strings.Contains(st.String(), funcName))
 
 	const depth = 129
@@ -33,7 +33,7 @@ func TestGet(t *testing.T) {
 
 	frames := recurse(depth, Get).Slice()
 	c.Equalf(len(frames), expectDepth, "%s", st)
-	c.Equal(frames[depth].Function, funcName)
+	c.Equal(frames[depth].Func(), funcName)
 }
 
 func TestStackIters(t *testing.T) {

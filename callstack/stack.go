@@ -1,7 +1,6 @@
 package callstack
 
 import (
-	"fmt"
 	"iter"
 	"runtime"
 	"strings"
@@ -56,7 +55,7 @@ func (st Stack) All() iter.Seq[Frame] {
 		for {
 			frame, more := frames.Next()
 			if frame != (runtime.Frame{}) {
-				if !yield(Frame{frame}) {
+				if !yield(Frame{f: frame}) {
 					return
 				}
 			}
@@ -71,10 +70,8 @@ func (st Stack) All() iter.Seq[Frame] {
 // String implements [fmt.Stringer]
 func (st Stack) String() string {
 	var b strings.Builder
-
-	for f := range st.All() {
-		fmt.Fprintf(&b, "%s()\n", f.Function)
-		fmt.Fprintf(&b, "\t%s:%d\n", f.File, f.Line)
+	for frame := range st.All() {
+		frame.append(&b)
 	}
 
 	return strings.TrimSpace(b.String())

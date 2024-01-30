@@ -1,47 +1,96 @@
 package callstack
 
 import (
+	"fmt"
+	"path/filepath"
 	"runtime"
-
-	"github.com/thatguystone/cog/assert"
+	"strings"
 )
 
-// Frame wraps [runtime.Frame] with extra functionality
-type Frame struct {
-	runtime.Frame
-}
+// Raw program counter wrapper
+type PC uintptr
 
-// Self gets the Frame of the caller
-func Self() Frame {
+// Self gets the PC of the caller
+func Self() PC {
 	return Caller(1)
 }
 
-// Caller gets the Frame of the caller after skipping the given number of frames
-func Caller(skip int) Frame {
+// Caller gets the PC of the caller after skipping the given number of frames
+func Caller(skip int) PC {
 	var pcs [1]uintptr
-	n := runtime.Callers(skip+2, pcs[:]) // runtime.Callers + Self()
-	assert.True(n > 0)
+	runtime.Callers(skip+2, pcs[:]) // runtime.Callers + Self()
+	return PC(pcs[0])
+}
 
+func (pc PC) Frame() Frame {
+	pcs := [1]uintptr{uintptr(pc)}
 	frames := runtime.CallersFrames(pcs[:])
 	frame, _ := frames.Next()
 	return Frame{frame}
 }
 
+// Frame wraps [runtime.Frame] with extra functionality
+type Frame struct {
+	f runtime.Frame
+}
+
+// PC gets the raw program counter
+func (frame Frame) PC() uintptr {
+	return frame.f.PC
+}
+
+// Func gets the fully-qualified name of the function
+func (frame Frame) Func() string {
+	name := frame.f.Function
+	if name == "" {
+		return "???"
+	}
+
+	return name
+}
+
 // FuncName gets the non-qualified name of the function.
-func (fr Frame) FuncName() string {
-	_, funcName := fr.PkgAndFunc()
+func (frame Frame) FuncName() string {
+	_, funcName := frame.PkgAndFunc()
 	return funcName
 }
 
 // PkgPath gets the name of the package the frame belongs to
-func (fr Frame) PkgPath() string {
-	pkgPath, _ := fr.PkgAndFunc()
+func (frame Frame) PkgPath() string {
+	pkgPath, _ := frame.PkgAndFunc()
 	return pkgPath
 }
 
-func (fr Frame) PkgAndFunc() (pkgPath string, funcName string) {
+// File gets the path and file name of this Frame
+func (frame Frame) File() string {
+	file := frame.f.File
+	if file == "" {
+		return "???"
+	}
+
+	return file
+}
+
+// FileName gets the file name of this Frame
+func (frame Frame) FileName() string {
+	file := frame.File()
+	return filepath.Base(file)
+}
+
+// Line gets the line number of this Frame
+func (frame Frame) Line() int {
+	return frame.f.Line
+}
+
+// PkgAndFunc gets the name of the package this frame belongs to and the
+// non-qualified name of the function in the package.
+func (frame Frame) PkgAndFunc() (pkgPath string, funcName string) {
+	name := frame.f.Function
+	if name == "" {
+		return "???", "???"
+	}
+
 	// Borrowed from [runtime.funcpkgpath]
-	name := fr.Function
 	i := len(name) - 1
 	for ; i > 0; i-- {
 		if name[i] == '/' {
@@ -54,4 +103,16 @@ func (fr Frame) PkgAndFunc() (pkgPath string, funcName string) {
 		}
 	}
 	return name[:i], name[i+1:]
+}
+
+func (frame Frame) append(b *strings.Builder) {
+	fmt.Fprintf(b, "%s()\n", frame.Func())
+	fmt.Fprintf(b, "\t%s:%d\n", frame.File(), frame.Line())
+}
+
+// String implements [fmt.Stringer]
+func (frame Frame) String() string {
+	var b strings.Builder
+	frame.append(&b)
+	return b.String()
 }
