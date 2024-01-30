@@ -40,11 +40,6 @@ func (st Stack) IsZero() bool {
 	return len(st.s) == 0
 }
 
-// A shallow wrapper around [runtime.CallersFrames]
-func (st Stack) CallersFrames() *runtime.Frames {
-	return runtime.CallersFrames(st.s)
-}
-
 func (st Stack) Slice() []Frame {
 	ret := make([]Frame, 0, len(st.s))
 	for f := range st.All() {
@@ -57,7 +52,7 @@ func (st Stack) Slice() []Frame {
 // All returns an iterator over every frame in the stack.
 func (st Stack) All() iter.Seq[Frame] {
 	return func(yield func(Frame) bool) {
-		frames := st.CallersFrames()
+		frames := runtime.CallersFrames(st.s)
 		for {
 			frame, more := frames.Next()
 			if frame != (runtime.Frame{}) {
