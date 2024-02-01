@@ -35,7 +35,7 @@ func (a assert) failTruef(format string, args ...any) {
 }
 
 // True checks that the given bool is true.
-func (a assert) True(cond bool) (ok bool) {
+func (a assert) True(cond bool) bool {
 	if !cond {
 		a.helper()
 		a.failTruef("")
@@ -531,7 +531,7 @@ func (a assert) Panics(fn func()) bool {
 }
 
 // Panicsf ensures that the given function panics.
-func (a assert) Panicsf(fn func(), format string, args ...any) (ok bool) {
+func (a assert) Panicsf(fn func(), format string, args ...any) bool {
 	if !checkPanic(fn).didPanic {
 		a.helper()
 		a.failPanicsf(format, args...)
@@ -604,7 +604,7 @@ func (a assert) NotPanics(fn func()) bool {
 }
 
 // NotPanicsf ensures that the given function does not panic.
-func (a assert) NotPanicsf(fn func(), format string, args ...any) (ok bool) {
+func (a assert) NotPanicsf(fn func(), format string, args ...any) bool {
 	p := checkPanic(fn)
 	if p.didPanic {
 		a.helper()
