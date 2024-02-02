@@ -8,43 +8,39 @@ import (
 )
 
 func TestIsTerminal(t *testing.T) {
-	c := check.NewT(t)
-
-	c.Run("Basic", func(c *check.T) {
+	t.Run("Basic", func(t *testing.T) {
 		f, err := os.Open(os.DevNull)
-		c.Must.Nil(err)
+		check.MustNil(t, err)
 		defer f.Close()
 
 		is, err := IsTerminal(f)
-		c.Must.Nil(err)
-		c.False(is)
+		check.MustNil(t, err)
+		check.False(t, is)
 	})
 
-	c.Run("InvalidFile", func(c *check.T) {
+	t.Run("InvalidFile", func(t *testing.T) {
 		var f *os.File
 
 		_, err := IsTerminal(f)
-		c.NotNil(err)
+		check.NotNil(t, err)
 	})
 }
 
 func TestIsDevNull(t *testing.T) {
-	c := check.NewT(t)
-
-	c.Run("Basic", func(c *check.T) {
+	t.Run("Basic", func(t *testing.T) {
 		f, err := os.Open(os.DevNull)
-		c.Must.Nil(err)
+		check.MustNil(t, err)
 		defer f.Close()
 
 		is, err := IsDevNull(f)
-		c.Must.Nil(err)
-		c.True(is)
+		check.MustNil(t, err)
+		check.True(t, is)
 	})
 
-	c.Run("InvalidFile", func(c *check.T) {
+	t.Run("InvalidFile", func(t *testing.T) {
 		var f *os.File
 
 		_, err := IsDevNull(f)
-		c.NotNil(err)
+		check.NotNil(t, err)
 	})
 }

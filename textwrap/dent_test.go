@@ -8,8 +8,6 @@ import (
 )
 
 func TestIndentBasic(t *testing.T) {
-	c := check.NewT(t)
-
 	tests := []struct {
 		p   string
 		in  string
@@ -82,19 +80,17 @@ func TestIndentBasic(t *testing.T) {
 		},
 	}
 
-	for i, t := range tests {
-		c.Equalf(t.out, textwrap.Indent(t.in, t.p), "failed at %d", i)
+	for i, test := range tests {
+		check.Equalf(t, test.out, textwrap.Indent(test.in, test.p), "failed at %d", i)
 
 		n := testing.AllocsPerRun(1_000, func() {
-			textwrap.Dedent(t.in)
+			textwrap.Dedent(test.in)
 		})
-		c.Truef(n <= 1.0, "i=%d n=%f", i, n)
+		check.Truef(t, n <= 1.0, "i=%d n=%f", i, n)
 	}
 }
 
 func TestDedentBasic(t *testing.T) {
-	c := check.NewT(t)
-
 	tests := []struct {
 		in  string
 		out string
@@ -181,13 +177,13 @@ func TestDedentBasic(t *testing.T) {
 		},
 	}
 
-	for i, t := range tests {
-		c.Equalf(t.out, textwrap.Dedent(t.in), "i=%d", i)
+	for i, test := range tests {
+		check.Equalf(t, test.out, textwrap.Dedent(test.in), "i=%d", i)
 
 		n := testing.AllocsPerRun(1_000, func() {
-			textwrap.Dedent(t.in)
+			textwrap.Dedent(test.in)
 		})
-		c.Truef(n <= 1.0, "i=%d n=%f", i, n)
+		check.Truef(t, n <= 1.0, "i=%d n=%f", i, n)
 	}
 }
 

@@ -2,16 +2,12 @@ package coverr
 
 import (
 	"testing"
-
-	"github.com/thatguystone/cog/check"
 )
 
 func TestTrackerBasic(t *testing.T) {
-	c := check.NewT(t)
-
 	trk := new(Tracker)
 
-	UntilNil(c, 5, func(i int) error {
+	EventuallyNil(t, 5, func(i int) error {
 		return trk.Err()
 	})
 }

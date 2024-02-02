@@ -1,112 +1,305 @@
-// Package check provides dead-simple assertions and utilities for testing.
 package check
 
 import (
+	"errors"
+	"fmt"
 	"reflect"
-	"testing"
+	"runtime/debug"
+	"strings"
+
+	"github.com/thatguystone/cog/textwrap"
 )
 
-// A T wraps a [testing.T]
-type T struct {
-	*testing.T
-	assert
-	Must assert
+type Error interface {
+	Helper()
+	Error(args ...any)
 }
 
-// New creates a new T and marks this test as parallel
-func NewT(t *testing.T) *T {
-	t.Parallel()
-
-	return &T{
-		T:      t,
-		assert: newAssert(t.Helper, t.Error),
-		Must:   newAssert(t.Helper, t.Fatal),
-	}
+type Fatal interface {
+	Helper()
+	Fatal(args ...any)
 }
 
-// Run is the equivalent of [testing.T.Run]
-func (t *T) Run(name string, fn func(c *T)) bool {
-	return t.T.Run(name, func(t *testing.T) {
-		fn(NewT(t))
-	})
-}
-
-// A B wraps a [testing.B]
-type B struct {
-	*testing.B
-	assert
-	Must assert
-}
-
-// NewB creates a new B
-func NewB(b *testing.B) *B {
-	return &B{
-		B:      b,
-		assert: newAssert(b.Helper, b.Error),
-		Must:   newAssert(b.Helper, b.Fatal),
-	}
-}
-
-// Run is the equivalent of [testing.B.Run]
-func (b *B) Run(name string, fn func(c *B)) bool {
-	return b.B.Run(name, func(b *testing.B) {
-		fn(NewB(b))
-	})
-}
-
-// A F wraps a [testing.F]
-type F struct {
-	*testing.F
-	assert
-	Must assert
-}
-
-// NewF creates a new F
-func NewF(f *testing.F) *F {
-	return &F{
-		F:      f,
-		assert: newAssert(f.Helper, f.Error),
-		Must:   newAssert(f.Helper, f.Fatal),
-	}
-}
-
-var (
-	tPtr  = reflect.TypeOf((*testing.T)(nil))
-	ctPtr = reflect.TypeOf((*T)(nil))
-)
-
-// Run is the equivalent of [testing.F.Fuzz]
-func (f *F) Fuzz(fn any) {
-	fv := reflect.ValueOf(fn)
-	ft := fv.Type()
-
-	if ft.Kind() != reflect.Func {
-		panic("check: F.Fuzz must receive a function")
+func checkTrue(cond bool) (string, bool) {
+	if cond {
+		return "", true
 	}
 
-	if ft.NumIn() < 2 || ft.In(0) != ctPtr {
-		panic("check: fuzz fn must be in form func(*check.T, ...)")
+	return "Bool check failed: expected true", false
+}
+
+func checkFalse(cond bool) (string, bool) {
+	if !cond {
+		return "", true
 	}
 
-	if ft.NumOut() != 0 {
-		panic("check: fuzz fn must not return a value")
+	return "Bool check failed: expected false", false
+}
+
+func equalMsg(op string, g, e any) string {
+	diff := diff(g, e)
+	if diff != "" {
+		diff = "\n\nDiff:\n" + textwrap.Indent(diff, spewConfig.Indent)
 	}
 
-	args := make([]reflect.Type, ft.NumIn())
-	args[0] = tPtr
-	for i := 1; i < len(args); i++ {
-		args[i] = ft.In(i)
-	}
-
-	wfv := reflect.MakeFunc(
-		reflect.FuncOf(args, nil, false),
-		func(args []reflect.Value) (results []reflect.Value) {
-			ct := NewT(args[0].Interface().(*testing.T))
-			args[0] = reflect.ValueOf(ct)
-
-			return fv.Call(args)
-		},
+	gf, ef := fmtVals(g, e)
+	return fmt.Sprintf(""+
+		"Expected: %s\n"+
+		"       %s %s%s",
+		gf,
+		op,
+		ef,
+		diff,
 	)
+}
 
-	f.F.Fuzz(wfv.Interface())
+func checkEqual(g, e any) (string, bool) {
+	if reflect.DeepEqual(g, e) {
+		return "", true
+	}
+
+	return equalMsg("==", g, e), false
+}
+
+func checkNotEqual(g, e any) (string, bool) {
+	if !reflect.DeepEqual(g, e) {
+		return "", true
+	}
+
+	return equalMsg("!=", g, e), false
+}
+
+func checkNil(v any) (string, bool) {
+	if v == nil {
+		return "", true
+	}
+
+	return fmt.Sprintf("Expected nil, got: %+v", v), false
+}
+
+func checkNotNil(v any) (string, bool) {
+	if v != nil {
+		return "", true
+	}
+
+	return "Expected something, got nil", false
+}
+
+func checkErrIs(err, target error) (string, bool) {
+	if errors.Is(err, target) {
+		return "", true
+	}
+
+	return equalMsg("==", err, target), false
+}
+
+func checkErrAs(err error, target any) (string, bool) {
+	if errors.As(err, target) {
+		return "", true
+	}
+
+	return equalMsg("==", err, target), false
+}
+
+func containsMsg(container any, what string, el any) string {
+	return fmt.Sprintf(
+		"%s %+v not found in %+v",
+		what,
+		el,
+		container,
+	)
+}
+
+func notContainsMsg(container any, what string, el any) string {
+	return fmt.Sprintf(
+		"%s %+v unexpectedly found in %+v",
+		what,
+		el,
+		container,
+	)
+}
+
+func hasKey(m, k any) (string, bool) {
+	rv := reflect.ValueOf(m)
+
+	if rv.Kind() != reflect.Map {
+		msg := fmt.Sprintf("Cannot check non-map %T for key", m)
+		return msg, false
+	}
+
+	v := rv.MapIndex(reflect.ValueOf(k))
+	return "", v != reflect.Value{}
+}
+
+func checkHasKey(m, k any) (string, bool) {
+	msg, ok := hasKey(m, k)
+	if msg != "" {
+		return msg, false
+	}
+
+	if ok {
+		return "", true
+	}
+
+	return containsMsg(m, "key", k), false
+}
+
+func checkNotHasKey(m, k any) (string, bool) {
+	msg, ok := hasKey(m, k)
+	if msg != "" {
+		return msg, false
+	}
+
+	if !ok {
+		return "", true
+	}
+
+	return notContainsMsg(m, "key", k), false
+}
+
+func contains(iter, v any) (msg, what string, ok bool) {
+	rv := reflect.ValueOf(iter)
+
+	switch rv.Kind() {
+	case reflect.Map:
+		for mi := rv.MapRange(); mi.Next(); {
+			if reflect.DeepEqual(mi.Value().Interface(), v) {
+				return "", "", true
+			}
+		}
+
+		return "", "value", false
+
+	case reflect.Slice, reflect.Array:
+		for i := range rv.Len() {
+			if reflect.DeepEqual(rv.Index(i).Interface(), v) {
+				return "", "", true
+			}
+		}
+
+		return "", "value", false
+
+	case reflect.String:
+		substr, ok := v.(string)
+		if !ok {
+			msg := fmt.Sprintf("Cannot search string for non-string: %T(%v)", v, v)
+			return msg, "", false
+		}
+
+		if strings.Contains(rv.String(), substr) {
+			return "", "", true
+		}
+
+		return "", "substring", false
+
+	default:
+		msg := fmt.Sprintf("Cannot check non-container %T for containment", iter)
+		return msg, "", false
+	}
+}
+
+func checkContains(iter, v any) (string, bool) {
+	msg, what, ok := contains(iter, v)
+	if msg != "" {
+		return msg, false
+	}
+
+	if ok {
+		return "", true
+	}
+
+	return containsMsg(iter, what, v), false
+}
+
+func checkNotContains(iter, v any) (string, bool) {
+	msg, what, ok := contains(iter, v)
+	if msg != "" {
+		return msg, false
+	}
+
+	if !ok {
+		return "", true
+	}
+
+	return notContainsMsg(iter, what, v), false
+}
+
+func checkPanics(fn func()) (msg string, ok bool) {
+	defer func() {
+		ok = recover() != nil
+	}()
+
+	fn()
+	return "Expected fn to panic; it did not.", false
+}
+
+func checkNotPanics(fn func()) (msg string, ok bool) {
+	defer func() {
+		if r := recover(); r != nil {
+			msg = fmt.Sprintf(
+				"Expected fn not to panic; got: %+v\n%s",
+				r,
+				textwrap.Indent(string(debug.Stack()), "\t"),
+			)
+		}
+	}()
+
+	fn()
+	return "", true
+}
+
+func checkPanicsWith(recovers any, fn func()) (msg string, ok bool) {
+	defer func() {
+		r := recover()
+		if r == nil {
+			msg = "Expected fn to panic; it did not."
+			return
+		}
+
+		if !reflect.DeepEqual(r, recovers) {
+			msg = fmt.Sprintf(
+				"%s\n%s",
+				equalMsg("==", r, recovers),
+				textwrap.Indent(string(debug.Stack()), "\t"),
+			)
+			return
+		}
+
+		ok = true
+	}()
+
+	fn()
+	return
+}
+
+func checkEventuallyTrue(numTries int, fn func(i int) bool) (string, bool) {
+	for i := range numTries {
+		if fn(i) {
+			return "", true
+		}
+	}
+
+	msg := fmt.Sprintf(
+		"Polling for condition failed, gave up after %d tries",
+		numTries,
+	)
+	return msg, false
+}
+
+func checkEventuallyNil(numTries int, fn func(i int) error) (string, bool) {
+	var err error
+
+	for i := range numTries {
+		err = fn(i)
+		if err == nil {
+			return "", true
+		}
+	}
+
+	msg := fmt.Sprintf(
+		"Func didn't succeed after %d tries, last err: %v",
+		numTries,
+		err,
+	)
+	return msg, false
 }

@@ -8,55 +8,47 @@ import (
 )
 
 func TestTrue(t *testing.T) {
-	c := check.NewT(t)
-
-	c.NotPanics(func() {
+	check.NotPanics(t, func() {
 		True(true)
 	})
 
-	c.Panics(func() {
+	check.Panics(t, func() {
 		True(false)
 	})
 }
 
 func TestEqual(t *testing.T) {
-	c := check.NewT(t)
-
-	c.NotPanics(func() {
+	check.NotPanics(t, func() {
 		Equal(1, 1)
 	})
 
-	c.Panics(func() {
+	check.Panics(t, func() {
 		Equal(1, 2)
 	})
 }
 
 func TestNil(t *testing.T) {
-	c := check.NewT(t)
-
-	c.NotPanics(func() {
+	check.NotPanics(t, func() {
 		Nil(nil)
 	})
 
-	c.Panics(func() {
+	check.Panics(t, func() {
 		Nil(errors.New("test"))
 	})
 }
 
 func TestMust(t *testing.T) {
-	c := check.NewT(t)
-
-	c.NotPanics(func() {
+	check.NotPanics(t, func() {
 		v := Must(func() (int, error) { return 1, nil }())
-		c.Equal(v, 1)
+		check.Equal(t, v, 1)
 	})
 
-	c.NotPanics(func() {
+	check.NotPanics(t, func() {
 		v := Must(1, nil)
-		c.Equal(v, 1)
+		check.Equal(t, v, 1)
 	})
 
-	c.Panics(func() {
+	check.Panics(t, func() {
 		Must(1, errors.New("hello"))
 	})
 }
