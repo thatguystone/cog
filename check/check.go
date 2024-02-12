@@ -53,20 +53,39 @@ func equalMsg(op string, g, e any) string {
 	)
 }
 
+func canEqual(g, e any) (string, bool) {
+	if reflect.TypeOf(g) != reflect.TypeOf(e) {
+		msg := fmt.Sprintf("Cannot compare mismatched types: %T != %T", g, e)
+		return msg, false
+	}
+
+	return "", true
+}
+
 func checkEqual(g, e any) (string, bool) {
 	if reflect.DeepEqual(g, e) {
 		return "", true
+	}
+
+	msg, ok := canEqual(g, e)
+	if !ok {
+		return msg, false
 	}
 
 	return equalMsg("==", g, e), false
 }
 
 func checkNotEqual(g, e any) (string, bool) {
-	if !reflect.DeepEqual(g, e) {
-		return "", true
+	if reflect.DeepEqual(g, e) {
+		return equalMsg("!=", g, e), false
 	}
 
-	return equalMsg("!=", g, e), false
+	msg, ok := canEqual(g, e)
+	if !ok {
+		return msg, false
+	}
+
+	return "", true
 }
 
 func checkNil(v any) (string, bool) {

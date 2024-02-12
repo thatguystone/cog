@@ -41,11 +41,13 @@ func TestCheckFalse(t *testing.T) {
 func TestCheckEqual(t *testing.T) {
 	testCheck(checkEqual(1, 1))(t, true)
 	testCheck(checkEqual(1, 2))(t, false)
+	testCheck(checkEqual(int8(1), int16(1)))(t, false)
 }
 
 func TestCheckNotEqual(t *testing.T) {
 	testCheck(checkNotEqual(1, 2))(t, true)
 	testCheck(checkNotEqual(1, 1))(t, false)
+	testCheck(checkNotEqual(int8(1), int16(2)))(t, false)
 }
 
 func TestCheckNil(t *testing.T) {

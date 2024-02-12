@@ -16,7 +16,7 @@ func TestSelfFunc(t *testing.T) {
 	fr := Self().Frame()
 
 	const funcName = "TestSelfFunc"
-	check.NotEqual(t, fr.PC(), 0)
+	check.NotEqual(t, fr.PC(), uintptr(0))
 	check.Equal(t, fr.PkgPath(), pkgPath)
 	check.Equal(t, fr.Func(), pkgPath+"."+funcName)
 	check.Equal(t, fr.FuncName(), funcName)
@@ -29,7 +29,7 @@ func TestSelfMethod(t *testing.T) {
 	fr := testSelf{}.getPC().Frame()
 
 	const funcName = "testSelf.getPC"
-	check.NotEqual(t, fr.PC(), 0)
+	check.NotEqual(t, fr.PC(), uintptr(0))
 	check.Equal(t, fr.PkgPath(), pkgPath)
 	check.Equal(t, fr.Func(), pkgPath+"."+funcName)
 	check.Equal(t, fr.FuncName(), funcName)
