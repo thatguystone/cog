@@ -6,7 +6,9 @@ import (
 	"reflect"
 	"runtime/debug"
 	"strings"
+	"unicode"
 
+	"github.com/peter-evans/patience"
 	"github.com/thatguystone/cog/textwrap"
 )
 
@@ -25,7 +27,7 @@ func checkTrue(cond bool) (string, bool) {
 		return "", true
 	}
 
-	return "Bool check failed: expected true", false
+	return "Expected true", false
 }
 
 func checkFalse(cond bool) (string, bool) {
@@ -33,33 +35,64 @@ func checkFalse(cond bool) (string, bool) {
 		return "", true
 	}
 
-	return "Bool check failed: expected false", false
+	return "Expected false", false
 }
 
-func equalMsg(op string, g, e any) string {
-	diff := diff(g, e)
-	if diff != "" {
-		diff = "\n\nDiff:\n" + textwrap.Indent(diff, spewConfig.Indent)
-	}
-
-	gf, ef := fmtVals(g, e)
-	return fmt.Sprintf(""+
-		"Expected: %s\n"+
-		"       %s %s%s",
-		gf,
-		op,
-		ef,
-		diff,
+func equalMsg(g, e any) string {
+	var (
+		gs = dump(g, 0)
+		gl = strings.Split(gs, "\n")
+		es = dump(e, 0)
+		el = strings.Split(es, "\n")
 	)
-}
 
-func canEqual(g, e any) (string, bool) {
-	if reflect.TypeOf(g) != reflect.TypeOf(e) {
-		msg := fmt.Sprintf("Cannot compare mismatched types: %T != %T", g, e)
-		return msg, false
+	if len(gl) == 1 && len(el) == 1 {
+		return fmt.Sprintf(""+
+			"Expected: %s\n"+
+			"       == %s",
+			gs,
+			es,
+		)
 	}
 
-	return "", true
+	var (
+		b     = new(strings.Builder)
+		diffs = patience.Diff(gl, el)
+	)
+
+	const (
+		prefixLen = 2
+		prelude   = "Expected values to be equal:\n"
+	)
+
+	n := len(prelude) + (len(dumpIndent)+prefixLen+1)*len(diffs)
+	for _, diff := range diffs {
+		n += len(diff.Text)
+	}
+
+	b.Grow(n)
+	b.WriteString(prelude)
+
+	for i, diff := range diffs {
+		if i > 0 {
+			b.WriteByte('\n')
+		}
+
+		b.WriteString(dumpIndent)
+
+		switch diff.Type {
+		case patience.Delete:
+			b.WriteString("- ")
+		case patience.Insert:
+			b.WriteString("+ ")
+		default:
+			b.WriteString("  ")
+		}
+
+		b.WriteString(diff.Text)
+	}
+
+	return b.String()
 }
 
 func checkEqual(g, e any) (string, bool) {
@@ -67,21 +100,17 @@ func checkEqual(g, e any) (string, bool) {
 		return "", true
 	}
 
-	msg, ok := canEqual(g, e)
-	if !ok {
-		return msg, false
-	}
-
-	return equalMsg("==", g, e), false
+	return equalMsg(g, e), false
 }
 
 func checkNotEqual(g, e any) (string, bool) {
 	if reflect.DeepEqual(g, e) {
-		return equalMsg("!=", g, e), false
+		return "Expected values to differ:\n" + dump(g, 1), false
 	}
 
-	msg, ok := canEqual(g, e)
-	if !ok {
+	// Not equal because of a type mismatch is probably not what was meant
+	if reflect.TypeOf(g) != reflect.TypeOf(e) {
+		msg := fmt.Sprintf("Cannot compare mismatched types: %T != %T", g, e)
 		return msg, false
 	}
 
@@ -93,7 +122,7 @@ func checkNil(v any) (string, bool) {
 		return "", true
 	}
 
-	return fmt.Sprintf("Expected nil, got: %+v", v), false
+	return "Expected nil, got:\n" + dump(v, 1), false
 }
 
 func checkNotNil(v any) (string, bool) {
@@ -109,7 +138,7 @@ func checkErrIs(err, target error) (string, bool) {
 		return "", true
 	}
 
-	return equalMsg("==", err, target), false
+	return equalMsg(err, target), false
 }
 
 func checkErrAs(err error, target any) (string, bool) {
@@ -117,25 +146,40 @@ func checkErrAs(err error, target any) (string, bool) {
 		return "", true
 	}
 
-	return equalMsg("==", err, target), false
+	return equalMsg(err, target), false
 }
 
 func containsMsg(container any, what string, el any) string {
-	return fmt.Sprintf(
-		"%s %+v not found in %+v",
-		what,
-		el,
-		container,
-	)
+	return "Expected to find " + what + " in iter:\n" +
+		dumpIndent + upperFirst(what) + ":\n" +
+		dump(el, 2) +
+		"\n" +
+		dumpIndent + "Iter:\n" +
+		dump(container, 2)
 }
 
 func notContainsMsg(container any, what string, el any) string {
-	return fmt.Sprintf(
-		"%s %+v unexpectedly found in %+v",
-		what,
-		el,
-		container,
-	)
+	return "Unexpectedly found " + what + " in iter:\n" +
+		dumpIndent + upperFirst(what) + ":\n" +
+		dump(el, 2) +
+		"\n" +
+		dumpIndent + "Iter:\n" +
+		dump(container, 2)
+}
+
+func upperFirst(str string) string {
+	first := true
+
+	return strings.Map(
+		func(r rune) rune {
+			if first {
+				r = unicode.ToTitle(r)
+				first = false
+			}
+
+			return r
+		},
+		str)
 }
 
 func hasKey(m, k any) (string, bool) {
@@ -185,39 +229,48 @@ func contains(iter, v any) (msg, what string, ok bool) {
 
 	switch rv.Kind() {
 	case reflect.Map:
+		what = "value"
+
 		for mi := rv.MapRange(); mi.Next(); {
 			if reflect.DeepEqual(mi.Value().Interface(), v) {
-				return "", "", true
+				ok = true
+				return
 			}
 		}
 
-		return "", "value", false
+		return
 
 	case reflect.Slice, reflect.Array:
+		what = "value"
+
 		for i := range rv.Len() {
 			if reflect.DeepEqual(rv.Index(i).Interface(), v) {
-				return "", "", true
+				ok = true
+				return
 			}
 		}
 
-		return "", "value", false
+		return
 
 	case reflect.String:
-		substr, ok := v.(string)
-		if !ok {
-			msg := fmt.Sprintf("Cannot search string for non-string: %T(%v)", v, v)
-			return msg, "", false
+		what = "substring"
+
+		substr, isStr := v.(string)
+		if !isStr {
+			msg = fmt.Sprintf("Cannot search string for non-string %T", v)
+			return
 		}
 
 		if strings.Contains(rv.String(), substr) {
-			return "", "", true
+			ok = true
+			return
 		}
 
-		return "", "substring", false
+		return
 
 	default:
-		msg := fmt.Sprintf("Cannot check non-container %T for containment", iter)
-		return msg, "", false
+		msg = fmt.Sprintf("Cannot check non-container %T for containment", iter)
+		return
 	}
 }
 
@@ -253,17 +306,17 @@ func checkPanics(fn func()) (msg string, ok bool) {
 	}()
 
 	fn()
-	return "Expected fn to panic; it did not.", false
+	return "Expected func to panic", false
 }
 
 func checkNotPanics(fn func()) (msg string, ok bool) {
 	defer func() {
 		if r := recover(); r != nil {
-			msg = fmt.Sprintf(
-				"Expected fn not to panic; got: %+v\n%s",
-				r,
-				textwrap.Indent(string(debug.Stack()), "\t"),
-			)
+			msg = "Expected func not to panic:\n" +
+				dump(r, 1) +
+				"\n" +
+				"\n" +
+				textwrap.Indent(string(debug.Stack()), dumpIndent)
 		}
 	}()
 
@@ -275,16 +328,15 @@ func checkPanicsWith(recovers any, fn func()) (msg string, ok bool) {
 	defer func() {
 		r := recover()
 		if r == nil {
-			msg = "Expected fn to panic; it did not."
+			msg = "Expected func to panic"
 			return
 		}
 
 		if !reflect.DeepEqual(r, recovers) {
-			msg = fmt.Sprintf(
-				"%s\n%s",
-				equalMsg("==", r, recovers),
-				textwrap.Indent(string(debug.Stack()), "\t"),
-			)
+			msg = equalMsg(r, recovers) +
+				"\n" +
+				"\n" +
+				textwrap.Indent(string(debug.Stack()), dumpIndent)
 			return
 		}
 
@@ -320,9 +372,9 @@ func checkEventuallyNil(numTries int, fn func(i int) error) (string, bool) {
 	}
 
 	msg := fmt.Sprintf(
-		"Func didn't succeed after %d tries, last err: %v",
+		"Func didn't succeed after %d tries, last err:\n%s",
 		numTries,
-		err,
+		dump(err, 1),
 	)
 	return msg, false
 }
