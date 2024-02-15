@@ -139,15 +139,19 @@ func notContainsMsg(container any, what string, el any) string {
 }
 
 func hasKey(m, k any) (string, bool) {
-	rv := reflect.ValueOf(m)
-
-	if rv.Kind() != reflect.Map {
+	mv := reflect.ValueOf(m)
+	if mv.Kind() != reflect.Map {
 		msg := fmt.Sprintf("Cannot check non-map %T for key", m)
 		return msg, false
 	}
 
-	v := rv.MapIndex(reflect.ValueOf(k))
-	return "", v != reflect.Value{}
+	kv := reflect.ValueOf(k)
+	if !kv.Type().AssignableTo(mv.Type().Key()) {
+		msg := fmt.Sprintf("Cannot check %T for mismatched key type %T", m, k)
+		return msg, false
+	}
+
+	return "", mv.MapIndex(kv).IsValid()
 }
 
 func checkHasKey(m, k any) (string, bool) {

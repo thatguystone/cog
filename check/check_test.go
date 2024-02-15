@@ -93,6 +93,7 @@ func TestCheckHasKey(t *testing.T) {
 
 	testCheck(checkHasKey(m, "k"))(t, true)
 	testCheck(checkHasKey(m, "v"))(t, false)
+	testCheck(checkHasKey(m, 1))(t, false)
 
 	testCheck(checkHasKey(1, 2))(t, false)
 }
@@ -104,6 +105,7 @@ func TestCheckNotHasKey(t *testing.T) {
 
 	testCheck(checkNotHasKey(m, "v"))(t, true)
 	testCheck(checkNotHasKey(m, "k"))(t, false)
+	testCheck(checkNotHasKey(m, 1))(t, false)
 
 	testCheck(checkNotHasKey(1, 2))(t, false)
 }
