@@ -34,9 +34,14 @@ func GetSkip(skip int) Stack {
 	}
 }
 
+// Len gets the number of frames in the stack trace
+func (st Stack) Len() int {
+	return len(st.s)
+}
+
 // IsZero determines if this stack is a zero-value
 func (st Stack) IsZero() bool {
-	return len(st.s) == 0
+	return st.Len() == 0
 }
 
 func (st Stack) Slice() []Frame {
