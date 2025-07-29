@@ -61,10 +61,10 @@ func (testSelf) getPC() PC {
 }
 
 func BenchmarkSelf(b *testing.B) {
-	recurse(10, func() any {
-		b.ResetTimer()
+	b.ReportAllocs()
 
-		for range b.N {
+	recurse(10, func() any {
+		for b.Loop() {
 			Self()
 		}
 
