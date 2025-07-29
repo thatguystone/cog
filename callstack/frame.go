@@ -8,7 +8,7 @@ import (
 )
 
 // Raw program counter wrapper
-type PC uintptr
+type PC [1]uintptr
 
 // Self gets the PC of the caller
 func Self() PC {
@@ -16,15 +16,13 @@ func Self() PC {
 }
 
 // Caller gets the PC of the caller after skipping the given number of frames
-func Caller(skip int) PC {
-	var pcs [1]uintptr
-	runtime.Callers(skip+2, pcs[:]) // runtime.Callers + Self()
-	return PC(pcs[0])
+func Caller(skip int) (pc PC) {
+	runtime.Callers(skip+2, pc[:]) // runtime.Callers + Self()
+	return
 }
 
 func (pc PC) Frame() Frame {
-	pcs := [1]uintptr{uintptr(pc)}
-	frames := runtime.CallersFrames(pcs[:])
+	frames := runtime.CallersFrames(pc[:])
 	frame, _ := frames.Next()
 	return Frame{frame}
 }
