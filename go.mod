@@ -1,6 +1,6 @@
 module github.com/thatguystone/cog
 
-go 1.23
+go 1.25
 
 require (
 	github.com/peter-evans/patience v0.3.0
