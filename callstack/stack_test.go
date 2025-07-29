@@ -37,7 +37,7 @@ func TestGet(t *testing.T) {
 
 func TestStackIters(t *testing.T) {
 	recurse(10, func() any {
-		for _ = range Get().All() {
+		for range Get().All() {
 			break
 		}
 
@@ -52,10 +52,10 @@ func TestStackString(t *testing.T) {
 }
 
 func BenchmarkGet(b *testing.B) {
-	recurse(32, func() any {
-		b.ResetTimer()
+	b.ReportAllocs()
 
-		for range b.N {
+	recurse(32, func() any {
+		for b.Loop() {
 			Get()
 		}
 
