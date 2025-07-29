@@ -71,3 +71,15 @@ func BenchmarkSelf(b *testing.B) {
 		return nil
 	})
 }
+
+func BenchmarkSelfFrame(b *testing.B) {
+	b.ReportAllocs()
+
+	recurse(10, func() any {
+		for b.Loop() {
+			Self().Frame()
+		}
+
+		return nil
+	})
+}
