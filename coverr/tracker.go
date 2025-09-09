@@ -28,7 +28,7 @@ func (trk *Tracker) Err() error {
 
 	h.h.Reset()
 
-	for f := range callstack.GetSkip(1).All() {
+	for f := range callstack.GetSkip(1).Frames() {
 		// Avoid allocations for speed
 		buf := strconv.AppendUint(h.buf, uint64(f.PC()), 10)
 		buf = append(buf, '-')

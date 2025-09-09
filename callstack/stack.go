@@ -6,10 +6,8 @@ import (
 	"strings"
 )
 
-// A Stack is an immutable stack trace
-type Stack struct {
-	s []uintptr
-}
+// A Stack is a stack trace
+type Stack []uintptr
 
 // Get gets a stack trace at the caller's location
 func Get() Stack {
@@ -25,38 +23,17 @@ func GetSkip(skip int) Stack {
 	for {
 		n := runtime.Callers(skip, pcs)
 		if n < len(pcs) {
-			return Stack{
-				s: pcs[:n],
-			}
+			return pcs[:n]
 		}
 
 		pcs = append(pcs, make([]uintptr, len(pcs))...)
 	}
 }
 
-// Len gets the number of frames in the stack trace
-func (st Stack) Len() int {
-	return len(st.s)
-}
-
-// IsZero determines if this stack is a zero-value
-func (st Stack) IsZero() bool {
-	return st.Len() == 0
-}
-
-func (st Stack) Slice() []Frame {
-	ret := make([]Frame, 0, len(st.s))
-	for f := range st.All() {
-		ret = append(ret, f)
-	}
-
-	return ret
-}
-
-// All returns an iterator over every frame in the stack.
-func (st Stack) All() iter.Seq[Frame] {
+// Frames returns an iterator over every [Frame] in the stack.
+func (st Stack) Frames() iter.Seq[Frame] {
 	return func(yield func(Frame) bool) {
-		frames := runtime.CallersFrames(st.s)
+		frames := runtime.CallersFrames(st)
 		for {
 			frame, more := frames.Next()
 			if frame != (runtime.Frame{}) {
@@ -75,7 +52,7 @@ func (st Stack) All() iter.Seq[Frame] {
 // String implements [fmt.Stringer]
 func (st Stack) String() string {
 	var b strings.Builder
-	for frame := range st.All() {
+	for frame := range st.Frames() {
 		frame.append(&b)
 	}
 
