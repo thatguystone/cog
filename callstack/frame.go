@@ -2,7 +2,7 @@ package callstack
 
 import (
 	"fmt"
-	"path/filepath"
+	"path"
 	"runtime"
 	"strings"
 )
@@ -72,7 +72,7 @@ func (frame Frame) File() string {
 // FileName gets the file name of this Frame
 func (frame Frame) FileName() string {
 	file := frame.File()
-	return filepath.Base(file)
+	return path.Base(file)
 }
 
 // Line gets the line number of this Frame
