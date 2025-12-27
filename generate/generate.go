@@ -2,9 +2,13 @@ package generate
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
+	"io"
+	"io/fs"
 	"os"
 	"os/exec"
+	"slices"
 	"strings"
 
 	"github.com/thatguystone/cog/assert"
@@ -49,7 +53,12 @@ func (b *Buffer) WriteFile() {
 	out, err := imports.Process(b.dstPath, b.Bytes(), nil)
 	assert.Nil(err)
 
-	err = os.WriteFile(b.dstPath, out, 0640)
+	// Don't touch identical files, just in case it matters
+	if equal(b.dstPath, out) {
+		return
+	}
+
+	err = os.WriteFile(b.dstPath, out, 0o640)
 	assert.Nil(err)
 }
 
@@ -64,4 +73,46 @@ func getPkgName() string {
 	assert.Nil(err)
 
 	return strings.TrimSpace(buf.String())
+}
+
+func equal(path string, contents []byte) bool {
+	f, err := os.Open(path)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return false
+		}
+
+		panic(err)
+	}
+
+	defer f.Close()
+
+	info, err := f.Stat()
+	assert.Nil(err)
+
+	if info.Size() != int64(len(contents)) {
+		return false
+	}
+
+	mode := info.Mode()
+	if !mode.IsRegular() {
+		return false
+	}
+
+	buf := make([]byte, min(len(contents), 1<<16))
+	for chunk := range slices.Chunk(contents, len(buf)) {
+		buf = buf[:len(chunk)]
+
+		_, err := io.ReadFull(f, buf)
+		assert.Nil(err)
+
+		if !bytes.Equal(chunk, buf) {
+			return false
+		}
+	}
+
+	_, err = f.Read(buf)
+	assert.Equal(err, io.EOF)
+
+	return true
 }
